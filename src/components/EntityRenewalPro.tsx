@@ -117,31 +117,34 @@ const EntityRenewalPro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        {/* Header */}
-        <div className="mb-8 rounded-2xl bg-card p-8 shadow-md border border-card-border">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface relative">
+      {/* Background mesh gradient */}
+      <div className="absolute inset-0 bg-[var(--gradient-mesh)] pointer-events-none" />
+      
+      <div className="relative mx-auto max-w-7xl px-6 py-8">
+        {/* Modern Header with Glass Effect */}
+        <div className="mb-8 rounded-3xl bg-glass backdrop-blur-xl border border-glass-border shadow-modern-lg p-8 animate-fade-in">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="rounded-xl bg-primary-muted p-3">
-                <Building className="h-8 w-8 text-primary" />
+            <div className="flex items-center gap-6">
+              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary-dark p-4 shadow-glow animate-glow">
+                <Building className="h-10 w-10 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent font-display">
                   Entity Renewal Pro
                 </h1>
-                <p className="text-muted-foreground">
-                  Welcome back, {userAccount.name} • {userAccount.company}
+                <p className="text-muted-foreground text-lg mt-1">
+                  Welcome back, <span className="font-semibold text-foreground">{userAccount.name}</span> • {userAccount.company}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <div className="relative">
-                <Button variant="ghost" size="sm" className="relative">
+                <Button variant="ghost" size="sm" className="relative hover:bg-primary/10 transition-all duration-300">
                   <Bell className="h-5 w-5" />
                   {notifications.filter(n => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-medium text-destructive-foreground">
+                    <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-destructive to-destructive bg-destructive text-xs font-medium text-destructive-foreground animate-pulse">
                       {notifications.filter(n => !n.read).length}
                     </span>
                   )}
@@ -150,22 +153,25 @@ const EntityRenewalPro = () => {
 
               <UserAccount user={userAccount} />
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   onClick={() => setShowPaymentModal(true)}
-                  className="bg-success/10 border-success/20 text-success hover:bg-success hover:text-success-foreground"
+                  className="bg-success/10 border-success/20 text-success hover:bg-success hover:text-success-foreground transition-all duration-300 hover:shadow-md hover:scale-105"
                 >
-                  Payments
+                  💳 Payments
                 </Button>
                 <Button 
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => setShowScheduleView(true)}
-                  className="bg-info/10 border-info/20 text-info hover:bg-info hover:text-info-foreground"
+                  className="bg-info/10 border-info/20 text-info hover:bg-info hover:text-info-foreground transition-all duration-300 hover:shadow-md hover:scale-105"
                 >
-                  Schedule
+                  📅 Schedule
                 </Button>
-                <Button onClick={() => setShowAddForm(true)}>
+                <Button 
+                  onClick={() => setShowAddForm(true)}
+                  className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary shadow-modern hover:shadow-modern-lg transition-all duration-300 hover:scale-105"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Entity
                 </Button>
@@ -174,48 +180,56 @@ const EntityRenewalPro = () => {
           </div>
         </div>
 
-        {/* Status Banner */}
+        {/* Modern Status Banner */}
         {userAccount.subscription.status === 'active' && (
-          <div className="mb-6 rounded-xl bg-success-muted border border-success/20 p-4">
+          <div className="mb-8 rounded-2xl bg-gradient-to-r from-success-muted to-success-muted/50 border border-success/20 p-6 shadow-modern animate-fade-up backdrop-blur-sm">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-success"></div>
-                <span className="font-medium text-success-foreground">
+              <div className="flex items-center gap-3">
+                <div className="h-3 w-3 rounded-full bg-gradient-to-r from-success to-success animate-pulse"></div>
+                <span className="font-semibold text-success-foreground text-lg">
                   {userAccount.plan.charAt(0).toUpperCase() + userAccount.plan.slice(1)} Plan Active
                 </span>
               </div>
-              <div className="text-sm text-success">
+              <div className="text-success font-medium">
                 Next billing: {new Date(userAccount.subscription.nextBilling).toLocaleDateString()} 
-                (${userAccount.subscription.amount}/{userAccount.subscription.billingCycle})
+                <span className="ml-2 px-3 py-1 bg-success/20 rounded-full text-sm">
+                  ${userAccount.subscription.amount}/{userAccount.subscription.billingCycle}
+                </span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Notifications */}
+        {/* Modern Notifications */}
         <NotificationBanner 
           notifications={notifications.filter(n => !n.read)}
           onDismiss={dismissNotification}
         />
 
-        {/* Metrics Grid */}
-        <MetricsGrid metrics={metrics} />
+        {/* Enhanced Metrics Grid */}
+        <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
+          <MetricsGrid metrics={metrics} />
+        </div>
 
-        {/* Entity Form */}
+        {/* Modern Entity Form */}
         {showAddForm && (
-          <EntityForm 
-            onSubmit={handleAddEntity}
-            onCancel={() => setShowAddForm(false)}
-          />
+          <div className="animate-scale-in">
+            <EntityForm 
+              onSubmit={handleAddEntity}
+              onCancel={() => setShowAddForm(false)}
+            />
+          </div>
         )}
 
-        {/* Entity List */}
-        <EntityList 
-          entities={entities}
-          onDelete={handleDeleteEntity}
-        />
+        {/* Enhanced Entity List */}
+        <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <EntityList 
+            entities={entities}
+            onDelete={handleDeleteEntity}
+          />
+        </div>
 
-        {/* Modals */}
+        {/* Enhanced Modals */}
         <PaymentModal 
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}

@@ -2,86 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Entity Renewal Pro Design System - Professional SaaS Theme */
+/* Entity Renewal Pro - Modern SaaS Design System */
 
 @layer base {
   :root {
-    /* Background & Surface Colors */
-    --background: 218 25% 97%;
-    --foreground: 216 25% 15%;
-    --surface: 220 20% 99%;
-    --surface-muted: 218 15% 95%;
+    /* Modern Background System */
+    --background: 240 10% 98%;
+    --foreground: 240 10% 3.9%;
+    --surface: 240 8% 99%;
+    --surface-elevated: 240 6% 100%;
 
-    /* Card System */
-    --card: 220 20% 99%;
-    --card-foreground: 216 25% 15%;
-    --card-border: 218 15% 91%;
+    /* Modern Card System with Glass Effects */
+    --card: 240 6% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --card-border: 240 6% 90%;
+    --glass: 240 8% 99% / 0.8;
+    --glass-border: 240 6% 85% / 0.3;
 
     /* Interactive Elements */
-    --popover: 220 20% 99%;
-    --popover-foreground: 216 25% 15%;
+    --popover: 240 6% 100%;
+    --popover-foreground: 240 10% 3.9%;
 
-    /* Brand Colors - Professional Blue */
-    --primary: 217 91% 60%;
-    --primary-foreground: 220 20% 99%;
-    --primary-muted: 217 85% 95%;
-    --primary-dark: 217 91% 45%;
+    /* Modern Brand Colors - Sophisticated Blue */
+    --primary: 231 98% 65%;
+    --primary-foreground: 240 6% 100%;
+    --primary-muted: 231 85% 96%;
+    --primary-dark: 231 98% 55%;
+    --primary-glow: 231 98% 65% / 0.15;
 
-    /* Secondary - Sophisticated Gray-Blue */
-    --secondary: 218 15% 92%;
-    --secondary-foreground: 216 25% 25%;
-    --secondary-hover: 218 15% 88%;
+    /* Contemporary Secondary */
+    --secondary: 240 6% 95%;
+    --secondary-foreground: 240 8% 15%;
+    --secondary-hover: 240 6% 92%;
+    --secondary-active: 240 6% 88%;
 
     /* Content Hierarchy */
-    --muted: 218 15% 94%;
-    --muted-foreground: 216 15% 55%;
-    --subtle: 218 10% 96%;
-    --subtle-foreground: 216 20% 65%;
+    --muted: 240 6% 96%;
+    --muted-foreground: 240 5% 64.9%;
+    --subtle: 240 4% 98%;
+    --subtle-foreground: 240 5% 74.9%;
 
-    /* Status Colors */
-    --success: 142 76% 36%;
-    --success-foreground: 220 20% 99%;
-    --success-muted: 142 50% 95%;
+    /* Modern Status Colors */
+    --success: 142 71% 45%;
+    --success-foreground: 240 6% 100%;
+    --success-muted: 142 60% 96%;
+    --success-glow: 142 71% 45% / 0.12;
     
-    --warning: 38 92% 50%;
-    --warning-foreground: 216 25% 15%;
-    --warning-muted: 38 60% 95%;
+    --warning: 43 96% 56%;
+    --warning-foreground: 240 10% 3.9%;
+    --warning-muted: 43 85% 96%;
+    --warning-glow: 43 96% 56% / 0.12;
     
     --destructive: 0 84% 60%;
-    --destructive-foreground: 220 20% 99%;
-    --destructive-muted: 0 70% 95%;
+    --destructive-foreground: 240 6% 100%;
+    --destructive-muted: 0 75% 96%;
+    --destructive-glow: 0 84% 60% / 0.12;
     
     --info: 262 83% 58%;
-    --info-foreground: 220 20% 99%;
-    --info-muted: 262 60% 95%;
+    --info-foreground: 240 6% 100%;
+    --info-muted: 262 70% 96%;
+    --info-glow: 262 83% 58% / 0.12;
 
     /* Form Elements */
-    --border: 218 15% 89%;
-    --input: 220 20% 99%;
-    --input-border: 218 15% 85%;
-    --ring: 217 91% 60%;
+    --border: 240 6% 88%;
+    --input: 240 6% 100%;
+    --input-border: 240 6% 85%;
+    --ring: 231 98% 65%;
+    --ring-offset: 240 6% 100%;
 
     /* Accents */
-    --accent: 217 91% 60%;
-    --accent-foreground: 220 20% 99%;
+    --accent: 231 98% 65%;
+    --accent-foreground: 240 6% 100%;
 
-    /* Shadows & Effects */
-    --shadow-sm: 0 2px 4px -1px hsl(216 25% 15% / 0.06);
-    --shadow-md: 0 4px 12px -2px hsl(216 25% 15% / 0.08);
-    --shadow-lg: 0 8px 32px -4px hsl(216 25% 15% / 0.12);
-    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.15);
+    /* Modern Shadows & Effects */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 0 0 1px hsl(var(--primary-glow)), 0 8px 32px hsl(var(--primary-glow));
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 46%));
-    --gradient-surface: linear-gradient(180deg, hsl(220 20% 99%), hsl(218 15% 97%));
-    --gradient-card: linear-gradient(145deg, hsl(220 20% 99%), hsl(218 10% 96%));
+    /* Modern Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(231 98% 65%), hsl(231 98% 75%));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 55%));
+    --gradient-surface: linear-gradient(180deg, hsl(240 6% 100%), hsl(240 4% 98%));
+    --gradient-glass: linear-gradient(135deg, hsl(240 8% 99% / 0.9), hsl(240 6% 97% / 0.8));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(231 98% 65% / 0.03) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(142 71% 45% / 0.03) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(262 83% 58% / 0.03) 0px, transparent 50%);
+
+    /* Typography Scale */
+    --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
     /* Animation Curves */
     --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-    --radius: 0.5rem;
+    --radius: 12px;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
