@@ -1,10 +1,11 @@
 import React from 'react';
-import { Mail, Phone, Trash2 } from 'lucide-react';
+import { Mail, Phone, Trash2, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Entity } from '@/types/entity';
 import { stateRequirements } from '@/lib/state-requirements';
+import { useNavigate } from 'react-router-dom';
 
 interface EntityListProps {
   entities: Entity[];
@@ -12,6 +13,8 @@ interface EntityListProps {
 }
 
 export const EntityList: React.FC<EntityListProps> = ({ entities, onDelete }) => {
+  const navigate = useNavigate();
+  
   if (entities.length === 0) {
     return (
       <div className="text-center py-16">
@@ -47,8 +50,12 @@ export const EntityList: React.FC<EntityListProps> = ({ entities, onDelete }) =>
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">
+                  <h3 
+                    className="text-lg font-semibold text-foreground hover:text-primary cursor-pointer transition-colors flex items-center gap-2"
+                    onClick={() => navigate(`/entity/${entity.id}`)}
+                  >
                     {entity.name}
+                    <ExternalLink className="h-4 w-4 opacity-60" />
                   </h3>
                   <Badge variant="secondary">
                     {getEntityTypeLabel(entity.type)} - {stateRequirements[entity.state].name}
