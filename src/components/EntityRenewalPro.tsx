@@ -143,11 +143,11 @@ const EntityRenewalPro = () => {
               <div className="relative">
                 <Button variant="ghost" size="sm" className="relative hover:bg-primary/10 transition-all duration-300">
                   <Bell className="h-5 w-5" />
-                  {notifications.filter(n => !n.read).length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-destructive to-destructive bg-destructive text-xs font-medium text-destructive-foreground animate-pulse">
-                      {notifications.filter(n => !n.read).length}
-                    </span>
-                  )}
+                   {notifications.filter(n => !n.read).length > 0 && (
+                     <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs font-medium text-white animate-pulse">
+                       {notifications.filter(n => !n.read).length}
+                     </span>
+                   )}
                 </Button>
               </div>
 
@@ -157,14 +157,14 @@ const EntityRenewalPro = () => {
                 <Button 
                   variant="ghost" 
                   onClick={() => setShowPaymentModal(true)}
-                  className="bg-success/10 border-success/20 text-success hover:bg-success hover:text-success-foreground transition-all duration-300 hover:shadow-md hover:scale-105"
+                  className="bg-success/10 border-success/20 text-success hover:bg-success hover:text-white transition-all duration-300 hover:shadow-md hover:scale-105"
                 >
                   💳 Payments
                 </Button>
                 <Button 
                   variant="ghost"
                   onClick={() => setShowScheduleView(true)}
-                  className="bg-info/10 border-info/20 text-info hover:bg-info hover:text-info-foreground transition-all duration-300 hover:shadow-md hover:scale-105"
+                  className="bg-info/10 border-info/20 text-info hover:bg-info hover:text-white transition-all duration-300 hover:shadow-md hover:scale-105"
                 >
                   📅 Schedule
                 </Button>
@@ -186,13 +186,13 @@ const EntityRenewalPro = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-3 w-3 rounded-full bg-gradient-to-r from-success to-success animate-pulse"></div>
-                <span className="font-semibold text-success-foreground text-lg">
+                <span className="font-semibold text-success text-lg">
                   {userAccount.plan.charAt(0).toUpperCase() + userAccount.plan.slice(1)} Plan Active
                 </span>
               </div>
               <div className="text-success font-medium">
                 Next billing: {new Date(userAccount.subscription.nextBilling).toLocaleDateString()} 
-                <span className="ml-2 px-3 py-1 bg-success/20 rounded-full text-sm">
+                <span className="ml-2 px-3 py-1 bg-success/20 rounded-full text-sm text-success">
                   ${userAccount.subscription.amount}/{userAccount.subscription.billingCycle}
                 </span>
               </div>
