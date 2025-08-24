@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Building, Bell, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import { MetricsGrid } from './MetricsGrid';
 import { EntityList } from './EntityList';
 import { EntityForm } from './EntityForm';
@@ -12,6 +13,7 @@ import { Entity, Payment, PaymentMethod, Notification } from '@/types/entity';
 import { stateRequirements } from '@/lib/state-requirements';
 
 const EntityRenewalPro = () => {
+  const navigate = useNavigate();
   const [entities, setEntities] = useState<Entity[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showScheduleView, setShowScheduleView] = useState(false);
@@ -156,10 +158,10 @@ const EntityRenewalPro = () => {
               <div className="flex gap-3">
                 <Button 
                   variant="ghost" 
-                  onClick={() => setShowPaymentModal(true)}
+                  onClick={() => navigate('/payments')}
                   className="bg-success/10 border-success/20 text-success hover:bg-success hover:text-white transition-all duration-300 hover:shadow-md hover:scale-105"
                 >
-                  💳 Payments
+                  💳 Payment History
                 </Button>
                 <Button 
                   variant="ghost"
