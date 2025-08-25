@@ -10,6 +10,9 @@ import Reports from "./pages/Reports";
 import PaymentHistory from "./pages/PaymentHistory";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import TeamManagement from "./pages/TeamManagement";
+import Billing from "./pages/Billing";
+import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
           <Route path="/entity/:id" element={<EntityDetails />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/payments" element={<PaymentHistory />} />
+          <Route path="/team" element={<TeamManagement />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
