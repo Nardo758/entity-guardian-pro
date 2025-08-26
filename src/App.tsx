@@ -10,6 +10,11 @@ import Reports from "./pages/Reports";
 import PaymentHistory from "./pages/PaymentHistory";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Integrations from "./pages/Integrations";
+import ApiDocs from "./pages/ApiDocs";
+import AuditTrail from "./pages/AuditTrail";
 import TeamManagement from "./pages/TeamManagement";
 import Billing from "./pages/Billing";
 import Support from "./pages/Support";
@@ -34,6 +39,11 @@ const App = () => (
           <Route path="/support" element={<Support />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/integrations" element={<Integrations />} />
+          <Route path="/api-docs" element={<ApiDocs />} />
+          <Route path="/audit" element={<AuditTrail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
