@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { EyeIcon, EyeOffIcon, Building, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,19 +21,43 @@ const Login = () => {
     rememberMe: false
   });
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login API call
-    setTimeout(() => {
+    try {
+      const { error } = await signIn(formData.email, formData.password);
+
+      if (error) {
+        toast({
+          title: "Sign in failed",
+          description: error.message || "Invalid email or password. Please try again.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully signed in.",
+        });
+        // Force page reload for clean state
+        window.location.href = "/";
+      }
+    } catch (error: any) {
       toast({
-        title: "Welcome back!",
-        description: "You have been successfully logged in.",
+        title: "Sign in failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
       });
-      navigate("/");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

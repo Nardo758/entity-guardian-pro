@@ -1,53 +1,94 @@
-import React from 'react';
-import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserAccount as UserAccountType } from '@/types/entity';
-import { useNavigate } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, Settings, LogOut, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-interface UserAccountProps {
-  user: UserAccountType;
-}
-
-export const UserAccount: React.FC<UserAccountProps> = ({ user }) => {
+export const UserAccount: React.FC = () => {
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await signOut();
+      if (error) {
+        toast({
+          title: "Sign out failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Signed out successfully",
+          description: "You have been signed out of your account.",
+        });
+        // Force page reload for clean state
+        window.location.href = "/login";
+      }
+    } catch (error) {
+      toast({
+        title: "Sign out failed",
+        description: "An unexpected error occurred.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (!user || !profile) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted">
+        <User className="h-4 w-4" />
+        <span className="text-sm">Loading...</span>
+      </div>
+    );
+  }
+
+  const displayName = profile.first_name && profile.last_name 
+    ? `${profile.first_name} ${profile.last_name}` 
+    : user.email;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
-          className="flex items-center gap-4 rounded-xl border bg-glass backdrop-blur-sm px-6 py-3 shadow-modern hover:shadow-modern-lg transition-all duration-300 h-auto"
+          className="h-auto p-3 w-full justify-between bg-gradient-to-r from-glass to-glass-border backdrop-blur-sm border border-glass-border hover:bg-glass-border/50 transition-all duration-200"
         >
-          <div className="rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 p-2">
-            <User className="h-4 w-4 text-primary" />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-primary-foreground font-semibold text-sm">
+              {displayName.charAt(0).toUpperCase()}
+            </div>
+            <div className="text-left">
+              <div className="font-medium text-sm text-foreground">{displayName}</div>
+              <Badge variant="secondary" className="text-xs px-2 py-0 bg-primary/10 text-primary border-primary/20">
+                {profile.plan}
+              </Badge>
+            </div>
           </div>
-          <span className="text-sm font-semibold text-foreground tracking-wide">
-            {user.name}
-          </span>
-          <Badge 
-            variant="secondary" 
-            className="text-xs capitalize bg-gradient-to-r from-primary/10 to-primary/20 text-primary border-primary/20 font-medium px-3 py-1"
-          >
-            ✨ {user.plan}
-          </Badge>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
+        <DropdownMenuItem 
+          onClick={() => navigate('/settings')}
+          className="cursor-pointer"
+        >
           <Settings className="mr-2 h-4 w-4" />
           Account Settings
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+        <DropdownMenuItem 
+          onClick={handleSignOut}
+          className="cursor-pointer text-destructive hover:text-destructive"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </DropdownMenuItem>

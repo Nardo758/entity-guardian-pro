@@ -19,19 +19,13 @@ const EntityRenewalPro = () => {
   const [showScheduleView, setShowScheduleView] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const [userAccount] = useState({
-    id: 'user_123',
-    name: 'John Smith',
-    email: 'john@techcorp.com',
-    company: 'TechCorp Solutions',
-    plan: 'professional',
-    subscription: {
-      status: 'active',
-      billingCycle: 'monthly',
-      nextBilling: '2025-08-08',
-      amount: 99
-    }
-  });
+  // Mock subscription data - in real app this would come from the profile
+  const mockSubscription = {
+    status: 'active',
+    billingCycle: 'monthly',
+    nextBilling: '2025-08-08',
+    amount: 99
+  };
 
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -136,7 +130,7 @@ const EntityRenewalPro = () => {
                   Entity Renewal Pro
                 </h1>
                 <p className="text-muted-foreground text-lg mt-1">
-                  Welcome back, <span className="font-semibold text-foreground">{userAccount.name}</span> • {userAccount.company}
+                  Manage your business entities and renewals
                 </p>
               </div>
             </div>
@@ -153,7 +147,7 @@ const EntityRenewalPro = () => {
                 </Button>
               </div>
 
-              <UserAccount user={userAccount} />
+              <UserAccount />
 
               <div className="flex gap-3">
                 <Button 
@@ -183,19 +177,19 @@ const EntityRenewalPro = () => {
         </div>
 
         {/* Modern Status Banner */}
-        {userAccount.subscription.status === 'active' && (
+        {mockSubscription.status === 'active' && (
           <div className="mb-8 rounded-2xl bg-gradient-to-r from-success-muted to-success-muted/50 border border-success/20 p-6 shadow-modern animate-fade-up backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="h-3 w-3 rounded-full bg-gradient-to-r from-success to-success animate-pulse"></div>
                 <span className="font-semibold text-success text-lg">
-                  {userAccount.plan.charAt(0).toUpperCase() + userAccount.plan.slice(1)} Plan Active
+                  Starter Plan Active
                 </span>
               </div>
               <div className="text-success font-medium">
-                Next billing: {new Date(userAccount.subscription.nextBilling).toLocaleDateString()} 
+                Next billing: {new Date(mockSubscription.nextBilling).toLocaleDateString()} 
                 <span className="ml-2 px-3 py-1 bg-success/20 rounded-full text-sm text-success">
-                  ${userAccount.subscription.amount}/{userAccount.subscription.billingCycle}
+                  ${mockSubscription.amount}/{mockSubscription.billingCycle}
                 </span>
               </div>
             </div>
