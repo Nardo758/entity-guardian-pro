@@ -16,6 +16,7 @@ import Billing from "./pages/Billing";
 import PaymentHistory from "./pages/PaymentHistory";
 import Integrations from "./pages/Integrations";
 import Support from "./pages/Support";
+import Documents from "./pages/Documents";
 import AuditTrail from "./pages/AuditTrail";
 import EntityDetails from "./pages/EntityDetails";
 import ApiDocs from "./pages/ApiDocs";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
             <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
+            <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
             <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
             <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />

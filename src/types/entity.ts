@@ -57,6 +57,21 @@ export interface Notification {
   updated_at: string;
 }
 
+export interface Document {
+  id: string;
+  user_id: string;
+  entity_id?: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  file_type: string;
+  category: string;
+  description?: string;
+  uploaded_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserAccount {
   id: string;
   name: string;
