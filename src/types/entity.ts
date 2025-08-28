@@ -1,7 +1,6 @@
 export interface Entity {
   id: string;
   user_id: string;
-  team_id?: string;
   name: string;
   type: 'sole_proprietorship' | 'partnership' | 'llc' | 'c_corp' | 's_corp';
   state: string;
@@ -49,46 +48,11 @@ export interface PaymentMethod {
 export interface Notification {
   id: string;
   user_id: string;
-  entity_id?: string;
-  type: 'payment_due' | 'renewal_reminder' | 'compliance_check';
-  notification_type: 'in_app' | 'email' | 'both';
+  type: 'payment_due' | 'renewal_reminder';
   title: string;
   message: string;
   timestamp: string;
   read: boolean;
-  scheduled_for?: string;
-  sent_at?: string;
-  email_sent: boolean;
-  retry_count: number;
-  metadata: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface NotificationPreferences {
-  id: string;
-  user_id: string;
-  email_notifications: boolean;
-  reminder_days_before: number[];
-  notification_types: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ScheduledNotification {
-  id: string;
-  user_id: string;
-  entity_id?: string;
-  notification_type: string;
-  title: string;
-  message: string;
-  scheduled_for: string;
-  processed: boolean;
-  processed_at?: string;
-  error_message?: string;
-  retry_count: number;
-  max_retries: number;
-  metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
@@ -161,53 +125,5 @@ export interface UserAccount {
     billingCycle: string;
     nextBilling: string;
     amount: number;
-  };
-}
-
-export type TeamRole = 'owner' | 'admin' | 'manager' | 'member';
-
-export interface Team {
-  id: string;
-  name: string;
-  description?: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  settings: Record<string, any>;
-}
-
-export interface TeamMembership {
-  id: string;
-  team_id: string;
-  user_id: string;
-  role: TeamRole;
-  joined_at: string;
-  invited_by?: string;
-  created_at: string;
-  updated_at: string;
-  team?: Team;
-  user_profile?: {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-  };
-}
-
-export interface TeamInvitation {
-  id: string;
-  team_id: string;
-  email: string;
-  role: TeamRole;
-  invited_by: string;
-  token: string;
-  expires_at: string;
-  accepted_at?: string;
-  created_at: string;
-  updated_at: string;
-  team?: Team;
-  inviter?: {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
   };
 }

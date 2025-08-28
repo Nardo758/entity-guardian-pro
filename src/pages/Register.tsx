@@ -28,9 +28,10 @@ const Register = () => {
     agreeToTerms: false
   });
 
+  // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      navigate("/dashboard");
+      navigate("/");
     }
   }, [user, loading, navigate]);
 
@@ -383,10 +384,10 @@ const Register = () => {
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link 
-                  to="/paid-register" 
+                  to="/login" 
                   className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  Start Free Trial
+                  Sign in here
                 </Link>
               </p>
             </div>

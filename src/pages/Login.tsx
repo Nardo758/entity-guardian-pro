@@ -21,9 +21,10 @@ const Login = () => {
     rememberMe: false
   });
 
+  // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      navigate("/dashboard");
+      navigate("/");
     }
   }, [user, loading, navigate]);
 
@@ -46,7 +47,7 @@ const Login = () => {
           description: "You have been successfully signed in.",
         });
         // Force page reload for clean state
-        window.location.href = "/dashboard";
+        window.location.href = "/";
       }
     } catch (error: any) {
       toast({
@@ -231,10 +232,10 @@ const Login = () => {
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link 
-                  to="/paid-register" 
+                  to="/register" 
                   className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  Start your free trial
+                  Sign up for free
                 </Link>
               </p>
             </div>
