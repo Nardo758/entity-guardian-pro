@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building, Bell, User, Plus } from 'lucide-react';
+import { Building, Bell, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { MetricsGrid } from './MetricsGrid';
@@ -9,12 +9,21 @@ import { PaymentModal } from './PaymentModal';
 import { ScheduleModal } from './ScheduleModal';
 import { NotificationBanner } from './NotificationBanner';
 import { UserAccount } from './UserAccount';
-import { Entity, Payment, PaymentMethod, Notification } from '@/types/entity';
+import { useEntities } from '@/hooks/useEntities';
+import { usePayments } from '@/hooks/usePayments';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useNotifications } from '@/hooks/useNotifications';
 import { stateRequirements } from '@/lib/state-requirements';
 
 const EntityRenewalPro = () => {
   const navigate = useNavigate();
-  const [entities, setEntities] = useState<Entity[]>([]);
+  
+  // Use hooks for data management
+  const { entities, addEntity, deleteEntity } = useEntities();
+  const { payments } = usePayments();
+  const { paymentMethods } = usePaymentMethods();
+  const { notifications, markAsRead } = useNotifications();
+  
   const [showAddForm, setShowAddForm] = useState(false);
   const [showScheduleView, setShowScheduleView] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -27,78 +36,29 @@ const EntityRenewalPro = () => {
     amount: 99
   };
 
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      type: 'payment_due',
-      title: 'Payment Due Soon',
-      message: 'Delaware Corp renewal payment of $175 due in 3 days',
-      timestamp: '2025-07-05T10:30:00Z',
-      read: false
-    },
-    {
-      id: 2,
-      type: 'renewal_reminder',
-      title: 'Renewal Reminder',
-      message: 'TechCorp LLC renewal due March 1, 2025',
-      timestamp: '2025-07-04T14:15:00Z',
-      read: true
+  const handleAddEntity = async (entityData: any) => {
+    try {
+      await addEntity(entityData);
+      setShowAddForm(false);
+    } catch (error) {
+      // Error is already handled in the hook
     }
-  ]);
-
-  const [paymentMethods] = useState<PaymentMethod[]>([
-    {
-      id: 1,
-      type: 'credit_card',
-      name: 'Business Visa ****4532',
-      isDefault: true,
-      expiryDate: '12/26'
-    },
-    {
-      id: 2,
-      type: 'bank_account',
-      name: 'Business Checking ****7891',
-      isDefault: false,
-      routingNumber: '****5678'
-    }
-  ]);
-
-  const [payments] = useState<Payment[]>([
-    {
-      id: 1,
-      entityName: 'TechCorp LLC',
-      type: 'Entity Renewal',
-      amount: 300,
-      dueDate: '2025-03-01',
-      status: 'pending',
-      paymentMethod: null
-    },
-    {
-      id: 2,
-      entityName: 'TechCorp LLC',
-      type: 'Registered Agent',
-      amount: 150,
-      dueDate: '2025-01-15',
-      status: 'paid',
-      paymentMethod: 'Business Visa ****4532',
-      paidDate: '2025-01-10'
-    }
-  ]);
-
-  const handleAddEntity = (entity: Omit<Entity, 'id'>) => {
-    const newEntity = { ...entity, id: Date.now() };
-    setEntities([...entities, newEntity]);
-    setShowAddForm(false);
   };
 
-  const handleDeleteEntity = (id: number) => {
-    setEntities(entities.filter(e => e.id !== id));
+  const handleDeleteEntity = async (id: string) => {
+    try {
+      await deleteEntity(id);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
   };
 
-  const dismissNotification = (id: number) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
+  const dismissNotification = async (id: string) => {
+    try {
+      await markAsRead(id);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
   };
 
   // Calculate metrics
@@ -107,7 +67,7 @@ const EntityRenewalPro = () => {
     delawareEntities: entities.filter(e => e.state === 'DE').length,
     annualEntityFees: entities.reduce((sum, e) => sum + stateRequirements[e.state][e.type].fee, 0),
     annualServiceFees: entities.reduce((sum, e) => 
-      sum + (e.registeredAgent.fee || 0) + (e.independentDirector.fee || 0), 0),
+      sum + (e.registered_agent_fee || 0) + (e.independent_director_fee || 0), 0),
     pendingPayments: payments.filter(p => p.status === 'pending' || p.status === 'scheduled')
       .reduce((sum, p) => sum + p.amount, 0)
   };
@@ -212,7 +172,7 @@ const EntityRenewalPro = () => {
           <div className="animate-scale-in">
             <EntityForm 
               onSubmit={handleAddEntity}
-              onCancel={() => setShowAddForm(false)}
+              onClose={() => setShowAddForm(false)}
             />
           </div>
         )}

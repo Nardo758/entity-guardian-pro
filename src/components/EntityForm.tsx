@@ -5,38 +5,33 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Entity } from '@/types/entity';
-import { stateRequirements } from '@/lib/state-requirements';
 
 interface EntityFormProps {
-  onSubmit: (entity: Omit<Entity, 'id'>) => void;
-  onCancel: () => void;
+  onSubmit: (entity: Omit<Entity, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
+  onClose: () => void;
 }
 
-export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) => {
+export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     type: 'llc' as Entity['type'],
     state: 'CA',
-    formationDate: '',
-    registeredAgent: {
-      name: '',
-      email: '',
-      phone: '',
-      fee: 0,
-      feeDueDate: ''
-    },
-    independentDirector: {
-      name: '',
-      email: '',
-      phone: '',
-      fee: 0,
-      feeDueDate: ''
-    }
+    formation_date: '',
+    registered_agent_name: '',
+    registered_agent_email: '',
+    registered_agent_phone: '',
+    registered_agent_fee: 0,
+    registered_agent_fee_due_date: '',
+    independent_director_name: '',
+    independent_director_email: '',
+    independent_director_phone: '',
+    independent_director_fee: 0,
+    independent_director_fee_due_date: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name && formData.formationDate && formData.registeredAgent.name) {
+    if (formData.name && formData.formation_date && formData.registered_agent_name) {
       onSubmit(formData);
     }
   };
@@ -46,7 +41,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
     const numValue = parseFloat(cleanValue) || 0;
     setFormData({
       ...formData,
-      registeredAgent: { ...formData.registeredAgent, fee: numValue }
+      registered_agent_fee: numValue
     });
   };
 
@@ -55,7 +50,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
     const numValue = parseFloat(cleanValue) || 0;
     setFormData({
       ...formData,
-      independentDirector: { ...formData.independentDirector, fee: numValue }
+      independent_director_fee: numValue
     });
   };
 
@@ -125,8 +120,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
               <Input
                 id="formationDate"
                 type="date"
-                value={formData.formationDate}
-                onChange={(e) => setFormData({ ...formData, formationDate: e.target.value })}
+                value={formData.formation_date}
+                onChange={(e) => setFormData({ ...formData, formation_date: e.target.value })}
                 required
               />
             </div>
@@ -140,11 +135,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                 <Label htmlFor="agentName">Agent Name *</Label>
                 <Input
                   id="agentName"
-                  value={formData.registeredAgent.name}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    registeredAgent: { ...formData.registeredAgent, name: e.target.value }
-                  })}
+                  value={formData.registered_agent_name}
+                  onChange={(e) => setFormData({ ...formData, registered_agent_name: e.target.value })}
                   placeholder="Enter agent name"
                   required
                 />
@@ -155,11 +147,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                 <Input
                   id="agentEmail"
                   type="email"
-                  value={formData.registeredAgent.email}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    registeredAgent: { ...formData.registeredAgent, email: e.target.value }
-                  })}
+                  value={formData.registered_agent_email}
+                  onChange={(e) => setFormData({ ...formData, registered_agent_email: e.target.value })}
                   placeholder="agent@example.com"
                   required
                 />
@@ -170,11 +159,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                 <Input
                   id="agentPhone"
                   type="tel"
-                  value={formData.registeredAgent.phone}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    registeredAgent: { ...formData.registeredAgent, phone: e.target.value }
-                  })}
+                  value={formData.registered_agent_phone}
+                  onChange={(e) => setFormData({ ...formData, registered_agent_phone: e.target.value })}
                   placeholder="(555) 123-4567"
                   required
                 />
@@ -187,7 +173,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                   <Input
                     id="agentFee"
                     type="text"
-                    value={formData.registeredAgent.fee > 0 ? formData.registeredAgent.fee.toFixed(2) : ''}
+                    value={formData.registered_agent_fee > 0 ? formData.registered_agent_fee.toFixed(2) : ''}
                     onChange={(e) => updateRegisteredAgentFee(e.target.value)}
                     placeholder="150.00"
                     className="pl-8"
@@ -232,11 +218,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                     </Label>
                     <Input
                       id="directorName"
-                      value={formData.independentDirector.name}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        independentDirector: { ...formData.independentDirector, name: e.target.value }
-                      })}
+                      value={formData.independent_director_name}
+                      onChange={(e) => setFormData({ ...formData, independent_director_name: e.target.value })}
                       placeholder="Enter director name"
                       required={isDirectorRequired}
                     />
@@ -249,11 +232,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                     <Input
                       id="directorEmail"
                       type="email"
-                      value={formData.independentDirector.email}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        independentDirector: { ...formData.independentDirector, email: e.target.value }
-                      })}
+                      value={formData.independent_director_email}
+                      onChange={(e) => setFormData({ ...formData, independent_director_email: e.target.value })}
                       placeholder="director@example.com"
                       required={isDirectorRequired}
                     />
@@ -266,11 +246,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                     <Input
                       id="directorPhone"
                       type="tel"
-                      value={formData.independentDirector.phone}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        independentDirector: { ...formData.independentDirector, phone: e.target.value }
-                      })}
+                      value={formData.independent_director_phone}
+                      onChange={(e) => setFormData({ ...formData, independent_director_phone: e.target.value })}
                       placeholder="(555) 123-4567"
                       required={isDirectorRequired}
                     />
@@ -285,7 +262,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
                       <Input
                         id="directorFee"
                         type="text"
-                        value={formData.independentDirector.fee > 0 ? formData.independentDirector.fee.toFixed(2) : ''}
+                        value={formData.independent_director_fee > 0 ? formData.independent_director_fee.toFixed(2) : ''}
                         onChange={(e) => updateDirectorFee(e.target.value)}
                         placeholder="2500.00"
                         className="pl-8"
@@ -305,7 +282,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onCancel }) =>
             <Button type="submit" className="bg-success hover:bg-success/90 text-success-foreground">
               Add Entity
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
           </div>

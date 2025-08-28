@@ -5,7 +5,7 @@ import { Notification } from '@/types/entity';
 
 interface NotificationBannerProps {
   notifications: Notification[];
-  onDismiss: (id: number) => void;
+  onDismiss: (id: string) => void;
 }
 
 export const NotificationBanner: React.FC<NotificationBannerProps> = ({ 

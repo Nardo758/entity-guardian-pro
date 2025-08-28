@@ -14,6 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
+      entities: {
+        Row: {
+          created_at: string
+          formation_date: string
+          id: string
+          independent_director_email: string | null
+          independent_director_fee: number | null
+          independent_director_fee_due_date: string | null
+          independent_director_name: string | null
+          independent_director_phone: string | null
+          name: string
+          registered_agent_email: string
+          registered_agent_fee: number
+          registered_agent_fee_due_date: string | null
+          registered_agent_name: string
+          registered_agent_phone: string
+          state: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          formation_date: string
+          id?: string
+          independent_director_email?: string | null
+          independent_director_fee?: number | null
+          independent_director_fee_due_date?: string | null
+          independent_director_name?: string | null
+          independent_director_phone?: string | null
+          name: string
+          registered_agent_email: string
+          registered_agent_fee: number
+          registered_agent_fee_due_date?: string | null
+          registered_agent_name: string
+          registered_agent_phone: string
+          state: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          formation_date?: string
+          id?: string
+          independent_director_email?: string | null
+          independent_director_fee?: number | null
+          independent_director_fee_due_date?: string | null
+          independent_director_name?: string | null
+          independent_director_phone?: string | null
+          name?: string
+          registered_agent_email?: string
+          registered_agent_fee?: number
+          registered_agent_fee_due_date?: string | null
+          registered_agent_name?: string
+          registered_agent_phone?: string
+          state?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          timestamp: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          timestamp: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          timestamp?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          is_default: boolean
+          name: string
+          routing_number: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          is_default?: boolean
+          name: string
+          routing_number?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          is_default?: boolean
+          name?: string
+          routing_number?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          entity_name: string
+          id: string
+          paid_date: string | null
+          payment_method: string | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          entity_name: string
+          id?: string
+          paid_date?: string | null
+          payment_method?: string | null
+          status: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          entity_name?: string
+          id?: string
+          paid_date?: string | null
+          payment_method?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null

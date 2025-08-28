@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface EntityListProps {
   entities: Entity[];
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }
 
 export const EntityList: React.FC<EntityListProps> = ({ entities, onDelete }) => {
@@ -67,44 +67,44 @@ export const EntityList: React.FC<EntityListProps> = ({ entities, onDelete }) =>
                   <div className="rounded-lg bg-primary-muted p-4 border border-primary/10">
                     <h4 className="font-medium text-primary mb-2">Registered Agent</h4>
                     <div className="space-y-1 text-sm">
-                      <div className="font-medium">{entity.registeredAgent.name}</div>
+                      <div className="font-medium">{entity.registered_agent_name}</div>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Mail className="h-3 w-3" />
-                        {entity.registeredAgent.email}
+                        {entity.registered_agent_email}
                       </div>
                       <div className="flex items-center gap-1 text-muted-foreground">
                         <Phone className="h-3 w-3" />
-                        {entity.registeredAgent.phone}
+                        {entity.registered_agent_phone}
                       </div>
                       <div className="font-semibold text-success">
-                        ${entity.registeredAgent.fee}/year
+                        ${entity.registered_agent_fee}/year
                       </div>
                     </div>
                   </div>
 
                   {/* Independent Director (Delaware) */}
-                  {entity.state === 'DE' && entity.independentDirector.name && (
+                  {entity.state === 'DE' && entity.independent_director_name && (
                     <div className="rounded-lg bg-info-muted p-4 border border-info/10">
                       <h4 className="font-medium text-info mb-2">Independent Director</h4>
                       <div className="space-y-1 text-sm">
-                        <div className="font-medium">{entity.independentDirector.name}</div>
+                        <div className="font-medium">{entity.independent_director_name}</div>
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Mail className="h-3 w-3" />
-                          {entity.independentDirector.email}
+                          {entity.independent_director_email}
                         </div>
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Phone className="h-3 w-3" />
-                          {entity.independentDirector.phone}
+                          {entity.independent_director_phone}
                         </div>
                         <div className="font-semibold text-success">
-                          ${entity.independentDirector.fee}/year
+                          ${entity.independent_director_fee}/year
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* Entity Fee Info */}
-                  {(!entity.independentDirector.name || entity.state !== 'DE') && (
+                  {(!entity.independent_director_name || entity.state !== 'DE') && (
                     <div className="rounded-lg bg-success-muted p-4 border border-success/10">
                       <h4 className="font-medium text-success mb-2">Annual Entity Fee</h4>
                       <div className="text-2xl font-bold text-success">

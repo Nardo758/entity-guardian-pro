@@ -111,7 +111,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                   </tr>
 
                   {/* Registered Agent Fee */}
-                  {entity.registeredAgent.fee > 0 && (
+                  {entity.registered_agent_fee > 0 && (
                     <tr className={entityIndex % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
                       <td className="border border-border p-3 font-medium">
                         {entity.name} - Registered Agent
@@ -120,7 +120,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                         <td key={monthIndex} className="border border-border p-2 text-center">
                           {monthIndex === 0 ? (
                             <div className="text-xs font-medium text-primary px-1 py-0.5 bg-primary-muted rounded">
-                              ${entity.registeredAgent.fee}
+                              ${entity.registered_agent_fee}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -128,13 +128,13 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                         </td>
                       ))}
                       <td className="border border-border p-3 text-center font-semibold text-primary">
-                        ${entity.registeredAgent.fee}
+                        ${entity.registered_agent_fee}
                       </td>
                     </tr>
                   )}
 
                   {/* Independent Director Fee */}
-                  {entity.state === 'DE' && entity.independentDirector.fee > 0 && (
+                  {entity.state === 'DE' && entity.independent_director_fee && entity.independent_director_fee > 0 && (
                     <tr className={entityIndex % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
                       <td className="border border-border p-3 font-medium">
                         {entity.name} - Independent Director
@@ -143,7 +143,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                         <td key={monthIndex} className="border border-border p-2 text-center">
                           {monthIndex === 0 ? (
                             <div className="text-xs font-medium text-info px-1 py-0.5 bg-info-muted rounded">
-                              ${entity.independentDirector.fee}
+                              ${entity.independent_director_fee}
                             </div>
                           ) : (
                             <span className="text-muted-foreground">-</span>
@@ -151,7 +151,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                         </td>
                       ))}
                       <td className="border border-border p-3 text-center font-semibold text-info">
-                        ${entity.independentDirector.fee}
+                        ${entity.independent_director_fee}
                       </td>
                     </tr>
                   )}

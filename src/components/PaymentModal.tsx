@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Payment, PaymentMethod } from '@/types/entity';
+import { usePayments } from '@/hooks/usePayments';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -26,10 +27,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   paymentMethods
 }) => {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const { updatePaymentStatus } = usePayments();
 
   const getPaymentStatus = (payment: Payment) => {
     const today = new Date();
-    const dueDate = new Date(payment.dueDate);
+    const dueDate = new Date(payment.due_date);
 
     if (payment.status === 'paid') {
       return { 
@@ -58,12 +60,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  const processPayment = (paymentId: number, paymentMethodId: number) => {
+  const processPayment = async (paymentId: string, paymentMethodId: string) => {
     const paymentMethod = paymentMethods.find(pm => pm.id === paymentMethodId);
     if (paymentMethod) {
-      // In a real app, this would process the payment
-      alert(`Payment processed successfully via ${paymentMethod.name}`);
-      setSelectedPayment(null);
+      try {
+        await updatePaymentStatus(paymentId, 'paid', paymentMethodId);
+        setSelectedPayment(null);
+      } catch (error) {
+        // Error handling is done in the hook
+      }
     }
   };
 
@@ -132,13 +137,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                           <div className="font-medium">{method.name}</div>
                           <div className="text-xs text-muted-foreground">
                             {method.type === 'credit_card' 
-                              ? `Expires ${method.expiryDate}` 
-                              : `Routing ${method.routingNumber}`
+                              ? `Expires ${method.expiry_date}` 
+                              : `Routing ${method.routing_number}`
                             }
                           </div>
                         </div>
                       </div>
-                      {method.isDefault && (
+                      {method.is_default && (
                         <Badge variant="secondary">Default</Badge>
                       )}
                     </div>
@@ -165,16 +170,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h5 className="font-medium">{payment.entityName}</h5>
+                              <h5 className="font-medium">{payment.entity_name}</h5>
                               <span className="text-sm text-muted-foreground">- {payment.type}</span>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              Due: {new Date(payment.dueDate).toLocaleDateString()} • ${payment.amount.toLocaleString()}
+                              Due: {new Date(payment.due_date).toLocaleDateString()} • ${payment.amount.toLocaleString()}
                             </div>
-                            {payment.paymentMethod && (
+                            {payment.payment_method && (
                               <div className="text-xs text-muted-foreground mt-1">
-                                {payment.status === 'paid' ? 'Paid' : 'Scheduled'} via {payment.paymentMethod}
-                                {payment.paidDate && ` on ${new Date(payment.paidDate).toLocaleDateString()}`}
+                                {payment.status === 'paid' ? 'Paid' : 'Scheduled'} via {payment.payment_method}
+                                {payment.paid_date && ` on ${new Date(payment.paid_date).toLocaleDateString()}`}
                               </div>
                             )}
                           </div>
@@ -222,7 +227,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="space-y-4">
               <Card className="bg-muted">
                 <CardContent className="p-4">
-                  <div className="font-medium">{selectedPayment.entityName}</div>
+                  <div className="font-medium">{selectedPayment.entity_name}</div>
                   <div className="text-sm text-muted-foreground">{selectedPayment.type}</div>
                   <div className="text-lg font-bold text-success">
                     ${selectedPayment.amount.toLocaleString()}
@@ -232,14 +237,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Payment Method:</label>
-                <Select defaultValue={paymentMethods.find(pm => pm.isDefault)?.id.toString()}>
+                <Select defaultValue={paymentMethods.find(pm => pm.is_default)?.id.toString()}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {paymentMethods.map(method => (
                       <SelectItem key={method.id} value={method.id.toString()}>
-                        {method.name} {method.isDefault ? '(Default)' : ''}
+                        {method.name} {method.is_default ? '(Default)' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -249,7 +254,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <div className="flex gap-2">
                 <Button
                   onClick={() => {
-                    const paymentMethodId = paymentMethods.find(pm => pm.isDefault)?.id || paymentMethods[0]?.id;
+                    const paymentMethodId = paymentMethods.find(pm => pm.is_default)?.id || paymentMethods[0]?.id;
                     if (paymentMethodId) {
                       processPayment(selectedPayment.id, paymentMethodId);
                     }
