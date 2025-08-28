@@ -234,6 +234,7 @@ export type Database = {
           registered_agent_name: string
           registered_agent_phone: string
           state: string
+          team_id: string | null
           type: string
           updated_at: string
           user_id: string
@@ -254,6 +255,7 @@ export type Database = {
           registered_agent_name: string
           registered_agent_phone: string
           state: string
+          team_id?: string | null
           type: string
           updated_at?: string
           user_id: string
@@ -274,7 +276,38 @@ export type Database = {
           registered_agent_name?: string
           registered_agent_phone?: string
           state?: string
+          team_id?: string | null
           type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean | null
+          id: string
+          notification_types: string[] | null
+          reminder_days_before: number[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          notification_types?: string[] | null
+          reminder_days_before?: number[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          notification_types?: string[] | null
+          reminder_days_before?: number[] | null
           updated_at?: string
           user_id?: string
         }
@@ -283,9 +316,16 @@ export type Database = {
       notifications: {
         Row: {
           created_at: string
+          email_sent: boolean | null
+          entity_id: string | null
           id: string
           message: string
+          metadata: Json | null
+          notification_type: string | null
           read: boolean
+          retry_count: number | null
+          scheduled_for: string | null
+          sent_at: string | null
           timestamp: string
           title: string
           type: string
@@ -294,9 +334,16 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email_sent?: boolean | null
+          entity_id?: string | null
           id?: string
           message: string
+          metadata?: Json | null
+          notification_type?: string | null
           read?: boolean
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
           timestamp: string
           title: string
           type: string
@@ -305,9 +352,16 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email_sent?: boolean | null
+          entity_id?: string | null
           id?: string
           message?: string
+          metadata?: Json | null
+          notification_type?: string | null
           read?: boolean
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
           timestamp?: string
           title?: string
           type?: string
@@ -430,15 +484,222 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          error_message: string | null
+          id: string
+          max_retries: number | null
+          message: string
+          metadata: Json | null
+          notification_type: string
+          processed: boolean | null
+          processed_at: string | null
+          retry_count: number | null
+          scheduled_for: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          message: string
+          metadata?: Json | null
+          notification_type: string
+          processed?: boolean | null
+          processed_at?: string | null
+          retry_count?: number | null
+          scheduled_for: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          message?: string
+          metadata?: Json | null
+          notification_type?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          retry_count?: number | null
+          scheduled_for?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role?: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["team_role"]
+          team_id?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_memberships: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string | null
+          joined_at: string
+          role: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          role?: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          role?: Database["public"]["Enums"]["team_role"]
+          team_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invitation_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_team_role: {
+        Args: { team_uuid: string; user_uuid: string }
+        Returns: Database["public"]["Enums"]["team_role"]
+      }
+      user_has_team_permission: {
+        Args: {
+          required_role: Database["public"]["Enums"]["team_role"]
+          team_uuid: string
+          user_uuid: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      team_role: "owner" | "admin" | "manager" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -565,6 +826,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      team_role: ["owner", "admin", "manager", "member"],
+    },
   },
 } as const
