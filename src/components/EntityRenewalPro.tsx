@@ -8,6 +8,7 @@ import { EntityForm } from './EntityForm';
 import { PaymentModal } from './PaymentModal';
 import { ScheduleModal } from './ScheduleModal';
 import { NotificationBanner } from './NotificationBanner';
+import { EnhancedNotificationBanner } from './EnhancedNotificationBanner';
 import { UserAccount } from './UserAccount';
 import { useEntities } from '@/hooks/useEntities';
 import { usePayments } from '@/hooks/usePayments';
@@ -96,17 +97,7 @@ const EntityRenewalPro = () => {
             </div>
 
             <div className="flex items-center gap-6">
-              <div className="relative">
-                <Button variant="ghost" size="sm" className="relative hover:bg-primary/10 transition-all duration-300">
-                  <Bell className="h-5 w-5" />
-                   {notifications.filter(n => !n.read).length > 0 && (
-                     <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs font-medium text-white animate-pulse">
-                       {notifications.filter(n => !n.read).length}
-                     </span>
-                   )}
-                </Button>
-              </div>
-
+              <EnhancedNotificationBanner />
               <UserAccount />
 
               <div className="flex gap-3">

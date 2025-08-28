@@ -48,11 +48,46 @@ export interface PaymentMethod {
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'payment_due' | 'renewal_reminder';
+  entity_id?: string;
+  type: 'payment_due' | 'renewal_reminder' | 'compliance_check';
+  notification_type: 'in_app' | 'email' | 'both';
   title: string;
   message: string;
   timestamp: string;
   read: boolean;
+  scheduled_for?: string;
+  sent_at?: string;
+  email_sent: boolean;
+  retry_count: number;
+  metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NotificationPreferences {
+  id: string;
+  user_id: string;
+  email_notifications: boolean;
+  reminder_days_before: number[];
+  notification_types: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScheduledNotification {
+  id: string;
+  user_id: string;
+  entity_id?: string;
+  notification_type: string;
+  title: string;
+  message: string;
+  scheduled_for: string;
+  processed: boolean;
+  processed_at?: string;
+  error_message?: string;
+  retry_count: number;
+  max_retries: number;
+  metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
