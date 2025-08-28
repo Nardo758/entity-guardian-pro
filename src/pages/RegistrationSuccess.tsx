@@ -11,13 +11,13 @@ const RegistrationSuccess = () => {
   
   const { email, plan, signInUrl } = location.state || {};
 
-  const handleSignIn = () => {
-    if (signInUrl) {
-      window.location.href = signInUrl;
-    } else {
-      navigate('/login');
-    }
-  };
+      const handleSignIn = () => {
+        if (signInUrl) {
+          window.location.href = signInUrl;
+        } else {
+          navigate('/dashboard');
+        }
+      };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-4">

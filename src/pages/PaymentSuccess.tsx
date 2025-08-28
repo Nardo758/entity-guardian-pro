@@ -25,9 +25,9 @@ const PaymentSuccess = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleGoToDashboard = () => {
-    navigate('/');
-  };
+      const handleGoToDashboard = () => {
+        navigate('/dashboard');
+      };
 
   const handleViewBilling = () => {
     navigate('/billing');

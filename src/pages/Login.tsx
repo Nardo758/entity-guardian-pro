@@ -21,10 +21,9 @@ const Login = () => {
     rememberMe: false
   });
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [user, loading, navigate]);
 
@@ -47,7 +46,7 @@ const Login = () => {
           description: "You have been successfully signed in.",
         });
         // Force page reload for clean state
-        window.location.href = "/";
+        window.location.href = "/dashboard";
       }
     } catch (error: any) {
       toast({

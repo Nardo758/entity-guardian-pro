@@ -28,10 +28,9 @@ const Register = () => {
     agreeToTerms: false
   });
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [user, loading, navigate]);
 
