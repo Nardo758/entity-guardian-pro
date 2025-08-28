@@ -36,7 +36,13 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.formation_date && formData.registered_agent_name) {
-      onSubmit(formData);
+      // Clean up the data before submitting - convert empty strings to null for optional date fields
+      const cleanedData = {
+        ...formData,
+        registered_agent_fee_due_date: formData.registered_agent_fee_due_date || null,
+        independent_director_fee_due_date: formData.independent_director_fee_due_date || null,
+      };
+      onSubmit(cleanedData);
     }
   };
 
