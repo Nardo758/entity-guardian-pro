@@ -29,6 +29,10 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
     independent_director_fee_due_date: ''
   });
 
+  // Track display values for fee inputs
+  const [agentFeeDisplay, setAgentFeeDisplay] = useState('');
+  const [directorFeeDisplay, setDirectorFeeDisplay] = useState('');
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.formation_date && formData.registered_agent_name) {
@@ -37,6 +41,10 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
   };
 
   const updateRegisteredAgentFee = (value: string) => {
+    // Allow user to type naturally
+    setAgentFeeDisplay(value);
+    
+    // Clean and convert to number for form data
     const cleanValue = value.replace(/[^0-9.]/g, '');
     const numValue = parseFloat(cleanValue) || 0;
     setFormData({
@@ -46,12 +54,30 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
   };
 
   const updateDirectorFee = (value: string) => {
+    // Allow user to type naturally
+    setDirectorFeeDisplay(value);
+    
+    // Clean and convert to number for form data
     const cleanValue = value.replace(/[^0-9.]/g, '');
     const numValue = parseFloat(cleanValue) || 0;
     setFormData({
       ...formData,
       independent_director_fee: numValue
     });
+  };
+
+  const handleAgentFeeBlur = () => {
+    // Format display value on blur
+    if (formData.registered_agent_fee > 0) {
+      setAgentFeeDisplay(formData.registered_agent_fee.toFixed(2));
+    }
+  };
+
+  const handleDirectorFeeBlur = () => {
+    // Format display value on blur
+    if (formData.independent_director_fee > 0) {
+      setDirectorFeeDisplay(formData.independent_director_fee.toFixed(2));
+    }
   };
 
   const isDelawareEntity = formData.state === 'DE';
@@ -173,8 +199,9 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
                   <Input
                     id="agentFee"
                     type="text"
-                    value={formData.registered_agent_fee > 0 ? formData.registered_agent_fee.toFixed(2) : ''}
+                    value={agentFeeDisplay}
                     onChange={(e) => updateRegisteredAgentFee(e.target.value)}
+                    onBlur={handleAgentFeeBlur}
                     placeholder="150.00"
                     className="pl-8"
                   />
@@ -262,8 +289,9 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
                       <Input
                         id="directorFee"
                         type="text"
-                        value={formData.independent_director_fee > 0 ? formData.independent_director_fee.toFixed(2) : ''}
+                        value={directorFeeDisplay}
                         onChange={(e) => updateDirectorFee(e.target.value)}
+                        onBlur={handleDirectorFeeBlur}
                         placeholder="2500.00"
                         className="pl-8"
                       />
