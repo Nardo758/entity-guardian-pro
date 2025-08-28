@@ -232,10 +232,10 @@ const Login = () => {
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link 
-                  to="/register" 
+                  to="/paid-register" 
                   className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  Sign up for free
+                  Start your free trial
                 </Link>
               </p>
             </div>

@@ -384,10 +384,10 @@ const Register = () => {
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link 
-                  to="/login" 
+                  to="/paid-register" 
                   className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  Sign in here
+                  Start Free Trial
                 </Link>
               </p>
             </div>

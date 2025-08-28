@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
+import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
 
 interface Invoice {
   id: string;
@@ -186,9 +187,10 @@ const Billing = () => {
       <div className="container mx-auto px-6 py-8">
         <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="plans">Plans</TabsTrigger>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="payment-methods">Payment Methods</TabsTrigger>
               <TabsTrigger value="invoices">Invoices</TabsTrigger>
               <TabsTrigger value="usage">Usage</TabsTrigger>
             </TabsList>
@@ -409,6 +411,10 @@ const Billing = () => {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="payment-methods" className="space-y-6">
+              <PaymentMethodManager />
             </TabsContent>
 
             <TabsContent value="usage" className="space-y-6">

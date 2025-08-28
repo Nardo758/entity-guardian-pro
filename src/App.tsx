@@ -7,8 +7,11 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Pages
 import Index from "./pages/Index";
-import Login from "./pages/Login";
+import Login from "./pages/Login"; 
 import Register from "./pages/Register";
+import PaidRegister from "./pages/PaidRegister";
+import RegistrationSuccess from "./pages/RegistrationSuccess";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import Settings from "./pages/Settings";
 import Reports from "./pages/Reports";
 import TeamManagement from "./pages/TeamManagement";
@@ -38,6 +41,9 @@ const App = () => (
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/paid-register" element={<PaidRegister />} />
+            <Route path="/registration-success" element={<RegistrationSuccess />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
