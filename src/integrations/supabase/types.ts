@@ -280,12 +280,49 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_notifications: boolean | null
+          id: string
+          notification_types: string[] | null
+          reminder_days_before: number[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          notification_types?: string[] | null
+          reminder_days_before?: number[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          notification_types?: string[] | null
+          reminder_days_before?: number[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
+          email_sent: boolean | null
+          entity_id: string | null
           id: string
           message: string
+          metadata: Json | null
+          notification_type: string | null
           read: boolean
+          retry_count: number | null
+          scheduled_for: string | null
+          sent_at: string | null
           timestamp: string
           title: string
           type: string
@@ -294,9 +331,16 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email_sent?: boolean | null
+          entity_id?: string | null
           id?: string
           message: string
+          metadata?: Json | null
+          notification_type?: string | null
           read?: boolean
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
           timestamp: string
           title: string
           type: string
@@ -305,9 +349,16 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email_sent?: boolean | null
+          entity_id?: string | null
           id?: string
           message?: string
+          metadata?: Json | null
+          notification_type?: string | null
           read?: boolean
+          retry_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
           timestamp?: string
           title?: string
           type?: string
@@ -426,6 +477,60 @@ export type Database = {
           last_name?: string | null
           plan?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scheduled_notifications: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          error_message: string | null
+          id: string
+          max_retries: number | null
+          message: string
+          metadata: Json | null
+          notification_type: string
+          processed: boolean | null
+          processed_at: string | null
+          retry_count: number | null
+          scheduled_for: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          message: string
+          metadata?: Json | null
+          notification_type: string
+          processed?: boolean | null
+          processed_at?: string | null
+          retry_count?: number | null
+          scheduled_for: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          error_message?: string | null
+          id?: string
+          max_retries?: number | null
+          message?: string
+          metadata?: Json | null
+          notification_type?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          retry_count?: number | null
+          scheduled_for?: string
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
