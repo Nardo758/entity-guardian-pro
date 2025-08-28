@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Entity } from '@/types/entity';
 import { useAuth } from '@/contexts/AuthContext';
@@ -130,7 +130,7 @@ export const useEntities = () => {
     };
   }, [user]);
 
-  const getEntity = async (id: string) => {
+  const getEntity = useCallback(async (id: string) => {
     if (!user) return null;
 
     try {
@@ -147,7 +147,7 @@ export const useEntities = () => {
       console.error('Error fetching entity:', error);
       return null;
     }
-  };
+  }, [user]);
 
   return {
     entities,
