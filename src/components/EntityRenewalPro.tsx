@@ -14,16 +14,19 @@ import { useEntities } from '@/hooks/useEntities';
 import { usePayments } from '@/hooks/usePayments';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useTeams } from '@/hooks/useTeams';
 import { stateRequirements } from '@/lib/state-requirements';
+import { TeamSwitcher } from './TeamSwitcher';
+import { TeamAwareEntityList } from './TeamAwareEntityList';
 
 const EntityRenewalPro = () => {
   const navigate = useNavigate();
   
-  // Use hooks for data management
   const { entities, addEntity, deleteEntity } = useEntities();
   const { payments } = usePayments();
   const { paymentMethods } = usePaymentMethods();
   const { notifications, markAsRead } = useNotifications();
+  const { currentTeam } = useTeams();
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [showScheduleView, setShowScheduleView] = useState(false);
@@ -39,7 +42,12 @@ const EntityRenewalPro = () => {
 
   const handleAddEntity = async (entityData: any) => {
     try {
-      await addEntity(entityData);
+      // Add team_id if we're in a team context
+      const entityWithTeam = {
+        ...entityData,
+        team_id: currentTeam?.id || null
+      };
+      await addEntity(entityWithTeam);
       setShowAddForm(false);
     } catch (error) {
       // Error is already handled in the hook
@@ -97,6 +105,7 @@ const EntityRenewalPro = () => {
             </div>
 
             <div className="flex items-center gap-6">
+              <TeamSwitcher />
               <EnhancedNotificationBanner />
               <UserAccount />
 
@@ -170,7 +179,7 @@ const EntityRenewalPro = () => {
 
         {/* Enhanced Entity List */}
         <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <EntityList 
+          <TeamAwareEntityList 
             entities={entities}
             onDelete={handleDeleteEntity}
           />

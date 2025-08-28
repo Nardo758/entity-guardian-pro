@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.notification-scheduler]
 verify_jwt = false
+
+[functions.send-team-invitation]
+verify_jwt = true
+
+[functions.accept-team-invitation]
+verify_jwt = false
