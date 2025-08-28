@@ -14,6 +14,156 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_data: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          metric_date: string
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_date: string
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_date?: string
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_data_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_checks: {
+        Row: {
+          check_name: string
+          check_type: string
+          completion_date: string | null
+          created_at: string
+          due_date: string | null
+          entity_id: string | null
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_name: string
+          check_type: string
+          completion_date?: string | null
+          created_at?: string
+          due_date?: string | null
+          entity_id?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_name?: string
+          check_type?: string
+          completion_date?: string | null
+          created_at?: string
+          due_date?: string | null
+          entity_id?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_checks_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cost_projections: {
+        Row: {
+          actual_amount: number | null
+          created_at: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          projected_amount: number
+          projection_date: string
+          projection_name: string
+          projection_type: string
+          updated_at: string
+          user_id: string
+          variance: number | null
+        }
+        Insert: {
+          actual_amount?: number | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          projected_amount: number
+          projection_date: string
+          projection_name: string
+          projection_type: string
+          updated_at?: string
+          user_id: string
+          variance?: number | null
+        }
+        Update: {
+          actual_amount?: number | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          projected_amount?: number
+          projection_date?: string
+          projection_name?: string
+          projection_type?: string
+          updated_at?: string
+          user_id?: string
+          variance?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cost_projections_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string

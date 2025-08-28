@@ -72,6 +72,48 @@ export interface Document {
   updated_at: string;
 }
 
+export interface AnalyticsData {
+  id: string;
+  user_id: string;
+  entity_id?: string;
+  metric_type: string;
+  metric_name: string;
+  metric_value: number;
+  metric_date: string;
+  metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ComplianceCheck {
+  id: string;
+  user_id: string;
+  entity_id?: string;
+  check_type: string;
+  check_name: string;
+  status: 'pending' | 'completed' | 'overdue' | 'failed';
+  due_date?: string;
+  completion_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CostProjection {
+  id: string;
+  user_id: string;
+  entity_id?: string;
+  projection_type: string;
+  projection_name: string;
+  projected_amount: number;
+  projection_date: string;
+  actual_amount?: number;
+  variance?: number;
+  metadata: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserAccount {
   id: string;
   name: string;

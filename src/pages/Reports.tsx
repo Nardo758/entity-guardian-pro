@@ -17,10 +17,16 @@ import {
   Clock,
   BarChart3,
   PieChart,
-  Filter
+  Filter,
+  ExternalLink
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { useEntities } from "@/hooks/useEntities";
+import { usePayments } from "@/hooks/usePayments";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { MetricsChart } from "@/components/charts/MetricsChart";
+import { ComplianceChart } from "@/components/charts/ComplianceChart";
 
 // Mock data for reports
 const mockReportData = {
@@ -64,6 +70,41 @@ const Reports = () => {
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState("6months");
   const [selectedEntityFilter, setSelectedEntityFilter] = useState("all");
+  
+  // Fetch real data
+  const { entities, loading: entitiesLoading } = useEntities();
+  const { payments, loading: paymentsLoading } = usePayments();
+  const { 
+    analyticsData, 
+    complianceChecks, 
+    costProjections, 
+    loading: analyticsLoading 
+  } = useAnalytics();
+
+  const loading = entitiesLoading || paymentsLoading || analyticsLoading;
+
+  // Calculate real metrics
+  const totalEntities = entities.length;
+  const activeEntities = entities.length; // Assuming all are active for now
+  const pendingPayments = payments.filter(p => p.status === 'pending').length;
+  const overduePayments = payments.filter(p => {
+    const dueDate = new Date(p.due_date);
+    return p.status === 'pending' && dueDate < new Date();
+  }).length;
+  const totalAnnualFees = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const upcomingPayments = payments
+    .filter(p => {
+      const dueDate = new Date(p.due_date);
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      return p.status === 'pending' && dueDate <= thirtyDaysFromNow;
+    })
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  const completedCompliance = complianceChecks.filter(c => c.status === 'completed').length;
+  const complianceRate = complianceChecks.length > 0 
+    ? Math.round((completedCompliance / complianceChecks.length) * 100) 
+    : 0;
 
   const handleExportReport = (reportType: string) => {
     toast({
@@ -86,6 +127,16 @@ const Reports = () => {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Loading reports...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
@@ -111,6 +162,15 @@ const Reports = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/analytics")}
+              className="gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Advanced Analytics
+              <ExternalLink className="h-3 w-3" />
+            </Button>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
               <SelectTrigger className="w-40">
                 <SelectValue />
@@ -137,10 +197,10 @@ const Reports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Entities</p>
-                  <p className="text-2xl font-bold">{mockReportData.overview.totalEntities}</p>
+                  <p className="text-2xl font-bold">{totalEntities}</p>
                   <p className="text-xs text-success flex items-center mt-1">
                     <TrendingUp className="h-3 w-3 mr-1" />
-                    +2 this month
+                    Active portfolio
                   </p>
                 </div>
                 <div className="p-3 rounded-full bg-primary/10">
@@ -155,10 +215,10 @@ const Reports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Active Entities</p>
-                  <p className="text-2xl font-bold">{mockReportData.overview.activeEntities}</p>
+                  <p className="text-2xl font-bold">{activeEntities}</p>
                   <p className="text-xs text-success flex items-center mt-1">
                     <CheckCircle className="h-3 w-3 mr-1" />
-                    83% compliance rate
+                    {complianceRate}% compliance rate
                   </p>
                 </div>
                 <div className="p-3 rounded-full bg-success/10">
@@ -172,11 +232,11 @@ const Reports = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pending Renewals</p>
-                  <p className="text-2xl font-bold">{mockReportData.overview.pendingRenewals}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Pending Payments</p>
+                  <p className="text-2xl font-bold">{pendingPayments}</p>
                   <p className="text-xs text-warning flex items-center mt-1">
                     <Clock className="h-3 w-3 mr-1" />
-                    Next due in 45 days
+                    {overduePayments} overdue
                   </p>
                 </div>
                 <div className="p-3 rounded-full bg-warning/10">
@@ -191,10 +251,10 @@ const Reports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Annual Fees</p>
-                  <p className="text-2xl font-bold">${mockReportData.overview.totalAnnualFees.toLocaleString()}</p>
-                  <p className="text-xs text-destructive flex items-center mt-1">
+                  <p className="text-2xl font-bold">${totalAnnualFees.toLocaleString()}</p>
+                  <p className="text-xs text-primary flex items-center mt-1">
                     <TrendingUp className="h-3 w-3 mr-1" />
-                    +$450 pending
+                    ${upcomingPayments.toLocaleString()} upcoming
                   </p>
                 </div>
                 <div className="p-3 rounded-full bg-primary/10">
@@ -208,9 +268,9 @@ const Reports = () => {
         {/* Main Content Tabs */}
         <Tabs defaultValue="renewals" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="renewals">Renewal Schedule</TabsTrigger>
+            <TabsTrigger value="renewals">Payment Schedule</TabsTrigger>
             <TabsTrigger value="compliance">Compliance Status</TabsTrigger>
-            <TabsTrigger value="expenses">Expense Analysis</TabsTrigger>
+            <TabsTrigger value="charts">Visual Analytics</TabsTrigger>
             <TabsTrigger value="insights">Insights</TabsTrigger>
           </TabsList>
 
@@ -220,37 +280,56 @@ const Reports = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Calendar className="h-5 w-5" />
-                    Upcoming Renewals
+                    Upcoming Payments
                   </CardTitle>
-                  <CardDescription>Entities requiring renewal attention</CardDescription>
+                  <CardDescription>Payments requiring attention</CardDescription>
                 </div>
-                <Button variant="outline" onClick={() => handleExportReport("renewals")}>
+                <Button variant="outline" onClick={() => handleExportReport("payments")}>
                   <Download className="h-4 w-4 mr-2" />
                   Export
                 </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockReportData.renewals.map((renewal, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{renewal.entity}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Due: {new Date(renewal.dueDate).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm">
-                          {renewal.daysLeft > 0 
-                            ? `${renewal.daysLeft} days remaining` 
-                            : `${Math.abs(renewal.daysLeft)} days overdue`
-                          }
-                        </p>
-                      </div>
-                      <div className="text-right space-y-2">
-                        <p className="font-semibold">${renewal.amount}</p>
-                        {getStatusBadge(renewal.status)}
-                      </div>
+                  {payments.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No payments found</p>
                     </div>
-                  ))}
+                  ) : (
+                    payments
+                      .filter(payment => payment.status === 'pending')
+                      .slice(0, 10)
+                      .map((payment) => {
+                        const dueDate = new Date(payment.due_date);
+                        const today = new Date();
+                        const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        const isOverdue = daysUntilDue < 0;
+                        
+                        return (
+                          <div key={payment.id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{payment.entity_name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {payment.type} • Due: {dueDate.toLocaleDateString()}
+                              </p>
+                              <p className="text-sm">
+                                {isOverdue 
+                                  ? `${Math.abs(daysUntilDue)} days overdue` 
+                                  : `${daysUntilDue} days remaining`
+                                }
+                              </p>
+                            </div>
+                            <div className="text-right space-y-2">
+                              <p className="font-semibold">${payment.amount}</p>
+                              <Badge variant={isOverdue ? 'destructive' : 'secondary'}>
+                                {isOverdue ? '⚠ overdue' : '⏳ pending'}
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -264,7 +343,7 @@ const Reports = () => {
                     <CheckCircle className="h-5 w-5" />
                     Compliance Overview
                   </CardTitle>
-                  <CardDescription>Track filing status and regulatory compliance</CardDescription>
+                  <CardDescription>Track compliance status and requirements</CardDescription>
                 </div>
                 <Button variant="outline" onClick={() => handleExportReport("compliance")}>
                   <Download className="h-4 w-4 mr-2" />
@@ -273,23 +352,56 @@ const Reports = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockReportData.compliance.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{item.entity}</h4>
-                        <p className="text-sm text-muted-foreground">{item.type}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Date: {new Date(item.date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        {getStatusBadge(item.status)}
-                      </div>
+                  {complianceChecks.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No compliance checks found</p>
                     </div>
-                  ))}
+                  ) : (
+                    complianceChecks.slice(0, 10).map((item) => (
+                      <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{item.check_name}</h4>
+                          <p className="text-sm text-muted-foreground">{item.check_type}</p>
+                          {item.due_date && (
+                            <p className="text-sm text-muted-foreground">
+                              Due: {new Date(item.due_date).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          {getStatusBadge(item.status)}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="charts" className="space-y-6">
+            <div className="grid gap-6">
+              {analyticsData.length > 0 && (
+                <MetricsChart analyticsData={analyticsData} />
+              )}
+              
+              {complianceChecks.length > 0 && (
+                <ComplianceChart complianceChecks={complianceChecks} />
+              )}
+              
+              {(analyticsData.length === 0 && complianceChecks.length === 0) && (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center py-8 text-muted-foreground">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No chart data available yet</p>
+                      <p className="text-sm mt-2">Analytics data will appear here as you use the system</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="expenses" className="space-y-6">
