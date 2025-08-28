@@ -233,8 +233,11 @@ const EntityDetails = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="officers">Officers</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
           </TabsList>
 
@@ -351,6 +354,133 @@ const EntityDetails = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="officers" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Officers & Directors
+                </CardTitle>
+                <CardDescription>Current officers and their appointment dates</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Mock officers data - replace with real data when available */}
+                  {[
+                    { name: "John Smith", title: "CEO", appointed: "2020-03-15" },
+                    { name: "Sarah Johnson", title: "CFO", appointed: "2021-01-10" },
+                    { name: "Michael Chen", title: "Secretary", appointed: "2020-03-15" }
+                  ].map((officer, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-semibold">{officer.name}</p>
+                        <p className="text-sm text-muted-foreground">{officer.title}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">Appointed</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(officer.appointed).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  <Button variant="outline" className="w-full">
+                    <Users className="h-4 w-4 mr-2" />
+                    Add Officer
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Entity Documents
+                </CardTitle>
+                <CardDescription>Important documents and filings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {/* Mock documents data - replace with real data when available */}
+                  {[
+                    { name: "Certificate of Incorporation", date: entity?.formation_date || "2020-03-15", type: "Certificate" },
+                    { name: "Operating Agreement", date: entity?.formation_date || "2020-03-20", type: "Agreement" },
+                    { name: "Annual Report 2024", date: "2024-03-15", type: "Filing" },
+                    { name: "Good Standing Certificate", date: "2024-01-01", type: "Certificate" }
+                  ].map((doc, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded bg-primary/10">
+                          <FileText className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{doc.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {doc.type} • {new Date(doc.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" className="w-full">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Upload Document
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="compliance" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Compliance Status
+                </CardTitle>
+                <CardDescription>Current compliance status and requirements</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Mock compliance data - replace with real data when available */}
+                  {[
+                    { name: "Annual Report Filed", status: true, description: "Due annually" },
+                    { name: "Taxes Current", status: true, description: "Filed quarterly" },
+                    { name: "Licenses Valid", status: false, description: "Renewal required" },
+                    { name: "Insurance Current", status: true, description: "Policy active" }
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {item.status ? (
+                          <CheckCircle className="h-5 w-5 text-success" />
+                        ) : (
+                          <AlertTriangle className="h-5 w-5 text-warning" />
+                        )}
+                        <div>
+                          <span className="font-medium">{item.name}</span>
+                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                        </div>
+                      </div>
+                      <Badge variant={item.status ? "default" : "secondary"}>
+                        {item.status ? "Current" : "Action Required"}
+                      </Badge>
+                    </div>
+                  ))}
+                  <Button variant="outline" className="w-full">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Update Compliance
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="financials" className="space-y-6">
