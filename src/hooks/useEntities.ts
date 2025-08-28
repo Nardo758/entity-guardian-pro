@@ -24,7 +24,7 @@ export const useEntities = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setEntities((data || []) as Entity[]);
+      setEntities((data || []).map(entity => ({...entity, type: entity.type as Entity['type']})) as Entity[]);
     } catch (error) {
       console.error('Error fetching entities:', error);
       toast.error('Failed to load entities');
@@ -48,12 +48,38 @@ export const useEntities = () => {
 
       if (error) throw error;
 
-      setEntities(prev => [data as Entity, ...prev]);
+      setEntities(prev => [{ ...data, type: data.type as Entity['type'] } as Entity, ...prev]);
       toast.success('Entity added successfully');
-      return data;
+      return { ...data, type: data.type as Entity['type'] } as Entity;
     } catch (error) {
       console.error('Error adding entity:', error);
       toast.error('Failed to add entity');
+      throw error;
+    }
+  };
+
+  const updateEntity = async (id: string, entityData: Partial<Omit<Entity, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('entities')
+        .update(entityData)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setEntities(prev => prev.map(entity => 
+        entity.id === id ? { ...data, type: data.type as Entity['type'] } as Entity : entity
+      ));
+      toast.success('Entity updated successfully');
+      return { ...data, type: data.type as Entity['type'] } as Entity;
+    } catch (error) {
+      console.error('Error updating entity:', error);
+      toast.error('Failed to update entity');
       throw error;
     }
   };
@@ -104,11 +130,32 @@ export const useEntities = () => {
     };
   }, [user]);
 
+  const getEntity = async (id: string) => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('entities')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return { ...data, type: data.type as Entity['type'] } as Entity;
+    } catch (error) {
+      console.error('Error fetching entity:', error);
+      return null;
+    }
+  };
+
   return {
     entities,
     loading,
     addEntity,
+    updateEntity,
     deleteEntity,
+    getEntity,
     refetch: fetchEntities,
   };
 };
