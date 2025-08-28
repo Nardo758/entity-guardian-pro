@@ -10,6 +10,8 @@ import { ScheduleModal } from './ScheduleModal';
 import { NotificationBanner } from './NotificationBanner';
 import { EnhancedNotificationBanner } from './EnhancedNotificationBanner';
 import { UserAccount } from './UserAccount';
+import { EntityFeeScheduleTable } from './EntityFeeScheduleTable';
+import { EntityDetailsCard } from './EntityDetailsCard';
 import { useEntities } from '@/hooks/useEntities';
 import { usePayments } from '@/hooks/usePayments';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
@@ -162,14 +164,9 @@ const EntityRenewalPro = () => {
           onDismiss={dismissNotification}
         />
 
-        {/* Enhanced Metrics Grid */}
-        <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <MetricsGrid metrics={metrics} />
-        </div>
-
         {/* Modern Entity Form */}
         {showAddForm && (
-          <div className="animate-scale-in">
+          <div className="animate-scale-in mb-8">
             <EntityForm 
               onSubmit={handleAddEntity}
               onClose={() => setShowAddForm(false)}
@@ -177,13 +174,19 @@ const EntityRenewalPro = () => {
           </div>
         )}
 
-        {/* Enhanced Entity List */}
-        <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <TeamAwareEntityList 
-            entities={entities}
-            onDelete={handleDeleteEntity}
-          />
+        {/* Entity Fee Schedule Table */}
+        <div className="animate-fade-up mb-8" style={{ animationDelay: '0.1s' }}>
+          <EntityFeeScheduleTable entities={entities} />
         </div>
+
+        {/* Entity Details */}
+        {entities.length > 0 && (
+          <div className="animate-fade-up space-y-6" style={{ animationDelay: '0.2s' }}>
+            {entities.map((entity) => (
+              <EntityDetailsCard key={entity.id} entity={entity} />
+            ))}
+          </div>
+        )}
 
         {/* Enhanced Modals */}
         <PaymentModal 
