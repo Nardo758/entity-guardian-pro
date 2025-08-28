@@ -101,12 +101,18 @@ const Landing = () => {
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+              <button 
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Features
-              </Link>
-              <Link to="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+              </button>
+              <button 
+                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Pricing
-              </Link>
+              </button>
               <Link to="/support" className="text-muted-foreground hover:text-foreground transition-colors">
                 Support
               </Link>
@@ -149,10 +155,13 @@ const Landing = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="text-lg px-8">
-                <Link to="#features">
-                  Learn More
-                </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-lg px-8"
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Learn More
               </Button>
             </div>
 
