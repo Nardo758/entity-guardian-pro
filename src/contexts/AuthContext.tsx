@@ -41,6 +41,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Handle Supabase token hash fragments (e.g. #access_token=...&refresh_token=...)
+  useEffect(() => {
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    if (hash && hash.includes('access_token')) {
+      (async () => {
+        try {
+          const params = new URLSearchParams(hash.replace('#', ''));
+          const access_token = params.get('access_token') ?? undefined;
+          const refresh_token = params.get('refresh_token') ?? undefined;
+          if (access_token && refresh_token) {
+            const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
+            if (!error) {
+              setSession(data.session);
+              setUser(data.session?.user ?? null);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to process auth hash:', err);
+        } finally {
+          const url = new URL(window.location.href);
+          url.hash = '';
+          window.history.replaceState({}, '', url.toString());
+        }
+      })();
+    }
+  }, []);
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
