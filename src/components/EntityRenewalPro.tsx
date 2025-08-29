@@ -15,6 +15,7 @@ import { usePayments } from '@/hooks/usePayments';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
+import { useSubscription } from '@/hooks/useSubscription';
 import { stateRequirements } from '@/lib/state-requirements';
 import { TeamSwitcher } from './TeamSwitcher';
 
@@ -31,13 +32,8 @@ const EntityRenewalPro = () => {
   const [showScheduleView, setShowScheduleView] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  // Mock subscription data - in real app this would come from the profile
-  const mockSubscription = {
-    status: 'active',
-    billingCycle: 'monthly',
-    nextBilling: '2025-08-08',
-    amount: 99
-  };
+  // Use actual subscription data
+  const { subscription } = useSubscription();
 
   const handleAddEntity = async (entityData: any) => {
     try {
@@ -138,25 +134,58 @@ const EntityRenewalPro = () => {
         </div>
 
         {/* Subscription Status Banner */}
-        {mockSubscription.status === 'active' && (
+        {subscription.subscribed && (
           <div className="mb-8 bg-success-muted border border-success/20 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-success"></div>
                 <span className="font-medium text-success">
-                  Starter Plan Active
+                  {subscription.subscription_tier} Plan Active
                 </span>
               </div>
               <div className="text-sm text-success">
-                Next billing: {new Date(mockSubscription.nextBilling).toLocaleDateString('en-US', { 
-                  month: 'numeric', 
-                  day: 'numeric', 
-                  year: 'numeric' 
-                })}
-                <span className="ml-3 bg-success/20 px-2 py-1 rounded text-xs">
-                  ${mockSubscription.amount}/{mockSubscription.billingCycle}
+                {subscription.subscription_end && (
+                  <>
+                    Next billing: {new Date(subscription.subscription_end).toLocaleDateString('en-US', { 
+                      month: 'numeric', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="ml-3 text-xs border-success/30 text-success hover:bg-success hover:text-success-foreground"
+                  onClick={() => navigate('/billing')}
+                >
+                  Manage Plan
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* No Subscription Banner */}
+        {!subscription.subscribed && (
+          <div className="mb-8 bg-warning-muted border border-warning/20 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-warning"></div>
+                <span className="font-medium text-warning">
+                  No Active Subscription
+                </span>
+                <span className="text-sm text-warning/80">
+                  • Limited to 3 entities
                 </span>
               </div>
+              <Button 
+                size="sm" 
+                className="bg-primary hover:bg-primary-dark"
+                onClick={() => navigate('/billing')}
+              >
+                Choose Plan
+              </Button>
             </div>
           </div>
         )}

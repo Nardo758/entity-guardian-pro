@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
+import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 
 interface Invoice {
   id: string;
@@ -44,79 +45,7 @@ const Billing = () => {
   const [activeTab, setActiveTab] = useState('plans');
   const { subscription, loading, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
 
-  const pricingTiers = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      description: 'Perfect for small businesses',
-      monthlyPrice: 25,
-      yearlyPrice: 249, // 17% discount
-      entities: 5,
-      features: [
-        'Up to 5 entities',
-        'Basic notifications',
-        'Email support',
-        'Standard templates'
-      ],
-      popular: false
-    },
-    {
-      id: 'professional',
-      name: 'Professional',
-      description: 'Most popular for growing businesses',
-      monthlyPrice: 99,
-      yearlyPrice: 986, // 17% discount
-      entities: 25,
-      features: [
-        'Up to 25 entities',
-        'Advanced notifications',
-        'Priority support',
-        'API access',
-        'Custom reports',
-        'Team collaboration'
-      ],
-      popular: true
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      description: 'For large organizations',
-      monthlyPrice: 200,
-      yearlyPrice: 1992, // 17% discount
-      entities: 100,
-      features: [
-        'Up to 100 entities',
-        'Advanced notifications',
-        'Dedicated support',
-        'Full API access',
-        'Custom reports',
-        'Team collaboration',
-        'Priority processing',
-        'Custom integrations'
-      ],
-      popular: false
-    },
-    {
-      id: 'unlimited',
-      name: 'Unlimited',
-      description: 'Enterprise with unlimited entities',
-      monthlyPrice: 350,
-      yearlyPrice: 3486, // 17% discount
-      entities: 'Unlimited',
-      features: [
-        'Unlimited entities',
-        'Advanced notifications',
-        'Dedicated account manager',
-        'Full API access',
-        'Custom reports',
-        'Team collaboration',
-        'Priority processing',
-        'Custom integrations',
-        'White label options'
-      ],
-      popular: false
-    }
-  ];
+  const pricingTiers = Object.values(STRIPE_PRICING_TIERS);
 
   // Mock invoices data
   const invoices: Invoice[] = [
