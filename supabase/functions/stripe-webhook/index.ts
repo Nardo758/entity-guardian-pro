@@ -18,6 +18,7 @@ serve(async (req) => {
 
   const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const cliWebhookSecret = Deno.env.get("STRIPE_CLI_WEBHOOK_SECRET");
   if (!stripeSecretKey || !webhookSecret) {
     return new Response(JSON.stringify({ error: "Stripe secrets not configured" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -38,15 +39,26 @@ serve(async (req) => {
     event = JSON.parse(body);
   } else {
     const signature = req.headers.get("stripe-signature") || req.headers.get("Stripe-Signature");
+    let verified: Stripe.Event | null = null;
     try {
-      event = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
-    } catch (err) {
-      log("Signature verification failed", { message: (err as Error).message });
+      verified = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
+    } catch (_) {
+      if (cliWebhookSecret) {
+        try {
+          verified = stripe.webhooks.constructEvent(body, signature || "", cliWebhookSecret);
+        } catch (err) {
+          verified = null;
+        }
+      }
+    }
+    if (!verified) {
+      log("Signature verification failed for all known secrets");
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
     }
+    event = verified;
   }
 
   // Supabase client with service role for writes
