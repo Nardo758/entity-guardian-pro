@@ -36,3 +36,7 @@ serve(async (req) => {
   }
 });
 
+// Export to signal to Supabase platform that JWT verification is not required.
+// Supabase will detect the constant by convention when set to "false".
+export const verifyJWT = false;
+
