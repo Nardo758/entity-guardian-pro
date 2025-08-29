@@ -11,6 +11,8 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({
   children, 
   clientSecret 
 }) => {
+  console.log('StripeProvider: clientSecret received:', clientSecret);
+  
   const options = clientSecret ? {
     clientSecret,
     appearance: {
@@ -43,6 +45,8 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({
       },
     },
   } : undefined;
+
+  console.log('StripeProvider: options configured:', options);
 
   return (
     <Elements stripe={stripePromise} options={options}>

@@ -128,6 +128,9 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 setErrorMessage('Failed to load payment form. Please refresh and try again.');
                 onError('Failed to load payment form');
               }}
+              onLoaderStart={() => {
+                console.log('PaymentElement loader started');
+              }}
               options={{
                 layout: 'tabs',
                 paymentMethodOrder: ['card', 'apple_pay', 'google_pay']

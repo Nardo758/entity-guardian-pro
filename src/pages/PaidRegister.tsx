@@ -386,13 +386,16 @@ const PaidRegister = () => {
       </div>
 
       {clientSecret && (
-        <StripeProvider clientSecret={clientSecret}>
-          <PaymentForm
-            onSuccess={handlePaymentSuccess}
-            onError={handlePaymentError}
-            loading={isLoading}
-          />
-        </StripeProvider>
+        <>
+          {console.log('PaidRegister: Rendering with clientSecret:', clientSecret)}
+          <StripeProvider clientSecret={clientSecret}>
+            <PaymentForm
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              loading={isLoading}
+            />
+          </StripeProvider>
+        </>
       )}
 
       {!clientSecret && (
