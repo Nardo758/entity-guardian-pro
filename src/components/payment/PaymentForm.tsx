@@ -27,11 +27,17 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [elementReady, setElementReady] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!stripe || !elements) {
+      return;
+    }
+
+    if (!elementReady) {
+      setErrorMessage('Payment element is not ready yet.');
       return;
     }
 
@@ -91,6 +97,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                 layout: 'tabs',
                 paymentMethodOrder: ['card', 'apple_pay', 'google_pay']
               }}
+              onReady={() => setElementReady(true)}
             />
           </div>
 
@@ -104,7 +111,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             <Button
               type="submit"
               className="w-full"
-              disabled={!stripe || !elements || isProcessing || loading}
+              disabled={!stripe || !elements || !elementReady || isProcessing || loading}
               size="lg"
             >
               {isProcessing ? (
