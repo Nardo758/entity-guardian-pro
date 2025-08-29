@@ -36,12 +36,22 @@ const PRICING_TIERS = {
 };
 
 serve(async (req) => {
+  console.log("[DEBUG] Request received, method:", req.method);
+  console.log("[DEBUG] Request headers:", Object.fromEntries(req.headers.entries()));
+  
   if (req.method === "OPTIONS") {
+    console.log("[DEBUG] OPTIONS request, returning CORS headers");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     logStep("Function started");
+    console.log("[DEBUG] Environment variables check:");
+    console.log("[DEBUG] STRIPE_SECRET_KEY exists:", !!Deno.env.get("STRIPE_SECRET_KEY"));
+    console.log("[DEBUG] STRIPE_SECRET_KEY length:", Deno.env.get("STRIPE_SECRET_KEY")?.length || 0);
+
+    const requestBody = await req.json();
+    console.log("[DEBUG] Request body received:", JSON.stringify(requestBody, null, 2));
 
     const { 
       email, 
@@ -49,7 +59,7 @@ serve(async (req) => {
       userData, 
       tier, 
       billing 
-    } = await req.json();
+    } = requestBody;
 
     if (!email || !password || !userData || !tier || !billing) {
       throw new Error("Missing required fields");
