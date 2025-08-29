@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 // Type definitions
 interface PaymentMetadata {
@@ -29,7 +29,7 @@ interface PaymentResponse {
 interface ErrorResponse {
   error: string;
   code?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 interface SubscriptionRecord {
@@ -50,7 +50,7 @@ interface LogDetails {
   status?: string;
   amount?: number;
   tier?: string;
-  error?: any;
+  error?: Error | Record<string, unknown>;
   message?: string;
   requestId?: string;
 }
@@ -133,28 +133,28 @@ const sanitizeString = (str: string): string => {
   return str.trim().replace(/[<>]/g, '');
 };
 
-const validatePaymentMetadata = (metadata: any): PaymentMetadata => {
-  if (!metadata.email || !validateEmail(metadata.email)) {
+const validatePaymentMetadata = (metadata: Record<string, unknown>): PaymentMetadata => {
+  if (!metadata.email || typeof metadata.email !== 'string' || !validateEmail(metadata.email)) {
     throw new ValidationError('Invalid email address', 'email');
   }
   
-  if (!metadata.registration) {
+  if (!metadata.registration || typeof metadata.registration !== 'string') {
     throw new ValidationError('Registration data is required', 'registration');
   }
   
-  if (!metadata.first_name || metadata.first_name.length < 1) {
+  if (!metadata.first_name || typeof metadata.first_name !== 'string' || metadata.first_name.length < 1) {
     throw new ValidationError('First name is required', 'first_name');
   }
   
-  if (!metadata.last_name || metadata.last_name.length < 1) {
+  if (!metadata.last_name || typeof metadata.last_name !== 'string' || metadata.last_name.length < 1) {
     throw new ValidationError('Last name is required', 'last_name');
   }
   
-  if (!metadata.tier || !['basic', 'pro', 'enterprise'].includes(metadata.tier.toLowerCase())) {
+  if (!metadata.tier || typeof metadata.tier !== 'string' || !['basic', 'pro', 'enterprise'].includes(metadata.tier.toLowerCase())) {
     throw new ValidationError('Invalid subscription tier', 'tier');
   }
   
-  if (!metadata.billing || !['monthly', 'yearly'].includes(metadata.billing)) {
+  if (!metadata.billing || typeof metadata.billing !== 'string' || !['monthly', 'yearly'].includes(metadata.billing)) {
     throw new ValidationError('Invalid billing period', 'billing');
   }
   
@@ -163,8 +163,8 @@ const validatePaymentMetadata = (metadata: any): PaymentMetadata => {
     registration: metadata.registration,
     first_name: sanitizeString(metadata.first_name),
     last_name: sanitizeString(metadata.last_name),
-    company: sanitizeString(metadata.company || ''),
-    company_size: sanitizeString(metadata.company_size || ''),
+    company: sanitizeString((metadata.company as string) || ''),
+    company_size: sanitizeString((metadata.company_size as string) || ''),
     tier: metadata.tier.toLowerCase(),
     billing: metadata.billing as 'monthly' | 'yearly'
   };
@@ -177,11 +177,22 @@ const findUserSecurely = async (supabaseAdmin: SupabaseClient, email: string) =>
     const { data, error } = await supabaseAdmin.rpc('find_user_by_email', { user_email: email });
     
     if (error) {
+      logStep('RPC user lookup failed, using fallback', { error: error.message }, 'warn');
       // Fallback to admin.listUsers with filter (less secure but functional)
-      const { data: users } = await supabaseAdmin.auth.admin.listUsers();
-      return users.users.find(user => user.email === email) || null;
+      try {
+        const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+        if (listError) {
+          logStep('Fallback user lookup failed', { error: listError }, 'error');
+          return null;
+        }
+        return users.users.find(user => user.email === email) || null;
+      } catch (fallbackError) {
+        logStep('Fallback user lookup exception', { error: fallbackError }, 'error');
+        return null;
+      }
     }
     
+    // The RPC returns a JSON object, so we need to parse it if it's valid
     return data;
   } catch (error) {
     logStep('User lookup error', { error }, 'warn');
@@ -301,7 +312,7 @@ serve(async (req) => {
         success: true,
         userId: existingSubscriber.data.user_id,
         email: validatedMetadata.email,
-        subscriptionTier: validatedMetadata.tier,
+        subscriptionTier: existingSubscriber.data.subscription_tier || validatedMetadata.tier,
         message: "Payment already processed"
       } as PaymentResponse), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -312,7 +323,7 @@ serve(async (req) => {
     // Secure user lookup
     const existingUser = await findUserSecurely(supabaseAdmin, validatedMetadata.email);
     
-    let authData: any;
+    let authData: { user: { id: string; email?: string; user_metadata?: Record<string, unknown> } };
     
     // Database transaction simulation (Supabase doesn't support full transactions in Edge Functions)
     // We'll implement compensating actions on failure
@@ -383,12 +394,12 @@ serve(async (req) => {
         logStep("User created", { userId: authData.user.id, email: validatedMetadata.email, requestId });
       }
 
-      // Calculate subscription end date
+      // Calculate subscription end date (add 30 days for monthly, 365 days for yearly)
       const subscriptionEnd = new Date();
       if (validatedMetadata.billing === 'yearly') {
-        subscriptionEnd.setFullYear(subscriptionEnd.getFullYear() + 1);
+        subscriptionEnd.setDate(subscriptionEnd.getDate() + 365);
       } else {
-        subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+        subscriptionEnd.setDate(subscriptionEnd.getDate() + 30);
       }
 
       const subscriptionRecord: SubscriptionRecord = {
