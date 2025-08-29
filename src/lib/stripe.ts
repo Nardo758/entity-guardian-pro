@@ -1,10 +1,8 @@
 import { loadStripe } from '@stripe/stripe-js';
 
-// IMPORTANT: Replace with your actual Stripe publishable key
-// For development: pk_test_...
-// For production: pk_live_...
+// Using the live Stripe publishable key
 export const stripePromise = loadStripe(
-  (import.meta as any)?.env?.VITE_STRIPE_PUBLISHABLE_KEY || ''
+  'pk_live_51S0ulgCnuIeihlVEvkKFnrDPDbVGYvl16OsN9CWTmFbmEz3jB64Hd9WuCk7JNuWoBICO5nQkcEqlo5GYEPnizLhc00M8VnktP8'
 );
 
 export const STRIPE_PRICING_TIERS = {

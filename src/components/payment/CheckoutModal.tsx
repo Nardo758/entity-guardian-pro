@@ -20,7 +20,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
+import { stripePromise } from '@/lib/stripe';
 import {
   Elements,
   PaymentElement,
@@ -32,10 +32,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 
-// Load Stripe
-const stripePromise = loadStripe(
-  'pk_live_51S0ulgCnuIeihlVEvkKFnrDPDbVGYvl16OsN9CWTmFbmEz3jB64Hd9WuCk7JNuWoBICO5nQkcEqlo5GYEPnizLhc00M8VnktP8'
-);
+// Use the shared Stripe promise from lib
 
 interface CheckoutModalProps {
   isOpen: boolean;
