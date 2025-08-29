@@ -19,6 +19,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const projectRef = Deno.env.get("SUPABASE_PROJECT_ID") || "wcuxqopfcgivypbiynjp";
     const url = body?.url || `https://${projectRef}.functions.supabase.co/stripe-webhook`;
+    const mode: 'test' | 'live' = body?.mode === 'live' ? 'live' : 'test';
 
     const endpoint = await stripe.webhookEndpoints.create({
       url,
@@ -30,9 +31,10 @@ serve(async (req) => {
         'customer.subscription.deleted'
       ],
       description: 'Supabase stripe-webhook handler',
+      api_version: '2023-10-16',
     });
 
-    return new Response(JSON.stringify({ id: endpoint.id, secret: endpoint.secret, url: endpoint.url }), {
+    return new Response(JSON.stringify({ id: endpoint.id, secret: endpoint.secret, url: endpoint.url, mode }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

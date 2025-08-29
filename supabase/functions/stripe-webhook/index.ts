@@ -18,6 +18,7 @@ serve(async (req) => {
 
   const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const webhookSecretTest = Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST");
   const cliWebhookSecret = Deno.env.get("STRIPE_CLI_WEBHOOK_SECRET");
   if (!stripeSecretKey || !webhookSecret) {
     return new Response(JSON.stringify({ error: "Stripe secrets not configured" }), {
@@ -43,6 +44,11 @@ serve(async (req) => {
     try {
       verified = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
     } catch (_) {
+      if (webhookSecretTest) {
+        try {
+          verified = stripe.webhooks.constructEvent(body, signature || "", webhookSecretTest);
+        } catch (_) {}
+      }
       if (cliWebhookSecret) {
         try {
           verified = stripe.webhooks.constructEvent(body, signature || "", cliWebhookSecret);
