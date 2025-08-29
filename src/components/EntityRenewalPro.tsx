@@ -16,6 +16,7 @@ import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
 import { useSubscription } from '@/hooks/useSubscription';
+import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { stateRequirements } from '@/lib/state-requirements';
 import { TeamSwitcher } from './TeamSwitcher';
 
@@ -131,6 +132,11 @@ const EntityRenewalPro = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Security Warning Banner */}
+        <div className="mb-6">
+          <SecurityWarningBanner />
         </div>
 
         {/* Subscription Status Banner */}
