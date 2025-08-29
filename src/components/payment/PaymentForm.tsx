@@ -60,15 +60,32 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       return;
     }
 
+    if (!paymentElementReady) {
+      setErrorMessage('Payment element is not ready yet.');
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage('');
 
     try {
+<<<<<<< HEAD
       console.log('PaymentForm: Calling stripe.confirmPayment...');
       
       // Add a small delay to ensure everything is fully ready
       await new Promise(resolve => setTimeout(resolve, 100));
       
+=======
+      // Ensure elements are complete before confirming
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setErrorMessage(submitError.message || 'Payment details are incomplete.');
+        onError(submitError.message || 'Payment details are incomplete.');
+        setIsProcessing(false);
+        return;
+      }
+
+>>>>>>> origin/cursor/sync-stripe-pricing-and-products-to-dashboard-6d5a
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -133,7 +150,11 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               }}
               options={{
                 layout: 'tabs',
-                paymentMethodOrder: ['card', 'apple_pay', 'google_pay']
+                paymentMethodOrder: ['card']
+              }}
+              onReady={() => {
+                console.log('PaymentElement onReady callback fired');
+                setPaymentElementReady(true);
               }}
             />
           </div>

@@ -28,6 +28,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
+import { useEffect } from 'react';
 
 interface Invoice {
   id: string;
@@ -49,6 +50,26 @@ const Billing = () => {
   const { subscription, loading, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
 
   const pricingTiers = Object.values(STRIPE_PRICING_TIERS);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const canceled = params.get('canceled');
+    if (success) {
+      toast.success('Payment complete. Activating your subscription...');
+      checkSubscription();
+      setActiveTab('overview');
+    } else if (canceled) {
+      toast.message('Checkout canceled');
+    }
+    if (success || canceled) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('success');
+      url.searchParams.delete('canceled');
+      window.history.replaceState({}, '', url.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Mock invoices data
   const invoices: Invoice[] = [

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { loadStripe } from '@stripe/stripe-js';
+import { stripePromise } from '@/lib/stripe';
 
 interface SubscriptionInfo {
   subscribed: boolean;
@@ -48,9 +50,33 @@ export const useSubscription = () => {
       });
 
       if (error) throw error;
-
-      // Open Stripe checkout in a new tab
-      window.open(data.url, '_blank');
+      const stripe = await stripePromise;
+      if (stripe) {
+        const result = await stripe.redirectToCheckout({ sessionId: data.id });
+        if (result.error) {
+          // Fallback to opening the Checkout URL if redirect fails
+          if (data?.url) {
+            if (window.top) {
+              (window.top as Window).location.href = data.url;
+            } else {
+              window.location.href = data.url;
+            }
+            return;
+          }
+          throw result.error;
+        }
+      } else {
+        // Fallback if Stripe failed to initialize
+        if (data?.url) {
+          if (window.top) {
+            (window.top as Window).location.href = data.url;
+          } else {
+            window.location.href = data.url;
+          }
+          return;
+        }
+        throw new Error('Stripe failed to initialize and no checkout URL provided');
+      }
     } catch (error) {
       console.error('Error creating checkout:', error);
       toast.error('Failed to create checkout session');

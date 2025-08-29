@@ -14,3 +14,27 @@ verify_jwt = true
 
 [functions.accept-team-invitation]
 verify_jwt = false
+
+[functions.stripe-whoami]
+verify_jwt = false
+
+[functions.sync-pricing]
+verify_jwt = false
+
+[functions.stripe-webhook-info]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.create-stripe-webhook-endpoint]
+verify_jwt = false
+
+[functions.stripe-webhook-delete]
+verify_jwt = false
+
+[functions.stripe-webhook-simulate]
+verify_jwt = false
+
+[functions.stripe-webhook-send-test]
+verify_jwt = false
