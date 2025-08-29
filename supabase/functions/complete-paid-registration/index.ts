@@ -56,27 +56,61 @@ serve(async (req) => {
       throw new Error("Invalid payment metadata");
     }
 
-    // Create user account
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: metadata.email,
-      password: Math.random().toString(36).slice(-8), // Temporary password
-      email_confirm: true, // Auto-confirm email for paid users
-      user_metadata: {
-        first_name: metadata.first_name,
-        last_name: metadata.last_name,
-        company: metadata.company,
-        company_size: metadata.company_size,
-        paid_registration: true,
-        payment_intent_id: paymentIntentId,
-      },
-    });
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers.users.find(user => user.email === metadata.email);
+    
+    let authData;
+    if (existingUser) {
+      logStep("Existing user found", { userId: existingUser.id, email: metadata.email });
+      
+      // Update existing user's metadata
+      const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        existingUser.id,
+        {
+          user_metadata: {
+            ...existingUser.user_metadata,
+            first_name: metadata.first_name,
+            last_name: metadata.last_name,
+            company: metadata.company,
+            company_size: metadata.company_size,
+            paid_registration: true,
+            payment_intent_id: paymentIntentId,
+          },
+        }
+      );
+      
+      if (updateError) {
+        logStep("User update error", updateError);
+        throw new Error(`Failed to update user account: ${updateError.message}`);
+      }
+      
+      authData = { user: updatedUser.user };
+      logStep("User updated", { userId: existingUser.id, email: metadata.email });
+    } else {
+      // Create new user account
+      const { data: newAuthData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: metadata.email,
+        password: Math.random().toString(36).slice(-8), // Temporary password
+        email_confirm: true, // Auto-confirm email for paid users
+        user_metadata: {
+          first_name: metadata.first_name,
+          last_name: metadata.last_name,
+          company: metadata.company,
+          company_size: metadata.company_size,
+          paid_registration: true,
+          payment_intent_id: paymentIntentId,
+        },
+      });
 
-    if (authError) {
-      logStep("Auth error", authError);
-      throw new Error(`Failed to create user account: ${authError.message}`);
+      if (authError) {
+        logStep("Auth error", authError);
+        throw new Error(`Failed to create user account: ${authError.message}`);
+      }
+
+      authData = newAuthData;
+      logStep("User created", { userId: authData.user.id, email: metadata.email });
     }
-
-    logStep("User created", { userId: authData.user.id, email: metadata.email });
 
     // Create subscription record
     const subscriptionTier = metadata.tier;
@@ -90,7 +124,8 @@ serve(async (req) => {
       subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
     }
 
-    await supabaseAdmin.from("subscribers").insert({
+    // Upsert subscription record (insert or update if exists)
+    await supabaseAdmin.from("subscribers").upsert({
       user_id: authData.user.id,
       email: metadata.email,
       stripe_customer_id: paymentIntent.customer,
@@ -98,6 +133,8 @@ serve(async (req) => {
       subscription_tier: subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1),
       subscription_end: subscriptionEnd.toISOString(),
       updated_at: new Date().toISOString(),
+    }, { 
+      onConflict: 'email' 
     });
 
     logStep("Subscriber record created", { userId: authData.user.id, tier: subscriptionTier });
