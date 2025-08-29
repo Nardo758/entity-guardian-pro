@@ -25,8 +25,8 @@ serve(async (req) => {
   }
 
   try {
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-    if (!webhookSecret) throw new Error("STRIPE_WEBHOOK_SECRET not set");
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST") || Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    if (!webhookSecret) throw new Error("No webhook secret set (need STRIPE_WEBHOOK_SECRET_TEST or STRIPE_WEBHOOK_SECRET)");
 
     const body = await req.json().catch(() => ({}));
     const email: string = body.email || "test-webhook@entityrenewalpro.com";
