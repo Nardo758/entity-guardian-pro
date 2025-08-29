@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.stripe-webhook-delete]
 verify_jwt = false
+
+[functions.stripe-webhook-simulate]
+verify_jwt = false
