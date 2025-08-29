@@ -1,41 +1,59 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
-  ArrowLeft, 
-  Calendar, 
-  MapPin, 
-  AlertTriangle, 
+  FileText, 
+  Users, 
   CheckCircle, 
-  Clock, 
-  DollarSign,
-  FileText,
+  DollarSign, 
+  Calendar,
+  MapPin,
+  Building,
+  Share,
+  Edit,
+  MoreVertical,
   Phone,
   Mail,
-  Globe,
-  Building,
-  Users,
-  Edit,
+  User,
+  Clock,
+  AlertCircle,
   Download,
-  Share
-} from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { useEntities } from "@/hooks/useEntities";
-import { EntityEditModal } from "@/components/EntityEditModal";
-import { Entity } from "@/types/entity";
+  Upload,
+  Trash2,
+  Plus,
+  ArrowLeft
+} from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { useEntities } from '@/hooks/useEntities';
+import { useOfficers } from '@/hooks/useOfficers';
+import { useComplianceChecks } from '@/hooks/useComplianceChecks';
+import { useDocuments } from '@/hooks/useDocuments';
+import { Entity } from '@/types/entity';
+import { EntityEditModal } from '@/components/EntityEditModal';
+import { OfficerModal } from '@/components/OfficerModal';
+import { ComplianceModal } from '@/components/ComplianceModal';
+import { DocumentUpload } from '@/components/DocumentUpload';
+import { DocumentList } from '@/components/DocumentList';
 
 const EntityDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getEntity, updateEntity } = useEntities();
   const [entity, setEntity] = useState<Entity | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isOfficerModalOpen, setIsOfficerModalOpen] = useState(false);
+  const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
+  const [selectedOfficer, setSelectedOfficer] = useState<any>(null);
+  const [selectedComplianceCheck, setSelectedComplianceCheck] = useState<any>(null);
+  const { getEntity, updateEntity } = useEntities();
+  const { officers, addOfficer, updateOfficer, deleteOfficer } = useOfficers(id);
+  const { complianceChecks, addComplianceCheck, updateComplianceCheck, deleteComplianceCheck } = useComplianceChecks(id);
+  const { documents, deleteDocument, downloadDocument } = useDocuments(id);
 
   useEffect(() => {
     const fetchEntityData = async () => {
@@ -357,185 +375,323 @@ const EntityDetails = () => {
           </TabsContent>
 
           <TabsContent value="officers" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Officers & Directors
-                </CardTitle>
-                <CardDescription>Current officers and their appointment dates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Mock officers data - replace with real data when available */}
-                  {[
-                    { name: "John Smith", title: "CEO", appointed: "2020-03-15" },
-                    { name: "Sarah Johnson", title: "CFO", appointed: "2021-01-10" },
-                    { name: "Michael Chen", title: "Secretary", appointed: "2020-03-15" }
-                  ].map((officer, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-semibold">{officer.name}</p>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Entity Officers</h3>
+              <Button size="sm" onClick={() => {
+                setSelectedOfficer(null);
+                setIsOfficerModalOpen(true);
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Officer
+              </Button>
+            </div>
+            
+            <div className="grid gap-4">
+              {officers.map((officer) => (
+                <Card key={officer.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="font-semibold">{officer.name}</h4>
+                          <Badge variant={officer.is_active ? 'default' : 'secondary'}>
+                            {officer.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
                         <p className="text-sm text-muted-foreground">{officer.title}</p>
+                        {officer.email && (
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Mail className="h-3 w-3 mr-1" />
+                            {officer.email}
+                          </div>
+                        )}
+                        {officer.phone && (
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Phone className="h-3 w-3 mr-1" />
+                            {officer.phone}
+                          </div>
+                        )}
+                        {officer.appointment_date && (
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Appointed: {new Date(officer.appointment_date).toLocaleDateString()}
+                          </div>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">Appointed</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(officer.appointed).toLocaleDateString()}
-                        </p>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedOfficer(officer);
+                            setIsOfficerModalOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remove Officer</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to remove {officer.name} from this entity?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteOfficer(officer.id)}>
+                                Remove
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
-                  ))}
-                  <Button variant="outline" className="w-full">
-                    <Users className="h-4 w-4 mr-2" />
-                    Add Officer
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ))}
+              {officers.length === 0 && (
+                <Card>
+                  <CardContent className="p-8 text-center text-muted-foreground">
+                    <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No officers added yet</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => {
+                        setSelectedOfficer(null);
+                        setIsOfficerModalOpen(true);
+                      }}
+                    >
+                      Add First Officer
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Entity Documents
-                </CardTitle>
-                <CardDescription>Important documents and filings</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {/* Mock documents data - replace with real data when available */}
-                  {[
-                    { name: "Certificate of Incorporation", date: entity?.formation_date || "2020-03-15", type: "Certificate" },
-                    { name: "Operating Agreement", date: entity?.formation_date || "2020-03-20", type: "Agreement" },
-                    { name: "Annual Report 2024", date: "2024-03-15", type: "Filing" },
-                    { name: "Good Standing Certificate", date: "2024-01-01", type: "Certificate" }
-                  ].map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded bg-primary/10">
-                          <FileText className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {doc.type} • {new Date(doc.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                  <Button variant="outline" className="w-full">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Upload Document
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <Tabs defaultValue="view" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="view">View Documents</TabsTrigger>
+                <TabsTrigger value="upload">Upload Document</TabsTrigger>
+              </TabsList>
+              <TabsContent value="view">
+                <DocumentList entityId={id} title="Entity Documents" />
+              </TabsContent>
+              <TabsContent value="upload">
+                <DocumentUpload entityId={id} />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="compliance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Compliance Status
-                </CardTitle>
-                <CardDescription>Current compliance status and requirements</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Mock compliance data - replace with real data when available */}
-                  {[
-                    { name: "Annual Report Filed", status: true, description: "Due annually" },
-                    { name: "Taxes Current", status: true, description: "Filed quarterly" },
-                    { name: "Licenses Valid", status: false, description: "Renewal required" },
-                    { name: "Insurance Current", status: true, description: "Policy active" }
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        {item.status ? (
-                          <CheckCircle className="h-5 w-5 text-success" />
-                        ) : (
-                          <AlertTriangle className="h-5 w-5 text-warning" />
-                        )}
-                        <div>
-                          <span className="font-medium">{item.name}</span>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Compliance Status</h3>
+              <Button size="sm" onClick={() => {
+                setSelectedComplianceCheck(null);
+                setIsComplianceModalOpen(true);
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Compliance Check
+              </Button>
+            </div>
+            
+            <div className="grid gap-4">
+              {complianceChecks.map((check) => (
+                <Card key={check.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="font-medium">{check.check_name}</h4>
+                          <Badge variant={
+                            check.status === 'completed' ? 'default' :
+                            check.status === 'pending' ? 'secondary' :
+                            check.status === 'overdue' ? 'destructive' : 'outline'
+                          }>
+                            {check.status.charAt(0).toUpperCase() + check.status.slice(1)}
+                          </Badge>
                         </div>
+                        <p className="text-sm text-muted-foreground capitalize">{check.check_type.replace('_', ' ')}</p>
+                        {check.due_date && (
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Due: {new Date(check.due_date).toLocaleDateString()}
+                          </div>
+                        )}
+                        {check.completion_date && (
+                          <div className="flex items-center text-sm text-green-600">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Completed: {new Date(check.completion_date).toLocaleDateString()}
+                          </div>
+                        )}
+                        {check.notes && (
+                          <p className="text-sm text-muted-foreground">{check.notes}</p>
+                        )}
                       </div>
-                      <Badge variant={item.status ? "default" : "secondary"}>
-                        {item.status ? "Current" : "Action Required"}
-                      </Badge>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedComplianceCheck(check);
+                            setIsComplianceModalOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Compliance Check</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this compliance check?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteComplianceCheck(check.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
-                  ))}
-                  <Button variant="outline" className="w-full">
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Update Compliance
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ))}
+              {complianceChecks.length === 0 && (
+                <Card>
+                  <CardContent className="p-8 text-center text-muted-foreground">
+                    <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No compliance checks added yet</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => {
+                        setSelectedComplianceCheck(null);
+                        setIsComplianceModalOpen(true);
+                      }}
+                    >
+                      Add First Check
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="financials" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Financial Summary
-                </CardTitle>
-                <CardDescription>Upcoming fees and costs</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center p-4 border rounded-lg">
-                      <p className="text-sm text-muted-foreground">Registered Agent Fee</p>
-                      <p className="text-2xl font-bold text-primary">${entity.registered_agent_fee}</p>
-                      {entity.registered_agent_fee_due_date && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Due: {new Date(entity.registered_agent_fee_due_date).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    {entity.independent_director_fee && entity.independent_director_fee > 0 && (
-                      <div className="text-center p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Independent Director Fee</p>
-                        <p className="text-2xl font-bold text-primary">${entity.independent_director_fee}</p>
-                        {entity.independent_director_fee_due_date && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Due: {new Date(entity.independent_director_fee_due_date).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    <div className="text-center p-4 border rounded-lg bg-primary/10">
-                      <p className="text-sm text-muted-foreground">Total Due</p>
-                      <p className="text-2xl font-bold text-primary">
-                        ${(entity.registered_agent_fee || 0) + (entity.independent_director_fee || 0)}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">Annual costs</p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Annual Fees
+                  </CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    ${(entity.registered_agent_fee || 0) + (entity.independent_director_fee || 0)}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <p className="text-xs text-muted-foreground">
+                    Total annual compliance costs
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Registered Agent Fee
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${entity.registered_agent_fee}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {entity.registered_agent_fee_due_date && (
+                      `Due: ${new Date(entity.registered_agent_fee_due_date).toLocaleDateString()}`
+                    )}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {entity.independent_director_fee && (
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Director Fee
+                    </CardTitle>
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">${entity.independent_director_fee}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {entity.independent_director_fee_due_date && (
+                        `Due: ${new Date(entity.independent_director_fee_due_date).toLocaleDateString()}`
+                      )}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
 
-        {/* Edit Modal */}
-        <EntityEditModal
-          entity={entity}
-          open={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          onSave={handleSaveEntity}
-        />
+        {isEditModalOpen && entity && (
+          <EntityEditModal
+            entity={entity}
+            open={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            onSave={handleSaveEntity}
+          />
+        )}
+
+        {id && (
+          <>
+            <OfficerModal
+              isOpen={isOfficerModalOpen}
+              onClose={() => {
+                setIsOfficerModalOpen(false);
+                setSelectedOfficer(null);
+              }}
+              onSave={selectedOfficer ? 
+                async (data) => { await updateOfficer(selectedOfficer.id, data); } :
+                async (data) => { await addOfficer(data); }
+              }
+              officer={selectedOfficer}
+              entityId={id}
+            />
+
+            <ComplianceModal
+              isOpen={isComplianceModalOpen}
+              onClose={() => {
+                setIsComplianceModalOpen(false);
+                setSelectedComplianceCheck(null);
+              }}
+              onSave={selectedComplianceCheck ? 
+                async (data) => { await updateComplianceCheck(selectedComplianceCheck.id, data); } :
+                async (data) => { await addComplianceCheck(data); }
+              }
+              complianceCheck={selectedComplianceCheck}
+              entityId={id}
+            />
+          </>
+        )}
       </div>
     </div>
   );

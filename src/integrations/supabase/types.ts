@@ -370,6 +370,51 @@ export type Database = {
         }
         Relationships: []
       }
+      officers: {
+        Row: {
+          address: string | null
+          appointment_date: string | null
+          created_at: string
+          email: string | null
+          entity_id: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          appointment_date?: string | null
+          created_at?: string
+          email?: string | null
+          entity_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          appointment_date?: string | null
+          created_at?: string
+          email?: string | null
+          entity_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           created_at: string
