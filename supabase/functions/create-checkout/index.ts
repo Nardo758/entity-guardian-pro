@@ -66,6 +66,7 @@ serve(async (req) => {
     }
     const priceId = prices.data[0].id;
 
+    const origin = req.headers.get("origin") || Deno.env.get("SITE_URL") || "http://localhost:5173";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -76,8 +77,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/billing?success=true`,
-      cancel_url: `${req.headers.get("origin")}/billing?canceled=true`,
+      success_url: `${origin}/billing?success=true`,
+      cancel_url: `${origin}/billing?canceled=true`,
     });
 
     logStep("Checkout session created", { sessionId: session.id, tier, billing, priceId });
