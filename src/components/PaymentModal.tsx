@@ -27,7 +27,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   paymentMethods
 }) => {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const { updatePaymentStatus } = usePayments();
+  const { updatePaymentStatus, processStripePayment } = usePayments();
 
   const getPaymentStatus = (payment: Payment) => {
     const today = new Date();
@@ -253,10 +253,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
               <div className="flex gap-2">
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     const paymentMethodId = paymentMethods.find(pm => pm.is_default)?.id || paymentMethods[0]?.id;
-                    if (paymentMethodId) {
-                      processPayment(selectedPayment.id, paymentMethodId);
+                    if (paymentMethodId && selectedPayment) {
+                      try {
+                        await processStripePayment(selectedPayment.id, paymentMethodId, selectedPayment.amount);
+                        setSelectedPayment(null); // Close modal on success
+                      } catch (error) {
+                        // Error handled in hook
+                      }
                     }
                   }}
                   className="flex-1 bg-success hover:bg-success/90 text-success-foreground"

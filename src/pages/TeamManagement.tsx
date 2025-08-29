@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,82 +9,64 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { UserPlus, Users, Mail, Phone, MoreHorizontal, Shield, Edit, Trash2, Settings } from "lucide-react";
+import { UserPlus, Users, Mail, Phone, MoreHorizontal, Shield, Edit, Trash2, Settings, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTeams } from "@/hooks/useTeams";
 
-interface TeamMember {
+interface DisplayTeamMember {
   id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'Manager' | 'Member' | 'Viewer';
+  role: 'owner' | 'admin' | 'manager' | 'member';
   department: string;
   joinDate: string;
-  status: 'Active' | 'Inactive' | 'Pending';
+  status: 'Active' | 'Pending';
   avatar?: string;
-  phone?: string;
   lastActive: string;
 }
 
 const TeamManagement = () => {
   const { toast } = useToast();
+  const { 
+    teams,
+    currentTeam,
+    setCurrentTeam,
+    teamMembers,
+    teamInvitations,
+    loading,
+    inviteTeamMember,
+    updateMemberRole,
+    removeMember,
+    createTeam
+  } = useTeams();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isCreateTeamOpen, setIsCreateTeamOpen] = useState(false);
   const [inviteData, setInviteData] = useState({
     email: '',
-    role: 'Member',
+    role: 'member' as 'owner' | 'admin' | 'manager' | 'member',
     department: ''
   });
+  const [createTeamData, setCreateTeamData] = useState({
+    name: '',
+    description: ''
+  });
 
-  const [teamMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@company.com',
-      role: 'Admin',
-      department: 'Legal',
-      joinDate: '2023-01-15',
-      status: 'Active',
-      avatar: '/api/placeholder/32/32',
-      phone: '+1 (555) 123-4567',
-      lastActive: '2 hours ago'
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael.chen@company.com',
-      role: 'Manager',
-      department: 'Compliance',
-      joinDate: '2023-03-20',
-      status: 'Active',
-      phone: '+1 (555) 234-5678',
-      lastActive: '1 day ago'
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      email: 'emily.rodriguez@company.com',
-      role: 'Member',
-      department: 'Operations',
-      joinDate: '2023-06-10',
-      status: 'Active',
-      phone: '+1 (555) 345-6789',
-      lastActive: '3 hours ago'
-    },
-    {
-      id: '4',
-      name: 'David Kim',
-      email: 'david.kim@company.com',
-      role: 'Viewer',
-      department: 'Finance',
-      joinDate: '2023-09-05',
-      status: 'Pending',
-      phone: '+1 (555) 456-7890',
-      lastActive: 'Never'
-    }
-  ]);
+  // Transform team members for display - simplified for now
+  const displayMembers: DisplayTeamMember[] = teamMembers.map(member => ({
+    id: member.id,
+    name: `User ${member.user_id.slice(-4)}`, // Show last 4 chars of user_id for now
+    email: 'user@example.com', // Would need to query auth.users separately
+    role: member.role,
+    department: 'General', // Could be added to team_memberships table
+    joinDate: new Date(member.joined_at).toLocaleDateString(),
+    status: 'Active' as const,
+    lastActive: new Date(member.updated_at).toLocaleDateString()
+  }));
 
-  const filteredMembers = teamMembers.filter(member => {
+  const filteredMembers = displayMembers.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          member.department.toLowerCase().includes(searchTerm.toLowerCase());
@@ -94,10 +76,10 @@ const TeamManagement = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Admin': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case 'Manager': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'Member': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'Viewer': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      case 'owner': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+      case 'admin': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'manager': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'member': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
   };
@@ -111,20 +93,49 @@ const TeamManagement = () => {
     }
   };
 
-  const handleInvite = () => {
-    toast({
-      title: "Invitation Sent",
-      description: `Invitation sent to ${inviteData.email}`,
-    });
-    setIsInviteOpen(false);
-    setInviteData({ email: '', role: 'Member', department: '' });
+  const handleInvite = async () => {
+    if (!currentTeam) return;
+    
+    try {
+      await inviteTeamMember(currentTeam.id, inviteData.email, inviteData.role);
+      setIsInviteOpen(false);
+      setInviteData({ email: '', role: 'member', department: '' });
+    } catch (error) {
+      // Error handled in hook
+    }
   };
 
-  const handleAction = (action: string, member: TeamMember) => {
-    toast({
-      title: `${action} Action`,
-      description: `${action} action performed for ${member.name}`,
-    });
+  const handleCreateTeam = async () => {
+    try {
+      await createTeam(createTeamData);
+      setIsCreateTeamOpen(false);
+      setCreateTeamData({ name: '', description: '' });
+    } catch (error) {
+      // Error handled in hook
+    }
+  };
+
+  const handleAction = async (action: string, member: DisplayTeamMember) => {
+    const teamMember = teamMembers.find(tm => tm.id === member.id);
+    if (!teamMember) return;
+
+    switch (action) {
+      case 'Remove':
+        await removeMember(teamMember.id);
+        break;
+      case 'Edit':
+        // Could open edit modal
+        toast({
+          title: `${action} Action`,
+          description: `${action} action for ${member.name} - Feature coming soon`,
+        });
+        break;
+      default:
+        toast({
+          title: `${action} Action`,
+          description: `${action} action for ${member.name} - Feature coming soon`,
+        });
+    }
   };
 
   return (
@@ -132,69 +143,109 @@ const TeamManagement = () => {
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Team Management</h1>
-              <p className="text-muted-foreground mt-1">Manage your team members and their permissions</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Team Management</h1>
+                <p className="text-muted-foreground mt-1">
+                  {currentTeam ? `Managing ${currentTeam.name}` : 'Manage your teams and members'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {!currentTeam && (
+                  <Dialog open={isCreateTeamOpen} onOpenChange={setIsCreateTeamOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Create Team
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Team</DialogTitle>
+                        <DialogDescription>
+                          Create a new team to collaborate with members.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="teamName">Team Name</Label>
+                          <Input
+                            id="teamName"
+                            placeholder="Enter team name"
+                            value={createTeamData.name}
+                            onChange={(e) => setCreateTeamData({...createTeamData, name: e.target.value})}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="description">Description</Label>
+                          <Input
+                            id="description"
+                            placeholder="Enter team description"
+                            value={createTeamData.description}
+                            onChange={(e) => setCreateTeamData({...createTeamData, description: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCreateTeamOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateTeam}>Create Team</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+                {currentTeam && (
+                  <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="gap-2">
+                        <UserPlus className="w-4 h-4" />
+                        Invite Member
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Invite Team Member</DialogTitle>
+                        <DialogDescription>
+                          Send an invitation to join {currentTeam.name}.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="Enter email address"
+                            value={inviteData.email}
+                            onChange={(e) => setInviteData({...inviteData, email: e.target.value})}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="role">Role</Label>
+                          <Select value={inviteData.role} onValueChange={(value: any) => setInviteData({...inviteData, role: value})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="manager">Manager</SelectItem>
+                              <SelectItem value="member">Member</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleInvite}>Send Invitation</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </div>
-            <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <UserPlus className="w-4 h-4" />
-                  Invite Member
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Invite Team Member</DialogTitle>
-                  <DialogDescription>
-                    Send an invitation to join your team.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter email address"
-                      value={inviteData.email}
-                      onChange={(e) => setInviteData({...inviteData, email: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select value={inviteData.role} onValueChange={(value) => setInviteData({...inviteData, role: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Manager">Manager</SelectItem>
-                        <SelectItem value="Member">Member</SelectItem>
-                        <SelectItem value="Viewer">Viewer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Input
-                      id="department"
-                      placeholder="Enter department"
-                      value={inviteData.department}
-                      onChange={(e) => setInviteData({...inviteData, department: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleInvite}>Send Invitation</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
         </div>
       </div>
 
@@ -207,7 +258,7 @@ const TeamManagement = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{teamMembers.length}</div>
+              <div className="text-2xl font-bold">{displayMembers.length}</div>
             </CardContent>
           </Card>
           <Card>
@@ -217,7 +268,7 @@ const TeamManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {teamMembers.filter(m => m.status === 'Active').length}
+                {displayMembers.filter(m => m.status === 'Active').length}
               </div>
             </CardContent>
           </Card>
@@ -228,7 +279,7 @@ const TeamManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {teamMembers.filter(m => m.status === 'Pending').length}
+                {displayMembers.filter(m => m.status === 'Pending').length}
               </div>
             </CardContent>
           </Card>
@@ -239,7 +290,7 @@ const TeamManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {teamMembers.filter(m => m.role === 'Admin').length}
+                {displayMembers.filter(m => m.role === 'admin' || m.role === 'owner').length}
               </div>
             </CardContent>
           </Card>
@@ -262,10 +313,10 @@ const TeamManagement = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Manager">Manager</SelectItem>
-                  <SelectItem value="Member">Member</SelectItem>
-                  <SelectItem value="Viewer">Viewer</SelectItem>
+                          <SelectItem value="owner">Owner</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="member">Member</SelectItem>
                 </SelectContent>
               </Select>
             </div>

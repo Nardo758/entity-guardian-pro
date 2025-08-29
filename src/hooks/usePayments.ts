@@ -26,7 +26,6 @@ export const usePayments = () => {
       if (error) throw error;
       setPayments((data || []) as Payment[]);
     } catch (error) {
-      console.error('Error fetching payments:', error);
       toast.error('Failed to load payments');
     } finally {
       setLoading(false);
@@ -63,8 +62,41 @@ export const usePayments = () => {
       
       toast.success(`Payment ${status === 'paid' ? 'processed' : 'updated'} successfully`);
     } catch (error) {
-      console.error('Error updating payment:', error);
       toast.error('Failed to update payment');
+      throw error;
+    }
+  };
+
+  const processStripePayment = async (paymentId: string, paymentMethodId: string, amount: number) => {
+    if (!user) return;
+
+    try {
+      setPayments(prev => 
+        prev.map(payment => 
+          payment.id === paymentId 
+            ? { ...payment, processing_status: 'processing' }
+            : payment
+        )
+      );
+
+      const { data, error } = await supabase.functions.invoke('process-stripe-payment', {
+        body: { paymentId, paymentMethodId, amount }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        await fetchPayments(); // Refresh to get updated status
+        toast.success('Payment processed successfully');
+      } else {
+        throw new Error('Payment failed');
+      }
+
+      return data;
+    } catch (error) {
+      toast.error('Payment processing failed');
+      // Refresh to reset status
+      await fetchPayments();
       throw error;
     }
   };
@@ -98,6 +130,7 @@ export const usePayments = () => {
     payments,
     loading,
     updatePaymentStatus,
+    processStripePayment,
     refetch: fetchPayments,
   };
 };
