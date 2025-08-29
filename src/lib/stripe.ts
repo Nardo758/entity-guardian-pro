@@ -4,7 +4,7 @@ import { loadStripe } from '@stripe/stripe-js';
 // For development: pk_test_...
 // For production: pk_live_...
 export const stripePromise = loadStripe(
-  'pk_test_51S0ulpEF6jrk85BxD1gWm0NBBCkzBYQhflAlSrNchhAsNQeugNiR96VjGglG3RiJPIgOy2w8YtKb6Gif1m2xf5ni00wUCJVSVF'
+  (import.meta as any)?.env?.VITE_STRIPE_PUBLISHABLE_KEY || ''
 );
 
 export const STRIPE_PRICING_TIERS = {
