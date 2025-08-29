@@ -95,7 +95,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             <PaymentElement 
               options={{
                 layout: 'tabs',
-                paymentMethodOrder: ['card', 'apple_pay', 'google_pay']
+                paymentMethodOrder: ['card']
               }}
               onReady={() => setElementReady(true)}
             />

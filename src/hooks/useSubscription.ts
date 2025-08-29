@@ -56,7 +56,11 @@ export const useSubscription = () => {
         if (result.error) {
           // Fallback to opening the Checkout URL if redirect fails
           if (data?.url) {
-            window.open(data.url, '_blank');
+            if (window.top) {
+              (window.top as Window).location.href = data.url;
+            } else {
+              window.location.href = data.url;
+            }
             return;
           }
           throw result.error;
@@ -64,7 +68,11 @@ export const useSubscription = () => {
       } else {
         // Fallback if Stripe failed to initialize
         if (data?.url) {
-          window.open(data.url, '_blank');
+          if (window.top) {
+            (window.top as Window).location.href = data.url;
+          } else {
+            window.location.href = data.url;
+          }
           return;
         }
         throw new Error('Stripe failed to initialize and no checkout URL provided');
