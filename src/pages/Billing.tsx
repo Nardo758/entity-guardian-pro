@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
+import { CheckoutModal } from '@/components/payment/CheckoutModal';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 
 interface Invoice {
@@ -43,6 +44,8 @@ const Billing = () => {
   const [showPaymentMethodDialog, setShowPaymentMethodDialog] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [activeTab, setActiveTab] = useState('plans');
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<string>('');
   const { subscription, loading, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
 
   const pricingTiers = Object.values(STRIPE_PRICING_TIERS);
@@ -76,7 +79,15 @@ const Billing = () => {
   };
 
   const handleUpgradeClick = (tier: string) => {
-    createCheckout(tier, selectedBilling);
+    setSelectedTierForCheckout(tier);
+    setShowCheckoutModal(true);
+  };
+
+  const handleCheckoutSuccess = () => {
+    // Refresh subscription status after successful payment
+    checkSubscription();
+    setShowCheckoutModal(false);
+    setSelectedTierForCheckout('');
   };
 
   const handleManageSubscription = () => {
@@ -397,6 +408,15 @@ const Billing = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        selectedTier={selectedTierForCheckout}
+        selectedBilling={selectedBilling}
+        onSuccess={handleCheckoutSuccess}
+      />
     </div>
   );
 };
