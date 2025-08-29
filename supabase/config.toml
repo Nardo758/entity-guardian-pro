@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.create-stripe-webhook-endpoint]
 verify_jwt = false
+
+[functions.stripe-webhook-delete]
+verify_jwt = false
