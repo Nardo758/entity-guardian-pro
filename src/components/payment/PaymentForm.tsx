@@ -29,11 +29,32 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [paymentElementReady, setPaymentElementReady] = useState(false);
 
+  // Debug logging
+  React.useEffect(() => {
+    console.log('PaymentForm: stripe ready:', !!stripe);
+    console.log('PaymentForm: elements ready:', !!elements);
+    console.log('PaymentForm: paymentElement ready:', paymentElementReady);
+  }, [stripe, elements, paymentElementReady]);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements || !paymentElementReady) {
-      const message = 'Payment form is not ready. Please wait a moment and try again.';
+    console.log('PaymentForm handleSubmit called');
+    console.log('- stripe:', !!stripe);
+    console.log('- elements:', !!elements);
+    console.log('- paymentElementReady:', paymentElementReady);
+
+    if (!stripe || !elements) {
+      const message = 'Stripe is not ready. Please refresh the page and try again.';
+      console.log('PaymentForm: Stripe not ready');
+      setErrorMessage(message);
+      onError(message);
+      return;
+    }
+
+    if (!paymentElementReady) {
+      const message = 'Payment form is still loading. Please wait a moment and try again.';
+      console.log('PaymentForm: PaymentElement not ready');
       setErrorMessage(message);
       onError(message);
       return;
@@ -43,6 +64,11 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
     setErrorMessage('');
 
     try {
+      console.log('PaymentForm: Calling stripe.confirmPayment...');
+      
+      // Add a small delay to ensure everything is fully ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -52,15 +78,18 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       });
 
       if (error) {
+        console.error('PaymentForm: Stripe error:', error);
         const message = error.message || 'An unexpected error occurred.';
         setErrorMessage(message);
         onError(message);
         toast.error('Payment failed: ' + message);
       } else if (paymentIntent) {
+        console.log('PaymentForm: Payment successful:', paymentIntent);
         onSuccess(paymentIntent);
         toast.success('Payment successful!');
       }
     } catch (err: any) {
+      console.error('PaymentForm: Exception during payment:', err);
       const message = err.message || 'Payment processing failed';
       setErrorMessage(message);
       onError(message);
@@ -90,7 +119,10 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
               </div>
             )}
             <PaymentElement 
-              onReady={() => setPaymentElementReady(true)}
+              onReady={() => {
+                console.log('PaymentElement onReady callback fired');
+                setPaymentElementReady(true);
+              }}
               onLoadError={(error) => {
                 console.error('PaymentElement failed to load:', error);
                 setErrorMessage('Failed to load payment form. Please refresh and try again.');
