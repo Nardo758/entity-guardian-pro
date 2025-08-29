@@ -71,3 +71,23 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Subscriptions
+
+This project uses Stripe Checkout for subscription creation and management. Our flow aligns with Stripe’s sample "Checkout single subscription":
+
+- Reference: https://github.com/stripe-samples/checkout-single-subscription/branches
+- Backend: Supabase Edge Functions create Checkout Sessions and handle webhooks
+  - `create-checkout`: creates a subscription Checkout Session using Price IDs
+  - `stripe-webhook`: processes `checkout.session.completed` and invoice events
+- Frontend: calls `create-checkout` and opens Stripe Checkout via `redirectToCheckout`
+- Pricing sync: `sync-pricing` upserts Products/Prices in Stripe and assigns lookup keys (e.g. `erp:starter:monthly`)
+
+Test mode:
+- Set `VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...`
+- Set `STRIPE_SECRET_KEY=sk_test_...` in Supabase project secrets
+- Run pricing sync: POST `.../sync-pricing`
+
+Production:
+- Swap to `pk_live_...` and `sk_live_...`
+- Update webhook endpoint in Stripe to your deployed function URL and set the signing secret in Supabase (`STRIPE_WEBHOOK_SECRET`)
