@@ -27,17 +27,26 @@ serve(async (req) => {
 
   const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
 
-  const signature = req.headers.get("stripe-signature");
   const body = await req.text();
+
+  // Test bypass: allow injection with shared token for simulation
+  const testBypass = req.headers.get('x-test-webhook');
+  const simulateToken = Deno.env.get('SIMULATE_TOKEN');
   let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
-  } catch (err) {
-    log("Signature verification failed", { message: (err as Error).message });
-    return new Response(JSON.stringify({ error: "Invalid signature" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+  if (testBypass && simulateToken && testBypass === simulateToken) {
+    log('Bypassing signature for test webhook');
+    event = JSON.parse(body);
+  } else {
+    const signature = req.headers.get("stripe-signature") || req.headers.get("Stripe-Signature");
+    try {
+      event = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
+    } catch (err) {
+      log("Signature verification failed", { message: (err as Error).message });
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
   }
 
   // Supabase client with service role for writes

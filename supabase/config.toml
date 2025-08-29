@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.stripe-webhook-simulate]
 verify_jwt = false
+
+[functions.stripe-webhook-send-test]
+verify_jwt = false
