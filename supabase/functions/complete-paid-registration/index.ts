@@ -56,27 +56,35 @@ serve(async (req) => {
       throw new Error("Invalid payment metadata");
     }
 
-    // Create user account
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    // Ensure a user exists and get a magic link. This works for existing or new users.
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
       email: metadata.email,
-      password: Math.random().toString(36).slice(-8), // Temporary password
-      email_confirm: true, // Auto-confirm email for paid users
-      user_metadata: {
-        first_name: metadata.first_name,
-        last_name: metadata.last_name,
-        company: metadata.company,
-        company_size: metadata.company_size,
-        paid_registration: true,
-        payment_intent_id: paymentIntentId,
-      },
     });
-
-    if (authError) {
-      logStep("Auth error", authError);
-      throw new Error(`Failed to create user account: ${authError.message}`);
+    if (linkError) {
+      logStep("Auth generateLink error", linkError);
+      throw new Error(`Failed to generate sign-in link: ${linkError.message}`);
     }
 
-    logStep("User created", { userId: authData.user.id, email: metadata.email });
+    const userId = linkData.user?.id;
+    if (userId) {
+      // Best-effort: update user metadata
+      try {
+        await supabaseAdmin.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            first_name: metadata.first_name,
+            last_name: metadata.last_name,
+            company: metadata.company,
+            company_size: metadata.company_size,
+            paid_registration: true,
+            payment_intent_id: paymentIntentId,
+          },
+        });
+      } catch (e) {
+        logStep("Warning: could not update user metadata", { message: (e as Error).message });
+      }
+    }
+    logStep("User ensured", { userId: userId || null, email: metadata.email });
 
     // Create subscription record
     const subscriptionTier = metadata.tier;
@@ -90,34 +98,24 @@ serve(async (req) => {
       subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
     }
 
-    await supabaseAdmin.from("subscribers").insert({
-      user_id: authData.user.id,
+    await supabaseAdmin.from("subscribers").upsert({
+      user_id: userId || null,
       email: metadata.email,
-      stripe_customer_id: paymentIntent.customer,
+      stripe_customer_id: paymentIntent.customer as any,
       subscribed: true,
       subscription_tier: subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1),
       subscription_end: subscriptionEnd.toISOString(),
       updated_at: new Date().toISOString(),
-    });
+    }, { onConflict: 'email' });
 
     logStep("Subscriber record created", { userId: authData.user.id, tier: subscriptionTier });
 
-    // Generate sign-in link for immediate access
-    const { data: signInData, error: signInError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: metadata.email,
-    });
-
-    if (signInError) {
-      logStep("Warning: Could not generate sign-in link", signInError);
-    }
-
     return new Response(JSON.stringify({
       success: true,
-      userId: authData.user.id,
+      userId: userId || null,
       email: metadata.email,
       subscriptionTier,
-      signInUrl: signInData?.properties?.action_link,
+      signInUrl: linkData?.properties?.action_link,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
