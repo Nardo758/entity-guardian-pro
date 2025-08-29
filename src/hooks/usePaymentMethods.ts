@@ -26,6 +26,7 @@ export const usePaymentMethods = () => {
       if (error) throw error;
       setPaymentMethods((data || []) as PaymentMethod[]);
     } catch (error) {
+      console.error('Error fetching payment methods:', error);
       toast.error('Failed to load payment methods');
     } finally {
       setLoading(false);

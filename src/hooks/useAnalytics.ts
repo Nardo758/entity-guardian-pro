@@ -32,6 +32,7 @@ export const useAnalytics = (entityId?: string) => {
       if (error) throw error;
       setAnalyticsData((data || []) as AnalyticsData[]);
     } catch (error) {
+      console.error('Error fetching analytics data:', error);
       toast.error('Failed to load analytics data');
     }
   };
@@ -57,6 +58,7 @@ export const useAnalytics = (entityId?: string) => {
       if (error) throw error;
       setComplianceChecks((data || []) as ComplianceCheck[]);
     } catch (error) {
+      console.error('Error fetching compliance checks:', error);
       toast.error('Failed to load compliance checks');
     }
   };
@@ -82,6 +84,7 @@ export const useAnalytics = (entityId?: string) => {
       if (error) throw error;
       setCostProjections((data || []) as CostProjection[]);
     } catch (error) {
+      console.error('Error fetching cost projections:', error);
       toast.error('Failed to load cost projections');
     }
   };
@@ -115,6 +118,7 @@ export const useAnalytics = (entityId?: string) => {
       toast.success('Analytics data added successfully');
       return newData;
     } catch (error) {
+      console.error('Error adding analytics data:', error);
       toast.error('Failed to add analytics data');
       throw error;
     }
@@ -143,6 +147,7 @@ export const useAnalytics = (entityId?: string) => {
       toast.success('Compliance check updated successfully');
       return data;
     } catch (error) {
+      console.error('Error updating compliance check:', error);
       toast.error('Failed to update compliance check');
       throw error;
     }
@@ -167,6 +172,7 @@ export const useAnalytics = (entityId?: string) => {
       toast.success('Cost projection added successfully');
       return newData;
     } catch (error) {
+      console.error('Error adding cost projection:', error);
       toast.error('Failed to add cost projection');
       throw error;
     }

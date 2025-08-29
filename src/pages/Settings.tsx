@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bell, User, Shield, CreditCard, Users, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { NotificationPreferences } from "@/components/NotificationPreferences";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -168,57 +169,7 @@ const Settings = () => {
               </TabsContent>
 
               <TabsContent value="notifications" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Notification Preferences</CardTitle>
-                    <CardDescription>Choose how you want to be notified about important updates</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label>Email Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Receive email notifications for renewals and deadlines</p>
-                      </div>
-                      <Switch
-                        checked={notifications.emailAlerts}
-                        onCheckedChange={(checked) => handleNotificationChange('emailAlerts', checked)}
-                      />
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label>Push Notifications</Label>
-                        <p className="text-sm text-muted-foreground">Browser notifications for urgent reminders</p>
-                      </div>
-                      <Switch
-                        checked={notifications.pushNotifications}
-                        onCheckedChange={(checked) => handleNotificationChange('pushNotifications', checked)}
-                      />
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label>Weekly Reports</Label>
-                        <p className="text-sm text-muted-foreground">Summary reports every Monday</p>
-                      </div>
-                      <Switch
-                        checked={notifications.weeklyReports}
-                        onCheckedChange={(checked) => handleNotificationChange('weeklyReports', checked)}
-                      />
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label>Urgent Only Mode</Label>
-                        <p className="text-sm text-muted-foreground">Only receive critical notifications</p>
-                      </div>
-                      <Switch
-                        checked={notifications.urgentOnly}
-                        onCheckedChange={(checked) => handleNotificationChange('urgentOnly', checked)}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                <NotificationPreferences />
               </TabsContent>
 
               <TabsContent value="security" className="space-y-6">

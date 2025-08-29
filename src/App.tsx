@@ -6,10 +6,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Pages
+import Index from "./pages/Index";
 import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import PaidRegister from "./pages/PaidRegister";
+import RegistrationSuccess from "./pages/RegistrationSuccess";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import Settings from "./pages/Settings";
 import Reports from "./pages/Reports";
 import TeamManagement from "./pages/TeamManagement";
@@ -40,11 +43,14 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/paid-register" element={<PaidRegister />} />
+            <Route path="/registration-success" element={<RegistrationSuccess />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
             {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />

@@ -370,90 +370,36 @@ export type Database = {
         }
         Relationships: []
       }
-      officers: {
-        Row: {
-          address: string | null
-          appointment_date: string | null
-          created_at: string
-          email: string | null
-          entity_id: string
-          id: string
-          is_active: boolean
-          name: string
-          phone: string | null
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          address?: string | null
-          appointment_date?: string | null
-          created_at?: string
-          email?: string | null
-          entity_id: string
-          id?: string
-          is_active?: boolean
-          name: string
-          phone?: string | null
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          address?: string | null
-          appointment_date?: string | null
-          created_at?: string
-          email?: string | null
-          entity_id?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          phone?: string | null
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       payment_methods: {
         Row: {
-          brand: string | null
           created_at: string
           expiry_date: string | null
           id: string
           is_default: boolean
-          last_four: string | null
           name: string
           routing_number: string | null
-          stripe_payment_method_id: string | null
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          brand?: string | null
           created_at?: string
           expiry_date?: string | null
           id?: string
           is_default?: boolean
-          last_four?: string | null
           name: string
           routing_number?: string | null
-          stripe_payment_method_id?: string | null
           type: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          brand?: string | null
           created_at?: string
           expiry_date?: string | null
           id?: string
           is_default?: boolean
-          last_four?: string | null
           name?: string
           routing_number?: string | null
-          stripe_payment_method_id?: string | null
           type?: string
           updated_at?: string
           user_id?: string
@@ -469,13 +415,7 @@ export type Database = {
           id: string
           paid_date: string | null
           payment_method: string | null
-          processing_fee: number | null
-          processing_status:
-            | Database["public"]["Enums"]["payment_processing_status"]
-            | null
           status: string
-          stripe_customer_id: string | null
-          stripe_payment_intent_id: string | null
           type: string
           updated_at: string
           user_id: string
@@ -488,13 +428,7 @@ export type Database = {
           id?: string
           paid_date?: string | null
           payment_method?: string | null
-          processing_fee?: number | null
-          processing_status?:
-            | Database["public"]["Enums"]["payment_processing_status"]
-            | null
           status: string
-          stripe_customer_id?: string | null
-          stripe_payment_intent_id?: string | null
           type: string
           updated_at?: string
           user_id: string
@@ -507,13 +441,7 @@ export type Database = {
           id?: string
           paid_date?: string | null
           payment_method?: string | null
-          processing_fee?: number | null
-          processing_status?:
-            | Database["public"]["Enums"]["payment_processing_status"]
-            | null
           status?: string
-          stripe_customer_id?: string | null
-          stripe_payment_intent_id?: string | null
           type?: string
           updated_at?: string
           user_id?: string
@@ -771,12 +699,6 @@ export type Database = {
       }
     }
     Enums: {
-      payment_processing_status:
-        | "pending"
-        | "processing"
-        | "succeeded"
-        | "failed"
-        | "canceled"
       team_role: "owner" | "admin" | "manager" | "member"
     }
     CompositeTypes: {
@@ -905,13 +827,6 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      payment_processing_status: [
-        "pending",
-        "processing",
-        "succeeded",
-        "failed",
-        "canceled",
-      ],
       team_role: ["owner", "admin", "manager", "member"],
     },
   },

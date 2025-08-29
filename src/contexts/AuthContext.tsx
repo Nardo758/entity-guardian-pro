@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface Profile {
   id: string;
@@ -57,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setProfile(data);
     } catch (error) {
-      toast.error('Failed to fetch profile');
+      console.error('Error fetching profile:', error);
     }
   };
 
@@ -68,6 +67,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      try {
+        await supabase.functions.invoke('check-subscription');
+      } catch (error) {
+        console.log('Failed to check subscription status:', error);
+      }
+    };
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -79,6 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
+          
+          // Check subscription status on successful sign-in or token refresh
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            setTimeout(() => {
+              checkSubscriptionStatus();
+            }, 100);
+          }
         } else {
           setProfile(null);
         }
@@ -96,6 +110,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTimeout(() => {
           fetchProfile(session.user.id);
         }, 0);
+        
+        // Check subscription status for existing session
+        setTimeout(() => {
+          checkSubscriptionStatus();
+        }, 100);
       }
       
       setLoading(false);
@@ -105,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const redirectUrl = `${window.location.origin}/dashboard`;
+    const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -131,13 +150,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
     });
-    
-    if (!error) {
-      // Redirect to dashboard after successful login
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 100);
-    }
     
     return { error };
   };

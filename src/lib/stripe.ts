@@ -1,0 +1,82 @@
+import { loadStripe } from '@stripe/stripe-js';
+
+// IMPORTANT: Replace with your actual Stripe publishable key
+// For development: pk_test_...
+// For production: pk_live_...
+export const stripePromise = loadStripe(
+  'pk_test_51S0ulpEF6jrk85BxD1gWm0NBBCkzBYQhflAlSrNchhAsNQeugNiR96VjGglG3RiJPIgOy2w8YtKb6Gif1m2xf5ni00wUCJVSVF'
+);
+
+export const STRIPE_PRICING_TIERS = {
+  starter: {
+    id: 'starter',
+    name: 'Starter',
+    description: 'Perfect for small businesses',
+    monthlyPrice: 25,
+    yearlyPrice: 249,
+    entities: 5,
+    features: [
+      'Up to 5 entities',
+      'Basic notifications',
+      'Email support',
+      'Standard templates'
+    ],
+    popular: false
+  },
+  professional: {
+    id: 'professional',  
+    name: 'Professional',
+    description: 'Most popular for growing businesses',
+    monthlyPrice: 99,
+    yearlyPrice: 986,
+    entities: 25,
+    features: [
+      'Up to 25 entities',
+      'Advanced notifications',
+      'Priority support',
+      'API access',
+      'Custom reports',
+      'Team collaboration'
+    ],
+    popular: true
+  },
+  enterprise: {
+    id: 'enterprise',
+    name: 'Enterprise', 
+    description: 'For large organizations',
+    monthlyPrice: 200,
+    yearlyPrice: 1992,
+    entities: 100,
+    features: [
+      'Up to 100 entities',
+      'Advanced notifications',
+      'Dedicated support',
+      'Full API access',
+      'Custom reports',
+      'Team collaboration',
+      'Priority processing',
+      'Custom integrations'
+    ],
+    popular: false
+  },
+  unlimited: {
+    id: 'unlimited',
+    name: 'Unlimited',
+    description: 'Enterprise with unlimited entities',
+    monthlyPrice: 350,
+    yearlyPrice: 3486,
+    entities: 'Unlimited',
+    features: [
+      'Unlimited entities',
+      'Advanced notifications',
+      'Dedicated account manager',
+      'Full API access',
+      'Custom reports',
+      'Team collaboration',
+      'Priority processing',
+      'Custom integrations',
+      'White label options'
+    ],
+    popular: false
+  }
+} as const;

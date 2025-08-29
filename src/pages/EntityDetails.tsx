@@ -1,116 +1,87 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  FileText, 
-  Users, 
+  ArrowLeft, 
+  Calendar, 
+  MapPin, 
+  AlertTriangle, 
   CheckCircle, 
-  DollarSign, 
-  Calendar,
-  MapPin,
-  Building,
-  Share,
-  Edit,
-  MoreVertical,
+  Clock, 
+  DollarSign,
+  FileText,
   Phone,
   Mail,
-  User,
-  Clock,
-  AlertCircle,
+  Globe,
+  Building,
+  Users,
+  Edit,
   Download,
-  Upload,
-  Trash2,
-  Plus,
-  ArrowLeft
-} from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { useEntities } from '@/hooks/useEntities';
-import { useOfficers } from '@/hooks/useOfficers';
-import { useComplianceChecks } from '@/hooks/useComplianceChecks';
-import { useDocuments } from '@/hooks/useDocuments';
-import { Entity } from '@/types/entity';
-import { EntityEditModal } from '@/components/EntityEditModal';
-import { OfficerModal } from '@/components/OfficerModal';
-import { ComplianceModal } from '@/components/ComplianceModal';
-import { DocumentUpload } from '@/components/DocumentUpload';
-import { DocumentList } from '@/components/DocumentList';
+  Share
+} from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+
+// Mock entity data - in real app this would come from API
+const mockEntity = {
+  id: "1",
+  name: "TechCorp Solutions LLC",
+  type: "LLC",
+  status: "Active",
+  jurisdiction: "Delaware",
+  incorporationDate: "2020-03-15",
+  nextRenewalDate: "2024-03-15",
+  registeredAgent: "Corporate Services Inc.",
+  address: {
+    street: "123 Business Ave, Suite 100",
+    city: "Wilmington",
+    state: "DE",
+    zipCode: "19801"
+  },
+  contact: {
+    phone: "+1 (555) 123-4567",
+    email: "legal@techcorp.com",
+    website: "www.techcorp.com"
+  },
+  officers: [
+    { name: "Sarah Johnson", title: "CEO", appointed: "2020-03-15" },
+    { name: "Michael Chen", title: "CFO", appointed: "2021-01-10" },
+    { name: "Emily Davis", title: "Secretary", appointed: "2020-03-15" }
+  ],
+  documents: [
+    { name: "Certificate of Incorporation", date: "2020-03-15", type: "Certificate" },
+    { name: "Operating Agreement", date: "2020-03-20", type: "Agreement" },
+    { name: "Annual Report 2023", date: "2023-03-15", type: "Filing" },
+    { name: "Good Standing Certificate", date: "2023-12-01", type: "Certificate" }
+  ],
+  financials: {
+    annualFee: 300,
+    registeredAgentFee: 150,
+    totalDue: 450,
+    lastPayment: "2023-03-15"
+  },
+  compliance: {
+    annualReportFiled: true,
+    taxesCurrent: true,
+    licensesValid: true,
+    insuranceCurrent: true
+  }
+};
 
 const EntityDetails = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [entity, setEntity] = useState<Entity | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isOfficerModalOpen, setIsOfficerModalOpen] = useState(false);
-  const [isComplianceModalOpen, setIsComplianceModalOpen] = useState(false);
-  const [selectedOfficer, setSelectedOfficer] = useState<any>(null);
-  const [selectedComplianceCheck, setSelectedComplianceCheck] = useState<any>(null);
-  const { getEntity, updateEntity } = useEntities();
-  const { officers, addOfficer, updateOfficer, deleteOfficer } = useOfficers(id);
-  const { complianceChecks, addComplianceCheck, updateComplianceCheck, deleteComplianceCheck } = useComplianceChecks(id);
-  const { documents, deleteDocument, downloadDocument } = useDocuments(id);
+  const [entity, setEntity] = useState(mockEntity);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchEntityData = async () => {
-      if (!id) {
-        navigate('/');
-        return;
-      }
-      
-      setLoading(true);
-      try {
-        const entityData = await getEntity(id);
-        if (!entityData) {
-          toast({
-            title: "Entity Not Found",
-            description: "The requested entity could not be found.",
-            variant: "destructive"
-          });
-          navigate('/');
-          return;
-        }
-        setEntity(entityData);
-      } catch (error) {
-        console.error('Error fetching entity:', error);
-        toast({
-          title: "Error Loading Entity",
-          description: "Failed to load entity details. Please try again.",
-          variant: "destructive"
-        });
-        navigate('/');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEntityData();
-  }, [id, getEntity, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading entity details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!entity) {
-    return null;
-  }
-
-  // Calculate days until renewal - use registered agent fee due date as primary renewal
-  const renewalDate = entity.registered_agent_fee_due_date || entity.independent_director_fee_due_date;
-  const daysUntilRenewal = renewalDate 
-    ? Math.ceil((new Date(renewalDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
+  // Calculate days until renewal
+  const daysUntilRenewal = Math.ceil(
+    (new Date(entity.nextRenewalDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -142,23 +113,6 @@ const EntityDetails = () => {
     });
   };
 
-  const handleEditEntity = () => {
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveEntity = async (entityData: Partial<Omit<Entity, 'id' | 'user_id' | 'created_at' | 'updated_at'>>) => {
-    if (!entity || !id) return;
-    
-    try {
-      const updatedEntity = await updateEntity(id, entityData);
-      if (updatedEntity) {
-        setEntity(updatedEntity);
-      }
-    } catch (error) {
-      // Error is already handled in the hook
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
       <div className="container mx-auto px-4 py-8">
@@ -179,15 +133,15 @@ const EntityDetails = () => {
                 {entity.name}
               </h1>
               <div className="flex items-center gap-3 mt-2">
-                <Badge className="bg-success text-white">
-                  Active
+                <Badge className={getStatusColor(entity.status)}>
+                  {entity.status}
                 </Badge>
                 <Badge variant="outline">
-                  {entity.type.replace('_', ' ').toUpperCase()}
+                  {entity.type}
                 </Badge>
                 <Badge variant="outline">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {entity.state}
+                  {entity.jurisdiction}
                 </Badge>
               </div>
             </div>
@@ -198,7 +152,7 @@ const EntityDetails = () => {
               <Share className="h-4 w-4 mr-2" />
               Share
             </Button>
-            <Button variant="outline" onClick={handleEditEntity}>
+            <Button variant="outline">
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>
@@ -222,28 +176,22 @@ const EntityDetails = () => {
                 <div>
                   <h3 className="text-lg font-semibold">Next Renewal Due</h3>
                   <p className="text-2xl font-bold">
-                    {renewalDate ? new Date(renewalDate).toLocaleDateString() : 'No date set'}
+                    {new Date(entity.nextRenewalDate).toLocaleDateString()}
                   </p>
                   <p className={`text-sm font-medium ${getUrgencyColor(daysUntilRenewal)}`}>
-                    {renewalDate ? (
-                      daysUntilRenewal > 0 ? `${daysUntilRenewal} days remaining` : 'Overdue!'
-                    ) : (
-                      'No renewal date set'
-                    )}
+                    {daysUntilRenewal > 0 ? `${daysUntilRenewal} days remaining` : 'Overdue!'}
                   </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Total Amount Due</p>
                 <p className="text-2xl font-bold text-primary">
-                  ${(entity.registered_agent_fee || 0) + (entity.independent_director_fee || 0)}
+                  ${entity.financials.totalDue}
                 </p>
-                {renewalDate && (
-                  <Progress 
-                    value={Math.max(0, Math.min(100, ((365 - daysUntilRenewal) / 365) * 100))} 
-                    className="w-32 mt-2"
-                  />
-                )}
+                <Progress 
+                  value={Math.max(0, Math.min(100, ((365 - daysUntilRenewal) / 365) * 100))} 
+                  className="w-32 mt-2"
+                />
               </div>
             </div>
           </CardContent>
@@ -270,428 +218,246 @@ const EntityDetails = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Entity Type</p>
-                      <p className="font-semibold">{entity.type.replace('_', ' ').toUpperCase()}</p>
+                      <p className="font-semibold">{entity.type}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">State</p>
-                      <p className="font-semibold">{entity.state}</p>
+                      <p className="text-sm font-medium text-muted-foreground">Jurisdiction</p>
+                      <p className="font-semibold">{entity.jurisdiction}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Formation Date</p>
+                      <p className="text-sm font-medium text-muted-foreground">Incorporation Date</p>
                       <p className="font-semibold">
-                        {new Date(entity.formation_date).toLocaleDateString()}
+                        {new Date(entity.incorporationDate).toLocaleDateString()}
                       </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Registered Agent</p>
+                      <p className="font-semibold">{entity.registeredAgent}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Registered Agent Information */}
+              {/* Contact Information */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Registered Agent
+                    <Mail className="h-5 w-5" />
+                    Contact Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Name</p>
-                      <p className="font-semibold">{entity.registered_agent_name}</p>
-                    </div>
                     <div className="flex items-center gap-3">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{entity.registered_agent_phone}</span>
+                      <span>{entity.contact.phone}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{entity.registered_agent_email}</span>
+                      <span>{entity.contact.email}</span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Annual Fee</p>
-                      <p className="font-semibold text-primary">${entity.registered_agent_fee}</p>
+                    <div className="flex items-center gap-3">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <span>{entity.contact.website}</span>
                     </div>
-                    {entity.registered_agent_fee_due_date && (
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Fee Due Date</p>
-                        <p className="font-semibold">
-                          {new Date(entity.registered_agent_fee_due_date).toLocaleDateString()}
-                        </p>
+                        <p>{entity.address.street}</p>
+                        <p>{entity.address.city}, {entity.address.state} {entity.address.zipCode}</p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Independent Director (if exists) */}
-            {entity.independent_director_name && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Independent Director
-                  </CardTitle>
-                  <CardDescription>Delaware special requirement</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Name</p>
-                        <p className="font-semibold">{entity.independent_director_name}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{entity.independent_director_phone}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{entity.independent_director_email}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Annual Fee</p>
-                        <p className="font-semibold text-primary">${entity.independent_director_fee}</p>
-                      </div>
-                      {entity.independent_director_fee_due_date && (
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Fee Due Date</p>
-                          <p className="font-semibold">
-                            {new Date(entity.independent_director_fee_due_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </TabsContent>
 
           <TabsContent value="officers" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Entity Officers</h3>
-              <Button size="sm" onClick={() => {
-                setSelectedOfficer(null);
-                setIsOfficerModalOpen(true);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Officer
-              </Button>
-            </div>
-            
-            <div className="grid gap-4">
-              {officers.map((officer) => (
-                <Card key={officer.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <h4 className="font-semibold">{officer.name}</h4>
-                          <Badge variant={officer.is_active ? 'default' : 'secondary'}>
-                            {officer.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Officers & Directors
+                </CardTitle>
+                <CardDescription>Current officers and their appointment dates</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {entity.officers.map((officer, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-semibold">{officer.name}</p>
                         <p className="text-sm text-muted-foreground">{officer.title}</p>
-                        {officer.email && (
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Mail className="h-3 w-3 mr-1" />
-                            {officer.email}
-                          </div>
-                        )}
-                        {officer.phone && (
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3 mr-1" />
-                            {officer.phone}
-                          </div>
-                        )}
-                        {officer.appointment_date && (
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Appointed: {new Date(officer.appointment_date).toLocaleDateString()}
-                          </div>
-                        )}
                       </div>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedOfficer(officer);
-                            setIsOfficerModalOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Remove Officer</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to remove {officer.name} from this entity?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteOfficer(officer.id)}>
-                                Remove
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">Appointed</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(officer.appointed).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {officers.length === 0 && (
-                <Card>
-                  <CardContent className="p-8 text-center text-muted-foreground">
-                    <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No officers added yet</p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => {
-                        setSelectedOfficer(null);
-                        setIsOfficerModalOpen(true);
-                      }}
-                    >
-                      Add First Officer
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-6">
-            <Tabs defaultValue="view" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="view">View Documents</TabsTrigger>
-                <TabsTrigger value="upload">Upload Document</TabsTrigger>
-              </TabsList>
-              <TabsContent value="view">
-                <DocumentList entityId={id} title="Entity Documents" />
-              </TabsContent>
-              <TabsContent value="upload">
-                <DocumentUpload entityId={id} />
-              </TabsContent>
-            </Tabs>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Entity Documents
+                </CardTitle>
+                <CardDescription>Important documents and filings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {entity.documents.map((doc, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded bg-primary/10">
+                          <FileText className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{doc.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {doc.type} • {new Date(doc.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="compliance" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Compliance Status</h3>
-              <Button size="sm" onClick={() => {
-                setSelectedComplianceCheck(null);
-                setIsComplianceModalOpen(true);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Compliance Check
-              </Button>
-            </div>
-            
-            <div className="grid gap-4">
-              {complianceChecks.map((check) => (
-                <Card key={check.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <h4 className="font-medium">{check.check_name}</h4>
-                          <Badge variant={
-                            check.status === 'completed' ? 'default' :
-                            check.status === 'pending' ? 'secondary' :
-                            check.status === 'overdue' ? 'destructive' : 'outline'
-                          }>
-                            {check.status.charAt(0).toUpperCase() + check.status.slice(1)}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground capitalize">{check.check_type.replace('_', ' ')}</p>
-                        {check.due_date && (
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            Due: {new Date(check.due_date).toLocaleDateString()}
-                          </div>
-                        )}
-                        {check.completion_date && (
-                          <div className="flex items-center text-sm text-green-600">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Completed: {new Date(check.completion_date).toLocaleDateString()}
-                          </div>
-                        )}
-                        {check.notes && (
-                          <p className="text-sm text-muted-foreground">{check.notes}</p>
-                        )}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedComplianceCheck(check);
-                            setIsComplianceModalOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Compliance Check</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this compliance check?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteComplianceCheck(check.id)}>
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Compliance Status
+                </CardTitle>
+                <CardDescription>Current compliance status and requirements</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {entity.compliance.annualReportFiled ? (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-warning" />
+                      )}
+                      <span>Annual Report Filed</span>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {complianceChecks.length === 0 && (
-                <Card>
-                  <CardContent className="p-8 text-center text-muted-foreground">
-                    <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No compliance checks added yet</p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                      onClick={() => {
-                        setSelectedComplianceCheck(null);
-                        setIsComplianceModalOpen(true);
-                      }}
-                    >
-                      Add First Check
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                    <Badge variant={entity.compliance.annualReportFiled ? "default" : "secondary"}>
+                      {entity.compliance.annualReportFiled ? "Complete" : "Pending"}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {entity.compliance.taxesCurrent ? (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-warning" />
+                      )}
+                      <span>Taxes Current</span>
+                    </div>
+                    <Badge variant={entity.compliance.taxesCurrent ? "default" : "secondary"}>
+                      {entity.compliance.taxesCurrent ? "Current" : "Overdue"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {entity.compliance.licensesValid ? (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-warning" />
+                      )}
+                      <span>Licenses Valid</span>
+                    </div>
+                    <Badge variant={entity.compliance.licensesValid ? "default" : "secondary"}>
+                      {entity.compliance.licensesValid ? "Valid" : "Expired"}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {entity.compliance.insuranceCurrent ? (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      ) : (
+                        <AlertTriangle className="h-5 w-5 text-warning" />
+                      )}
+                      <span>Insurance Current</span>
+                    </div>
+                    <Badge variant={entity.compliance.insuranceCurrent ? "default" : "secondary"}>
+                      {entity.compliance.insuranceCurrent ? "Active" : "Lapsed"}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="financials" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Annual Fees
-                  </CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    ${(entity.registered_agent_fee || 0) + (entity.independent_director_fee || 0)}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Financial Summary
+                </CardTitle>
+                <CardDescription>Upcoming fees and payment history</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 border rounded-lg">
+                      <p className="text-sm text-muted-foreground">Annual Fee</p>
+                      <p className="text-2xl font-bold text-primary">${entity.financials.annualFee}</p>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <p className="text-sm text-muted-foreground">Registered Agent Fee</p>
+                      <p className="text-2xl font-bold text-primary">${entity.financials.registeredAgentFee}</p>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg bg-primary/10">
+                      <p className="text-sm text-muted-foreground">Total Due</p>
+                      <p className="text-2xl font-bold text-primary">${entity.financials.totalDue}</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Total annual compliance costs
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Registered Agent Fee
-                  </CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${entity.registered_agent_fee}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {entity.registered_agent_fee_due_date && (
-                      `Due: ${new Date(entity.registered_agent_fee_due_date).toLocaleDateString()}`
-                    )}
-                  </p>
-                </CardContent>
-              </Card>
-
-              {entity.independent_director_fee && (
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Director Fee
-                    </CardTitle>
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">${entity.independent_director_fee}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {entity.independent_director_fee_due_date && (
-                        `Due: ${new Date(entity.independent_director_fee_due_date).toLocaleDateString()}`
-                      )}
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                  
+                  <Separator />
+                  
+                  <div>
+                    <h4 className="font-semibold mb-3">Recent Payments</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">Annual Renewal 2023</p>
+                          <p className="text-sm text-muted-foreground">
+                            Paid on {new Date(entity.financials.lastPayment).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <p className="font-semibold text-success">$450.00</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
-
-        {isEditModalOpen && entity && (
-          <EntityEditModal
-            entity={entity}
-            open={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            onSave={handleSaveEntity}
-          />
-        )}
-
-        {id && (
-          <>
-            <OfficerModal
-              isOpen={isOfficerModalOpen}
-              onClose={() => {
-                setIsOfficerModalOpen(false);
-                setSelectedOfficer(null);
-              }}
-              onSave={selectedOfficer ? 
-                async (data) => { await updateOfficer(selectedOfficer.id, data); } :
-                async (data) => { await addOfficer(data); }
-              }
-              officer={selectedOfficer}
-              entityId={id}
-            />
-
-            <ComplianceModal
-              isOpen={isComplianceModalOpen}
-              onClose={() => {
-                setIsComplianceModalOpen(false);
-                setSelectedComplianceCheck(null);
-              }}
-              onSave={selectedComplianceCheck ? 
-                async (data) => { await updateComplianceCheck(selectedComplianceCheck.id, data); } :
-                async (data) => { await addComplianceCheck(data); }
-              }
-              complianceCheck={selectedComplianceCheck}
-              entityId={id}
-            />
-          </>
-        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -24,7 +25,9 @@ export const useNotifications = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotifications((data || []) as Notification[]);
+      const notificationData = (data || []) as Notification[];
+      setNotifications(notificationData);
+      setUnreadCount(notificationData.filter(n => !n.read).length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
       toast.error('Failed to load notifications');
@@ -45,13 +48,15 @@ export const useNotifications = () => {
 
       if (error) throw error;
 
-      setNotifications(prev => 
-        prev.map(notification => 
+      setNotifications(prev => {
+        const updated = prev.map(notification => 
           notification.id === id 
             ? { ...notification, read: true }
             : notification
-        )
-      );
+        );
+        setUnreadCount(updated.filter(n => !n.read).length);
+        return updated;
+      });
     } catch (error) {
       console.error('Error marking notification as read:', error);
       toast.error('Failed to update notification');
@@ -84,10 +89,75 @@ export const useNotifications = () => {
     };
   }, [user]);
 
+  const markAllAsRead = async () => {
+    if (!user) return;
+
+    try {
+      const unreadNotifications = notifications.filter(n => !n.read);
+      
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notification => ({ ...notification, read: true }))
+      );
+      setUnreadCount(0);
+      
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      toast.error('Failed to mark notifications as read');
+    }
+  };
+
+  const createNotification = async (
+    type: string, 
+    title: string, 
+    message: string,
+    entityId?: string,
+    metadata?: Record<string, any>
+  ) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          entity_id: entityId,
+          type,
+          notification_type: 'in_app',
+          title,
+          message,
+          timestamp: new Date().toISOString(),
+          read: false,
+          email_sent: false,
+          retry_count: 0,
+          metadata: metadata || {}
+        });
+
+      if (error) throw error;
+      
+      // Refetch to update the list
+      fetchNotifications();
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      toast.error('Failed to create notification');
+    }
+  };
+
   return {
     notifications,
+    unreadCount,
     loading,
     markAsRead,
+    markAllAsRead,
+    createNotification,
     refetch: fetchNotifications,
   };
 };

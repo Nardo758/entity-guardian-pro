@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
-import { Building, Bell, Plus } from 'lucide-react';
+import { Building, Plus, CreditCard, Calendar, FileText, Users, AlertTriangle, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { MetricsGrid } from './MetricsGrid';
-import { EntityList } from './EntityList';
 import { EntityForm } from './EntityForm';
 import { PaymentModal } from './PaymentModal';
 import { ScheduleModal } from './ScheduleModal';
 import { NotificationBanner } from './NotificationBanner';
+import { EnhancedNotificationBanner } from './EnhancedNotificationBanner';
 import { UserAccount } from './UserAccount';
+import { MetricsCard } from './MetricsCard';
+import { SimpleEntityCard } from './SimpleEntityCard';
 import { useEntities } from '@/hooks/useEntities';
 import { usePayments } from '@/hooks/usePayments';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useTeams } from '@/hooks/useTeams';
 import { stateRequirements } from '@/lib/state-requirements';
+import { TeamSwitcher } from './TeamSwitcher';
 
 const EntityRenewalPro = () => {
   const navigate = useNavigate();
   
-  // Use hooks for data management
   const { entities, addEntity, deleteEntity } = useEntities();
   const { payments } = usePayments();
   const { paymentMethods } = usePaymentMethods();
   const { notifications, markAsRead } = useNotifications();
+  const { currentTeam } = useTeams();
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [showScheduleView, setShowScheduleView] = useState(false);
@@ -38,7 +41,12 @@ const EntityRenewalPro = () => {
 
   const handleAddEntity = async (entityData: any) => {
     try {
-      await addEntity(entityData);
+      // Add team_id if we're in a team context
+      const entityWithTeam = {
+        ...entityData,
+        team_id: currentTeam?.id || null
+      };
+      await addEntity(entityWithTeam);
       setShowAddForm(false);
     } catch (error) {
       // Error is already handled in the hook
@@ -73,60 +81,53 @@ const EntityRenewalPro = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface relative">
-      {/* Background mesh gradient */}
-      <div className="absolute inset-0 bg-[var(--gradient-mesh)] pointer-events-none" />
-      
-      <div className="relative mx-auto max-w-7xl px-6 py-8">
-        {/* Modern Header with Glass Effect */}
-        <div className="mb-8 rounded-3xl bg-glass backdrop-blur-xl border border-glass-border shadow-modern-lg p-8 animate-fade-in">
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-7xl px-6 py-8">
+        {/* Clean Header */}
+        <div className="mb-8 bg-card border border-border rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary-dark p-4 shadow-glow animate-glow">
-                <Building className="h-10 w-10 text-primary-foreground" />
+            <div className="flex items-center gap-4">
+              <div className="bg-primary rounded-xl p-3">
+                <Building className="h-8 w-8 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent font-display">
+                <h1 className="text-3xl font-bold text-foreground">
                   Entity Renewal Pro
                 </h1>
-                <p className="text-muted-foreground text-lg mt-1">
+                <p className="text-muted-foreground">
                   Manage your business entities and renewals
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-6">
-              <div className="relative">
-                <Button variant="ghost" size="sm" className="relative hover:bg-primary/10 transition-all duration-300">
-                  <Bell className="h-5 w-5" />
-                   {notifications.filter(n => !n.read).length > 0 && (
-                     <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs font-medium text-white animate-pulse">
-                       {notifications.filter(n => !n.read).length}
-                     </span>
-                   )}
-                </Button>
-              </div>
-
+            <div className="flex items-center gap-4">
+              <TeamSwitcher />
+              <EnhancedNotificationBanner />
               <UserAccount />
 
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <Button 
-                  variant="ghost" 
+                  variant="outline"
+                  size="sm"
                   onClick={() => navigate('/payments')}
-                  className="bg-success/10 border-success/20 text-success hover:bg-success hover:text-white transition-all duration-300 hover:shadow-md hover:scale-105"
+                  className="text-success border-success/20 hover:bg-success hover:text-success-foreground"
                 >
-                  💳 Payment History
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Payment History
                 </Button>
                 <Button 
-                  variant="ghost"
+                  variant="outline"
+                  size="sm"
                   onClick={() => setShowScheduleView(true)}
-                  className="bg-info/10 border-info/20 text-info hover:bg-info hover:text-white transition-all duration-300 hover:shadow-md hover:scale-105"
+                  className="text-info border-info/20 hover:bg-info hover:text-info-foreground"
                 >
-                  📅 Schedule
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Schedule
                 </Button>
                 <Button 
                   onClick={() => setShowAddForm(true)}
-                  className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary shadow-modern hover:shadow-modern-lg transition-all duration-300 hover:scale-105"
+                  size="sm"
+                  className="bg-primary hover:bg-primary-dark"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Entity
@@ -136,19 +137,23 @@ const EntityRenewalPro = () => {
           </div>
         </div>
 
-        {/* Modern Status Banner */}
+        {/* Subscription Status Banner */}
         {mockSubscription.status === 'active' && (
-          <div className="mb-8 rounded-2xl bg-gradient-to-r from-success-muted to-success-muted/50 border border-success/20 p-6 shadow-modern animate-fade-up backdrop-blur-sm">
+          <div className="mb-8 bg-success-muted border border-success/20 rounded-xl p-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-3 w-3 rounded-full bg-gradient-to-r from-success to-success animate-pulse"></div>
-                <span className="font-semibold text-success text-lg">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-success"></div>
+                <span className="font-medium text-success">
                   Starter Plan Active
                 </span>
               </div>
-              <div className="text-success font-medium">
-                Next billing: {new Date(mockSubscription.nextBilling).toLocaleDateString()} 
-                <span className="ml-2 px-3 py-1 bg-success/20 rounded-full text-sm text-success">
+              <div className="text-sm text-success">
+                Next billing: {new Date(mockSubscription.nextBilling).toLocaleDateString('en-US', { 
+                  month: 'numeric', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+                <span className="ml-3 bg-success/20 px-2 py-1 rounded text-xs">
                   ${mockSubscription.amount}/{mockSubscription.billingCycle}
                 </span>
               </div>
@@ -156,20 +161,15 @@ const EntityRenewalPro = () => {
           </div>
         )}
 
-        {/* Modern Notifications */}
+        {/* Notifications */}
         <NotificationBanner 
           notifications={notifications.filter(n => !n.read)}
           onDismiss={dismissNotification}
         />
 
-        {/* Enhanced Metrics Grid */}
-        <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <MetricsGrid metrics={metrics} />
-        </div>
-
-        {/* Modern Entity Form */}
+        {/* Entity Form */}
         {showAddForm && (
-          <div className="animate-scale-in">
+          <div className="mb-8">
             <EntityForm 
               onSubmit={handleAddEntity}
               onClose={() => setShowAddForm(false)}
@@ -177,13 +177,54 @@ const EntityRenewalPro = () => {
           </div>
         )}
 
-        {/* Enhanced Entity List */}
-        <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <EntityList 
-            entities={entities}
-            onDelete={handleDeleteEntity}
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <MetricsCard
+            title="Active Entities"
+            value={metrics.totalEntities}
+            subtitle="0 Delaware entities"
+            icon={FileText}
+            iconColor="text-primary"
+            backgroundColor="bg-primary/10"
+          />
+          <MetricsCard
+            title="Annual Entity Fees"
+            value={`$${metrics.annualEntityFees.toFixed(2)}`}
+            subtitle="Avg. $139 per entity"
+            icon={DollarSign}
+            iconColor="text-success"
+            backgroundColor="bg-success/10"
+          />
+          <MetricsCard
+            title="Annual Service Fees"
+            value={`$${metrics.annualServiceFees.toFixed(2)}`}
+            subtitle="Registered agents & directors"
+            icon={Users}
+            iconColor="text-info"
+            backgroundColor="bg-info/10"
+          />
+          <MetricsCard
+            title="Pending Payments"
+            value={`$${metrics.pendingPayments.toFixed(2)}`}
+            subtitle="Requires attention"
+            icon={AlertTriangle}
+            iconColor="text-warning"
+            backgroundColor="bg-warning/10"
           />
         </div>
+
+        {/* Entity Cards */}
+        {entities.length > 0 && (
+          <div className="space-y-6">
+            {entities.map((entity) => (
+              <SimpleEntityCard 
+                key={entity.id} 
+                entity={entity} 
+                onDelete={handleDeleteEntity}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Enhanced Modals */}
         <PaymentModal 
