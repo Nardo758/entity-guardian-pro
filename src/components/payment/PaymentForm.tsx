@@ -39,6 +39,15 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
     setErrorMessage('');
 
     try {
+      // Ensure elements are complete before confirming
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setErrorMessage(submitError.message || 'Payment details are incomplete.');
+        onError(submitError.message || 'Payment details are incomplete.');
+        setIsProcessing(false);
+        return;
+      }
+
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {

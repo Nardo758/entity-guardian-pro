@@ -115,6 +115,7 @@ serve(async (req) => {
       currency: "usd",
       customer: customer.id,
       setup_future_usage: "off_session", // For future subscription payments
+      automatic_payment_methods: { enabled: true },
       metadata: {
         email,
         tier,
