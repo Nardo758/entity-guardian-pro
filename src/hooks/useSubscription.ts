@@ -51,10 +51,23 @@ export const useSubscription = () => {
 
       if (error) throw error;
       const stripe = await stripePromise;
-      if (!stripe) throw new Error('Stripe failed to initialize');
-      const result = await stripe.redirectToCheckout({ sessionId: data.id });
-      if (result.error) {
-        throw result.error;
+      if (stripe) {
+        const result = await stripe.redirectToCheckout({ sessionId: data.id });
+        if (result.error) {
+          // Fallback to opening the Checkout URL if redirect fails
+          if (data?.url) {
+            window.open(data.url, '_blank');
+            return;
+          }
+          throw result.error;
+        }
+      } else {
+        // Fallback if Stripe failed to initialize
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          return;
+        }
+        throw new Error('Stripe failed to initialize and no checkout URL provided');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
