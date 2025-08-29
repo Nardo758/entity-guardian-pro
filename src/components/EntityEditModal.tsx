@@ -206,7 +206,7 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
                       <Input
                         id="agentFee"
                         type="text"
-                        value={formData.registered_agent_fee > 0 ? formData.registered_agent_fee.toFixed(2) : ''}
+                        value={formData.registered_agent_fee.toFixed(2)}
                         onChange={(e) => updateRegisteredAgentFee(e.target.value)}
                         placeholder="150.00"
                         className="pl-8"
@@ -296,7 +296,7 @@ export const EntityEditModal: React.FC<EntityEditModalProps> = ({
                           <Input
                             id="directorFee"
                             type="text"
-                            value={formData.independent_director_fee > 0 ? formData.independent_director_fee.toFixed(2) : ''}
+                            value={formData.independent_director_fee.toFixed(2)}
                             onChange={(e) => updateDirectorFee(e.target.value)}
                             placeholder="2500.00"
                             className="pl-8"
