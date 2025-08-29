@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.stripe-whoami]
 verify_jwt = false
+
+[functions.sync-pricing]
+verify_jwt = false

@@ -12,28 +12,12 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-const PRICING_TIERS = {
-  starter: { 
-    monthly: 2500, // $25
-    yearly: 24900, // $249 (17% discount)
-    name: "Starter"
-  },
-  professional: { 
-    monthly: 9900, // $99
-    yearly: 98604, // $986.04 (17% discount)
-    name: "Professional"
-  },
-  enterprise: { 
-    monthly: 20000, // $200
-    yearly: 199200, // $1,992 (17% discount)
-    name: "Enterprise"
-  },
-  unlimited: { 
-    monthly: 35000, // $350
-    yearly: 348600, // $3,486 (17% discount)
-    name: "Unlimited"
-  }
-};
+const VALID_TIERS = ["starter", "professional", "enterprise", "unlimited"] as const;
+type TierKey = typeof VALID_TIERS[number];
+
+function priceLookupKey(tier: TierKey, billing: 'monthly' | 'yearly') {
+  return `erp:${tier}:${billing}`;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -49,7 +33,7 @@ serve(async (req) => {
     logStep("Function started");
 
     const { tier, billing } = await req.json();
-    if (!tier || !PRICING_TIERS[tier as keyof typeof PRICING_TIERS]) {
+    if (!tier || !VALID_TIERS.includes(tier)) {
       throw new Error("Invalid pricing tier");
     }
     if (!billing || !['monthly', 'yearly'].includes(billing)) {
@@ -75,25 +59,19 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const selectedTier = PRICING_TIERS[tier as keyof typeof PRICING_TIERS];
-    const amount = selectedTier[billing as keyof typeof selectedTier] as number;
+    const lk = priceLookupKey(tier as TierKey, billing);
+    const prices = await stripe.prices.list({ lookup_keys: [lk], active: true, limit: 1 });
+    if (prices.data.length === 0) {
+      throw new Error(`Price not found for lookup_key ${lk}. Run sync-pricing first.`);
+    }
+    const priceId = prices.data[0].id;
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price_data: {
-            currency: "usd",
-            product_data: { 
-              name: `Entity Renewal Pro - ${selectedTier.name}`,
-              description: `${selectedTier.name} plan - ${billing === 'yearly' ? 'Annual' : 'Monthly'} billing`
-            },
-            unit_amount: amount,
-            recurring: { 
-              interval: billing === 'yearly' ? 'year' : 'month'
-            },
-          },
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -102,9 +80,9 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/billing?canceled=true`,
     });
 
-    logStep("Checkout session created", { sessionId: session.id, tier, billing, amount });
+    logStep("Checkout session created", { sessionId: session.id, tier, billing, priceId });
 
-    return new Response(JSON.stringify({ url: session.url }), {
+    return new Response(JSON.stringify({ url: session.url, id: session.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

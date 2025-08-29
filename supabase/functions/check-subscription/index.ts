@@ -81,20 +81,22 @@ serve(async (req) => {
       const subscription = subscriptions.data[0];
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
-      // Determine subscription tier from price
-      const priceId = subscription.items.data[0].price.id;
-      const price = await stripe.prices.retrieve(priceId);
-      const amount = price.unit_amount || 0;
-      if (amount <= 2500) {
-        subscriptionTier = "Starter";
-      } else if (amount <= 9900) {
-        subscriptionTier = "Professional";
-      } else if (amount <= 20000) {
-        subscriptionTier = "Enterprise";
+      // Determine subscription tier from price lookup_key
+      const price = subscription.items.data[0].price;
+      const lookupKey = price.lookup_key || null;
+      if (lookupKey) {
+        const [, tierId] = (lookupKey as string).split(":"); // erp:{tier}:{billing}
+        switch (tierId) {
+          case 'starter': subscriptionTier = 'Starter'; break;
+          case 'professional': subscriptionTier = 'Professional'; break;
+          case 'enterprise': subscriptionTier = 'Enterprise'; break;
+          case 'unlimited': subscriptionTier = 'Unlimited'; break;
+          default: subscriptionTier = null;
+        }
       } else {
-        subscriptionTier = "Unlimited";
+        subscriptionTier = null;
       }
-      logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
+      logStep("Determined subscription tier", { lookupKey, subscriptionTier });
     } else {
       logStep("No active subscription found");
     }
