@@ -1,6 +1,6 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,11 +58,23 @@ serve(async (req) => {
       password, 
       userData, 
       tier, 
-      billing 
+      billing,
+      first_name,
+      last_name,
+      company,
+      company_size
     } = requestBody;
 
-    if (!email || !password || !userData || !tier || !billing) {
-      throw new Error("Missing required fields");
+    // Handle both registration and subscription upgrade scenarios
+    const isRegistration = password && userData;
+    const isSubscription = !password && !userData && email && first_name && last_name;
+
+    if (!email || !tier || !billing) {
+      throw new Error("Missing required fields: email, tier, billing");
+    }
+
+    if (!isRegistration && !isSubscription) {
+      throw new Error("Invalid request: must be either registration (with password/userData) or subscription (with user details)");
     }
 
     if (!PRICING_TIERS[tier as keyof typeof PRICING_TIERS]) {
@@ -73,7 +85,7 @@ serve(async (req) => {
       throw new Error("Invalid billing period");
     }
 
-    logStep("Request validated", { email, tier, billing });
+    logStep("Request validated", { email, tier, billing, type: isRegistration ? 'registration' : 'subscription' });
 
     // Check for Stripe secret key
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -95,13 +107,24 @@ serve(async (req) => {
       customer = existingCustomers.data[0];
       logStep("Existing customer found", { customerId: customer.id });
     } else {
+      const customerName = isRegistration 
+        ? `${userData.first_name} ${userData.last_name}`
+        : `${first_name} ${last_name}`;
+      
+      const customerMetadata = isRegistration 
+        ? {
+            company: userData.company,
+            company_size: userData.company_size,
+          }
+        : {
+            company: company || '',
+            company_size: company_size || '',
+          };
+
       customer = await stripe.customers.create({
         email,
-        name: `${userData.first_name} ${userData.last_name}`,
-        metadata: {
-          company: userData.company,
-          company_size: userData.company_size,
-        },
+        name: customerName,
+        metadata: customerMetadata,
       });
       logStep("New customer created", { customerId: customer.id });
     }
@@ -119,11 +142,11 @@ serve(async (req) => {
         email,
         tier,
         billing,
-        registration: "true",
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        company: userData.company,
-        company_size: userData.company_size,
+        registration: isRegistration ? "true" : "false",
+        first_name: isRegistration ? userData.first_name : first_name,
+        last_name: isRegistration ? userData.last_name : last_name,
+        company: isRegistration ? userData.company : (company || ''),
+        company_size: isRegistration ? userData.company_size : (company_size || ''),
       },
       description: `Entity Renewal Pro - ${selectedTier.name} Plan (${billing})`,
     });
