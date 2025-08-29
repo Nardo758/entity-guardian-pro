@@ -27,11 +27,15 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [paymentElementReady, setPaymentElementReady] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !paymentElementReady) {
+      const message = 'Payment form is not ready. Please wait a moment and try again.';
+      setErrorMessage(message);
+      onError(message);
       return;
     }
 
@@ -77,7 +81,21 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
+            {!paymentElementReady && (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading payment form...
+                </div>
+              </div>
+            )}
             <PaymentElement 
+              onReady={() => setPaymentElementReady(true)}
+              onLoadError={(error) => {
+                console.error('PaymentElement failed to load:', error);
+                setErrorMessage('Failed to load payment form. Please refresh and try again.');
+                onError('Failed to load payment form');
+              }}
               options={{
                 layout: 'tabs',
                 paymentMethodOrder: ['card', 'apple_pay', 'google_pay']
@@ -95,7 +113,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
             <Button
               type="submit"
               className="w-full"
-              disabled={!stripe || !elements || isProcessing || loading}
+              disabled={!stripe || !elements || !paymentElementReady || isProcessing || loading}
               size="lg"
             >
               {isProcessing ? (
