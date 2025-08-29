@@ -12,28 +12,12 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-PAID-REGISTRATION] ${step}${detailsStr}`);
 };
 
-const PRICING_TIERS = {
-  starter: { 
-    monthly: 2500, // $25
-    yearly: 24900, // $249 (17% discount)
-    name: "Starter"
-  },
-  professional: { 
-    monthly: 9900, // $99
-    yearly: 98604, // $986.04 (17% discount)
-    name: "Professional"
-  },
-  enterprise: { 
-    monthly: 20000, // $200
-    yearly: 199200, // $1,992 (17% discount)
-    name: "Enterprise"
-  },
-  unlimited: { 
-    monthly: 35000, // $350
-    yearly: 348600, // $3,486 (17% discount)
-    name: "Unlimited"
-  }
-};
+const VALID_TIERS = ["starter", "professional", "enterprise", "unlimited"] as const;
+type TierKey = typeof VALID_TIERS[number];
+
+function priceLookupKey(tier: TierKey, billing: 'monthly' | 'yearly') {
+  return `erp:${tier}:${billing}`;
+}
 
 serve(async (req) => {
   console.log("[DEBUG] Request received, method:", req.method);
@@ -65,7 +49,7 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
-    if (!PRICING_TIERS[tier as keyof typeof PRICING_TIERS]) {
+    if (!VALID_TIERS.includes(tier)) {
       throw new Error("Invalid pricing tier");
     }
 
@@ -106,8 +90,14 @@ serve(async (req) => {
       logStep("New customer created", { customerId: customer.id });
     }
 
-    const selectedTier = PRICING_TIERS[tier as keyof typeof PRICING_TIERS];
-    const amount = selectedTier[billing as keyof typeof selectedTier] as number;
+    // Retrieve amount from Stripe Price via lookup key to stay in sync
+    const lk = priceLookupKey(tier as TierKey, billing);
+    const prices = await stripe.prices.list({ lookup_keys: [lk], active: true, limit: 1 });
+    if (prices.data.length === 0) {
+      throw new Error(`Price not found for lookup_key ${lk}. Run sync-pricing first.`);
+    }
+    const price = prices.data[0];
+    const amount = price.unit_amount || 0;
 
     // Create payment intent for immediate payment
     const paymentIntent = await stripe.paymentIntents.create({
@@ -126,7 +116,7 @@ serve(async (req) => {
         company: userData.company,
         company_size: userData.company_size,
       },
-      description: `Entity Renewal Pro - ${selectedTier.name} Plan (${billing})`,
+      description: price.nickname || `Entity Renewal Pro - ${tier} Plan (${billing})`,
     });
 
     logStep("Payment intent created", { 
