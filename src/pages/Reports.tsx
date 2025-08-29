@@ -28,42 +28,43 @@ import { useAnalytics } from "@/hooks/useAnalytics";
 import { MetricsChart } from "@/components/charts/MetricsChart";
 import { ComplianceChart } from "@/components/charts/ComplianceChart";
 
-// Mock data for reports
-const mockReportData = {
-  overview: {
-    totalEntities: 12,
-    activeEntities: 10,
-    pendingRenewals: 3,
-    overdueRenewals: 1,
-    totalAnnualFees: 5400,
-    upcomingPayments: 1350
-  },
-  renewals: [
-    { entity: "TechCorp Solutions LLC", dueDate: "2024-03-15", amount: 450, status: "pending", daysLeft: 45 },
-    { entity: "Innovation Partners Inc", dueDate: "2024-04-20", amount: 300, status: "pending", daysLeft: 80 },
-    { entity: "Digital Ventures Corp", dueDate: "2024-02-10", amount: 600, status: "overdue", daysLeft: -15 }
-  ],
-  compliance: [
-    { entity: "TechCorp Solutions LLC", type: "Annual Report", status: "filed", date: "2024-01-15" },
-    { entity: "Innovation Partners Inc", type: "Tax Filing", status: "pending", date: "2024-03-15" },
-    { entity: "Digital Ventures Corp", type: "License Renewal", status: "overdue", date: "2024-01-01" }
-  ],
-  expenses: {
-    categories: [
-      { name: "State Filing Fees", amount: 2100, percentage: 38.9 },
-      { name: "Registered Agent Fees", amount: 1800, percentage: 33.3 },
-      { name: "Legal Services", amount: 900, percentage: 16.7 },
-      { name: "Other Fees", amount: 600, percentage: 11.1 }
-    ],
-    monthly: [
-      { month: "Jan", amount: 850 },
-      { month: "Feb", amount: 1200 },
-      { month: "Mar", amount: 950 },
-      { month: "Apr", amount: 1100 },
-      { month: "May", amount: 800 },
-      { month: "Jun", amount: 1300 }
-    ]
-  }
+// Calculate expense categories from real payment data
+const getExpenseCategories = (payments: any[]) => {
+  const categoryMap: Record<string, number> = {};
+  let total = 0;
+
+  payments.forEach(payment => {
+    const amount = Number(payment.amount);
+    const type = payment.type || 'Other Fees';
+    
+    categoryMap[type] = (categoryMap[type] || 0) + amount;
+    total += amount;
+  });
+
+  return Object.entries(categoryMap).map(([name, amount]) => ({
+    name,
+    amount,
+    percentage: total > 0 ? Math.round((amount / total) * 100 * 10) / 10 : 0
+  }));
+};
+
+// Calculate monthly expense trends from real payment data
+const getMonthlyExpenses = (payments: any[]) => {
+  const monthMap: Record<string, number> = {};
+  
+  payments.forEach(payment => {
+    if (payment.paid_date) {
+      const date = new Date(payment.paid_date);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
+      monthMap[monthKey] = (monthMap[monthKey] || 0) + Number(payment.amount);
+    }
+  });
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months.map(month => ({
+    month,
+    amount: monthMap[month] || 0
+  })).filter(item => item.amount > 0);
 };
 
 const Reports = () => {
@@ -105,6 +106,19 @@ const Reports = () => {
   const complianceRate = complianceChecks.length > 0 
     ? Math.round((completedCompliance / complianceChecks.length) * 100) 
     : 0;
+
+  // Calculate expense data from real payments
+  const expenseCategories = getExpenseCategories(payments.filter(p => p.status === 'paid'));
+  const monthlyExpenses = getMonthlyExpenses(payments.filter(p => p.status === 'paid'));
+  const maxMonthlyAmount = Math.max(...monthlyExpenses.map(m => m.amount), 1);
+
+  // Generate insights based on real data
+  const upcomingRenewals = payments.filter(p => {
+    const dueDate = new Date(p.due_date);
+    const sixtyDaysFromNow = new Date();
+    sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
+    return p.status === 'pending' && dueDate <= sixtyDaysFromNow;
+  }).length;
 
   const handleExportReport = (reportType: string) => {
     toast({
@@ -415,26 +429,33 @@ const Reports = () => {
                   </CardTitle>
                   <CardDescription>Breakdown of annual entity expenses</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {mockReportData.expenses.categories.map((category, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">{category.name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            ${category.amount} ({category.percentage}%)
-                          </span>
-                        </div>
-                        <div className="w-full bg-secondary/20 rounded-full h-2">
-                          <div 
-                            className="bg-primary h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${category.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
+                 <CardContent>
+                   <div className="space-y-4">
+                     {expenseCategories.length === 0 ? (
+                       <div className="text-center py-4 text-muted-foreground">
+                         <p>No expense data available yet</p>
+                         <p className="text-sm mt-1">Expense categories will appear as payments are made</p>
+                       </div>
+                     ) : (
+                       expenseCategories.map((category, index) => (
+                         <div key={index} className="space-y-2">
+                           <div className="flex items-center justify-between">
+                             <span className="text-sm font-medium">{category.name}</span>
+                             <span className="text-sm text-muted-foreground">
+                               ${category.amount.toLocaleString()} ({category.percentage}%)
+                             </span>
+                           </div>
+                           <div className="w-full bg-secondary/20 rounded-full h-2">
+                             <div 
+                               className="bg-primary h-2 rounded-full transition-all duration-300"
+                               style={{ width: `${category.percentage}%` }}
+                             />
+                           </div>
+                         </div>
+                       ))
+                     )}
+                   </div>
+                 </CardContent>
               </Card>
 
               {/* Monthly Trends */}
@@ -446,26 +467,33 @@ const Reports = () => {
                   </CardTitle>
                   <CardDescription>Entity-related expenses over time</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {mockReportData.expenses.monthly.map((month, index) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <span className="text-sm font-medium w-12">{month.month}</span>
-                        <div className="flex-1 mx-4">
-                          <div className="w-full bg-secondary/20 rounded-full h-3">
-                            <div 
-                              className="bg-gradient-to-r from-primary to-primary/70 h-3 rounded-full transition-all duration-300"
-                              style={{ width: `${(month.amount / 1300) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                        <span className="text-sm text-muted-foreground w-16 text-right">
-                          ${month.amount}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
+                 <CardContent>
+                   <div className="space-y-4">
+                     {monthlyExpenses.length === 0 ? (
+                       <div className="text-center py-4 text-muted-foreground">
+                         <p>No monthly expense data available yet</p>
+                         <p className="text-sm mt-1">Monthly trends will appear as payments are processed</p>
+                       </div>
+                     ) : (
+                       monthlyExpenses.map((month, index) => (
+                         <div key={index} className="flex items-center justify-between">
+                           <span className="text-sm font-medium w-12">{month.month}</span>
+                           <div className="flex-1 mx-4">
+                             <div className="w-full bg-secondary/20 rounded-full h-3">
+                               <div 
+                                 className="bg-gradient-to-r from-primary to-primary/70 h-3 rounded-full transition-all duration-300"
+                                 style={{ width: `${(month.amount / maxMonthlyAmount) * 100}%` }}
+                               />
+                             </div>
+                           </div>
+                           <span className="text-sm text-muted-foreground w-16 text-right">
+                             ${month.amount.toLocaleString()}
+                           </span>
+                         </div>
+                       ))
+                     )}
+                   </div>
+                 </CardContent>
               </Card>
             </div>
           </TabsContent>
@@ -482,41 +510,53 @@ const Reports = () => {
                   <CardDescription>AI-powered analysis of your entity portfolio</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-success mt-0.5" />
-                      <div>
-                        <p className="font-medium text-success">Strong Compliance Rate</p>
-                        <p className="text-sm text-muted-foreground">
-                          83% of your entities are in good standing, above industry average of 75%
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
-                      <div>
-                        <p className="font-medium text-warning">Renewal Attention Needed</p>
-                        <p className="text-sm text-muted-foreground">
-                          3 entities require renewal within the next 60 days
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                   <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
+                     <div className="flex items-start gap-3">
+                       <CheckCircle className="h-5 w-5 text-success mt-0.5" />
+                       <div>
+                         <p className="font-medium text-success">
+                           {complianceRate >= 75 ? 'Strong Compliance Rate' : 'Good Compliance Progress'}
+                         </p>
+                         <p className="text-sm text-muted-foreground">
+                           {complianceRate}% of your compliance checks are completed
+                           {complianceRate >= 75 ? ', above industry average of 75%' : ', working towards 75% target'}
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   {(upcomingRenewals > 0 || overduePayments > 0) && (
+                     <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                       <div className="flex items-start gap-3">
+                         <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
+                         <div>
+                           <p className="font-medium text-warning">
+                             {overduePayments > 0 ? 'Overdue Payments Need Attention' : 'Renewal Attention Needed'}
+                           </p>
+                           <p className="text-sm text-muted-foreground">
+                             {overduePayments > 0 
+                               ? `${overduePayments} payments are overdue and need immediate attention`
+                               : `${upcomingRenewals} entities require renewal within the next 60 days`
+                             }
+                           </p>
+                         </div>
+                       </div>
+                     </div>
+                   )}
 
-                  <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
-                    <div className="flex items-start gap-3">
-                      <DollarSign className="h-5 w-5 text-info mt-0.5" />
-                      <div>
-                        <p className="font-medium text-info">Cost Optimization</p>
-                        <p className="text-sm text-muted-foreground">
-                          Consider consolidating registered agent services to save $600/year
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                   {totalEntities >= 5 && (
+                     <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
+                       <div className="flex items-start gap-3">
+                         <DollarSign className="h-5 w-5 text-info mt-0.5" />
+                         <div>
+                           <p className="font-medium text-info">Portfolio Management</p>
+                           <p className="text-sm text-muted-foreground">
+                             With {totalEntities} entities, consider our premium management features for better oversight
+                           </p>
+                         </div>
+                       </div>
+                     </div>
+                   )}
                 </CardContent>
               </Card>
 
@@ -531,26 +571,48 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
-                    <div className="p-3 border rounded-lg">
-                      <p className="font-medium text-sm">Set up automated renewal reminders</p>
-                      <p className="text-xs text-muted-foreground">
-                        Never miss a deadline with our 90, 60, and 30-day alerts
-                      </p>
-                    </div>
-                    
-                    <div className="p-3 border rounded-lg">
-                      <p className="font-medium text-sm">Schedule quarterly compliance reviews</p>
-                      <p className="text-xs text-muted-foreground">
-                        Regular reviews help catch issues before they become problems
-                      </p>
-                    </div>
+                     {overduePayments > 0 && (
+                       <div className="p-3 border border-destructive/20 rounded-lg">
+                         <p className="font-medium text-sm text-destructive">Address overdue payments immediately</p>
+                         <p className="text-xs text-muted-foreground">
+                           {overduePayments} payment{overduePayments > 1 ? 's are' : ' is'} overdue and require immediate attention
+                         </p>
+                       </div>
+                     )}
+                     
+                     {upcomingRenewals > 0 && (
+                       <div className="p-3 border border-warning/20 rounded-lg">
+                         <p className="font-medium text-sm text-warning">Prepare for upcoming renewals</p>
+                         <p className="text-xs text-muted-foreground">
+                           {upcomingRenewals} renewal{upcomingRenewals > 1 ? 's' : ''} needed within 60 days - set reminders now
+                         </p>
+                       </div>
+                     )}
 
-                    <div className="p-3 border rounded-lg">
-                      <p className="font-medium text-sm">Consider premium support package</p>
-                      <p className="text-xs text-muted-foreground">
-                        With 12 entities, premium support could save time and ensure compliance
-                      </p>
-                    </div>
+                     <div className="p-3 border rounded-lg">
+                       <p className="font-medium text-sm">Set up automated renewal reminders</p>
+                       <p className="text-xs text-muted-foreground">
+                         Never miss a deadline with our automated notification system
+                       </p>
+                     </div>
+                     
+                     {complianceChecks.length > 0 && complianceRate < 90 && (
+                       <div className="p-3 border rounded-lg">
+                         <p className="font-medium text-sm">Improve compliance tracking</p>
+                         <p className="text-xs text-muted-foreground">
+                           Current rate: {complianceRate}% - aim for 90% or higher for optimal management
+                         </p>
+                       </div>
+                     )}
+
+                     {totalEntities >= 10 && (
+                       <div className="p-3 border rounded-lg">
+                         <p className="font-medium text-sm">Consider portfolio optimization</p>
+                         <p className="text-xs text-muted-foreground">
+                           With {totalEntities} entities, review consolidation opportunities to reduce costs
+                         </p>
+                       </div>
+                     )}
                   </div>
                 </CardContent>
               </Card>
