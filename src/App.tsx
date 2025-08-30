@@ -25,6 +25,9 @@ import Analytics from "./pages/Analytics";
 import AuditTrail from "./pages/AuditTrail";
 import EntityDetails from "./pages/EntityDetails";
 import ApiDocs from "./pages/ApiDocs";
+import AgentDirectory from "./pages/AgentDirectory";
+import AgentDashboard from "./pages/AgentDashboard";
+import AgentSignup from "./pages/AgentSignup";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -62,7 +65,9 @@ const App = () => (
             <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
             <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
-            <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
+            <Route path="/agent-directory" element={<ProtectedRoute><AgentDirectory /></ProtectedRoute>} />
+            <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
+            <Route path="/agent-signup" element={<AgentSignup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

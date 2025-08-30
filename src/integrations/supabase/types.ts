@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_invitations: {
+        Row: {
+          agent_email: string
+          agent_id: string | null
+          created_at: string
+          entity_id: string
+          entity_owner_id: string
+          expires_at: string
+          id: string
+          message: string | null
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          agent_email: string
+          agent_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_owner_id: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          agent_email?: string
+          agent_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_owner_id?: string
+          expires_at?: string
+          id?: string
+          message?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_invitations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_invitations_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agents: {
+        Row: {
+          bio: string | null
+          company_name: string | null
+          contact_email: string | null
+          created_at: string
+          id: string
+          is_available: boolean
+          price_per_entity: number
+          states: string[]
+          updated_at: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_per_entity?: number
+          states?: string[]
+          updated_at?: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_per_entity?: number
+          states?: string[]
+          updated_at?: string
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       analytics_data: {
         Row: {
           created_at: string
@@ -283,6 +382,60 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_agent_assignments: {
+        Row: {
+          agent_id: string
+          created_at: string
+          entity_id: string
+          expires_at: string
+          id: string
+          invitation_token: string | null
+          invited_at: string
+          responded_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          entity_id: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string | null
+          invited_at?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          entity_id?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string | null
+          invited_at?: string
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_agent_assignments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_agent_assignments_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -531,6 +684,7 @@ export type Database = {
           plan: string | null
           updated_at: string | null
           user_id: string
+          user_type: string | null
         }
         Insert: {
           company?: string | null
@@ -542,6 +696,7 @@ export type Database = {
           plan?: string | null
           updated_at?: string | null
           user_id: string
+          user_type?: string | null
         }
         Update: {
           company?: string | null
@@ -553,6 +708,7 @@ export type Database = {
           plan?: string | null
           updated_at?: string | null
           user_id?: string
+          user_type?: string | null
         }
         Relationships: []
       }
@@ -753,6 +909,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_agent_invitation_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_invitation_token: {
         Args: Record<PropertyKey, never>
         Returns: string
