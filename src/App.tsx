@@ -28,6 +28,10 @@ import ApiDocs from "./pages/ApiDocs";
 import AgentDirectory from "./pages/AgentDirectory";
 import AgentDashboard from "./pages/AgentDashboard";
 import AgentSignup from "./pages/AgentSignup";
+import EntityOwnerDashboard from "./components/EntityOwnerDashboard";
+import AgentRedirect from "./pages/AgentRedirect";
+import AgentRoleGuard from "./components/AgentRoleGuard";
+import AgentInvitationAccept from "./pages/AgentInvitationAccept";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -54,6 +58,7 @@ const App = () => (
             
             {/* Protected routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
@@ -65,8 +70,9 @@ const App = () => (
             <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
             <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
-            <Route path="/find-agents" element={<ProtectedRoute><AgentDirectory /></ProtectedRoute>} />
-            <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
+            <Route path="/find-agents" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><AgentDirectory /></AgentRoleGuard></ProtectedRoute>} />
+            <Route path="/agent-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="agent"><AgentDashboard /></AgentRoleGuard></ProtectedRoute>} />
+            <Route path="/agent-invitation/:token" element={<AgentInvitationAccept />} />
             <Route path="/agent-signup" element={<AgentSignup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

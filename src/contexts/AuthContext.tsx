@@ -9,9 +9,10 @@ interface Profile {
   last_name: string | null;
   company: string | null;
   company_size: string | null;
-  plan: string;
-  created_at: string;
-  updated_at: string;
+  plan: string | null;
+  user_type: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface AuthContextType {

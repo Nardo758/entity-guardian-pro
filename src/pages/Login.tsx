@@ -12,7 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signIn, user, loading } = useAuth();
+  const { signIn, user, profile, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,11 +21,16 @@ const Login = () => {
     rememberMe: false
   });
 
+  // Handle redirects after login based on user type
   useEffect(() => {
-    if (!loading && user) {
-      navigate("/dashboard");
+    if (!loading && user && profile) {
+      if (profile.user_type === 'agent') {
+        navigate('/agent-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, profile, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +50,7 @@ const Login = () => {
           title: "Welcome back!",
           description: "You have been successfully signed in.",
         });
-        // Force page reload for clean state
-        window.location.href = "/dashboard";
+        // Redirect will be handled by useEffect below
       }
     } catch (error: any) {
       toast({

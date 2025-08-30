@@ -81,7 +81,7 @@ export const useAgentInvitations = () => {
         .from('agent_invitations')
         .update({ 
           status: response,
-          responded_at: new Date().toISOString()
+        responded_at: new Date().toISOString()
         })
         .eq('token', token)
         .select(`

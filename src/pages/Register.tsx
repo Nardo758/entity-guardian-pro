@@ -71,7 +71,8 @@ const Register = () => {
         first_name: formData.firstName,
         last_name: formData.lastName,
         company: formData.company,
-        company_size: formData.companySize
+        company_size: formData.companySize,
+        user_type: 'entity_owner'
       });
 
       if (error) {

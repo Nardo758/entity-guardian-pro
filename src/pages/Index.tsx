@@ -1,7 +1,7 @@
-import EntityRenewalPro from "../components/EntityRenewalPro";
+import AgentRedirectUpdated from "./AgentRedirectUpdated";
 
 const Index = () => {
-  return <EntityRenewalPro />;
+  return <AgentRedirectUpdated />;
 };
 
 export default Index;

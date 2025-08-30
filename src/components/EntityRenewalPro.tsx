@@ -19,6 +19,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { stateRequirements } from '@/lib/state-requirements';
 import { TeamSwitcher } from './TeamSwitcher';
+import NavigationMenu from './NavigationMenu';
 
 const EntityRenewalPro = () => {
   const navigate = useNavigate();
@@ -98,11 +99,21 @@ const EntityRenewalPro = () => {
             </div>
 
             <div className="flex items-center gap-4">
+              <NavigationMenu />
               <TeamSwitcher />
               <EnhancedNotificationBanner />
               <UserAccount />
 
               <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/find-agents')}
+                  className="text-primary border-primary/20 hover:bg-primary hover:text-primary-foreground"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Find Agents
+                </Button>
                 <Button 
                   variant="outline"
                   size="sm"
