@@ -65,7 +65,7 @@ const App = () => (
             <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
             <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
             <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
-            <Route path="/agent-directory" element={<ProtectedRoute><AgentDirectory /></ProtectedRoute>} />
+            <Route path="/find-agents" element={<ProtectedRoute><AgentDirectory /></ProtectedRoute>} />
             <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
             <Route path="/agent-signup" element={<AgentSignup />} />
             <Route path="*" element={<NotFound />} />

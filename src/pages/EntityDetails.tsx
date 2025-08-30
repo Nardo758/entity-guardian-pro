@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EntityRegisteredAgentSection } from '@/components/EntityRegisteredAgentSection';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -240,6 +241,12 @@ const EntityDetails = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Registered Agent Section */}
+              <EntityRegisteredAgentSection 
+                entityId={entity.id} 
+                entityState={entity.address.state}
+              />
 
               {/* Contact Information */}
               <Card>
