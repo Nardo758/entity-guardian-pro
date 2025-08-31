@@ -904,6 +904,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -921,6 +948,17 @@ export type Database = {
         Args: { team_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["team_role"]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       user_has_team_permission: {
         Args: {
           required_role: Database["public"]["Enums"]["team_role"]
@@ -931,6 +969,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "manager" | "user"
       payment_processing_status:
         | "pending"
         | "processing"
@@ -1065,6 +1104,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "manager", "user"],
       payment_processing_status: [
         "pending",
         "processing",
