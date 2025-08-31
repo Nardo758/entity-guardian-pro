@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building, Plus, CreditCard, Calendar, FileText, Users, AlertTriangle, DollarSign } from 'lucide-react';
+import { Building, Plus, CreditCard, Calendar, FileText, Users, AlertTriangle, DollarSign, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { EntityForm } from './EntityForm';
@@ -104,20 +104,29 @@ const EntityRenewalPro = () => {
               <EnhancedNotificationBanner />
               <UserAccount />
 
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/find-agents')}
-                  className="text-primary border-primary/20 hover:bg-primary hover:text-primary-foreground"
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Find Agents
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/payments')}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/find-agents')}
+                className="text-primary border-primary/20 hover:bg-primary hover:text-primary-foreground"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Find Agents
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin-setup')}
+                className="text-purple-600 border-purple-600/20 hover:bg-purple-600 hover:text-white"
+              >
+                <Crown className="mr-2 h-4 w-4" />
+                Admin Setup
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/payments')}
                   className="text-success border-success/20 hover:bg-success hover:text-success-foreground"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import AdminSetupPage from "./pages/AdminSetupPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Pages
 import Index from "./pages/Index";
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
             <Route path="/find-agents" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><AgentDirectory /></AgentRoleGuard></ProtectedRoute>} />
             <Route path="/agent-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></ProtectedRoute>} />
+            <Route path="/admin-setup" element={<ProtectedRoute><AdminSetupPage /></ProtectedRoute>} />
             <Route path="/agent-invitation/:token" element={<AgentInvitationAccept />} />
             <Route path="/agent-signup" element={<AgentSignup />} />
             <Route path="*" element={<NotFound />} />
