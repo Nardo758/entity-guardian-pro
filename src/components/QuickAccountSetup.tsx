@@ -5,14 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Mail, Lock, Eye, EyeOff, RotateCcw } from 'lucide-react';
+import PasswordResetForm from './PasswordResetForm';
 
 const QuickAccountSetup: React.FC = () => {
   const { signUp, signIn } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -87,6 +88,10 @@ const QuickAccountSetup: React.FC = () => {
       [name]: value
     }));
   };
+
+  if (mode === 'reset') {
+    return <PasswordResetForm onBack={() => setMode('signin')} />;
+  }
 
   return (
     <div className="max-w-md mx-auto">
@@ -170,7 +175,7 @@ const QuickAccountSetup: React.FC = () => {
             </Button>
           </form>
 
-          <div className="text-center pt-4">
+          <div className="text-center pt-4 space-y-2">
             <Button
               variant="ghost"
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
@@ -178,6 +183,17 @@ const QuickAccountSetup: React.FC = () => {
             >
               {mode === 'signin' ? "Don't have an account? Create one" : "Already have an account? Sign in"}
             </Button>
+            
+            {mode === 'signin' && (
+              <Button
+                variant="ghost"
+                onClick={() => setMode('reset')}
+                className="text-sm text-orange-600 hover:text-orange-700"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Forgot Password?
+              </Button>
+            )}
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
