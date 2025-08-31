@@ -187,6 +187,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('Attempting sign in for email:', email);
+    
     // Clean up any existing state
     try {
       await supabase.auth.signOut({ scope: 'global' });
@@ -194,10 +196,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Continue even if this fails
     }
     
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    console.log('Sign in result:', { data: data?.user?.email, error: error?.message });
     
     return { error };
   };
