@@ -24,7 +24,7 @@ const Login = () => {
   // Handle redirects after login based on user type
   useEffect(() => {
     if (!loading && user && profile) {
-      if (profile.user_type === 'agent') {
+      if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard');
       } else {
         navigate('/dashboard');

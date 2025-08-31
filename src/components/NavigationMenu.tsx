@@ -17,7 +17,7 @@ const NavigationMenu: React.FC = () => {
   const { profile } = useAuth();
   const location = useLocation();
   
-  const isAgent = profile?.user_type === 'agent';
+  const isAgent = profile?.user_type === 'registered_agent';
 
   // Entity Owner Navigation
   const entityOwnerLinks = [

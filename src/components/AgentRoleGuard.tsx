@@ -7,13 +7,13 @@ import { useNavigate } from 'react-router-dom';
 
 interface AgentRoleGuardProps {
   children: React.ReactNode;
-  requiredRole?: 'agent' | 'entity_owner';
+  requiredRole?: 'registered_agent' | 'entity_owner';
   fallbackPath?: string;
 }
 
 const AgentRoleGuard: React.FC<AgentRoleGuardProps> = ({ 
   children, 
-  requiredRole = 'agent',
+  requiredRole = 'registered_agent',
   fallbackPath = '/dashboard' 
 }) => {
   const { profile, loading } = useAuth();
@@ -30,7 +30,7 @@ const AgentRoleGuard: React.FC<AgentRoleGuardProps> = ({
   const userRole = profile?.user_type || 'entity_owner';
   
   if (userRole !== requiredRole) {
-    const message = requiredRole === 'agent' 
+    const message = requiredRole === 'registered_agent' 
       ? 'This page is only available to registered agents.'
       : 'This page is only available to entity owners.';
       

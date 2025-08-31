@@ -8,7 +8,7 @@ const AgentRedirect: React.FC = () => {
 
   useEffect(() => {
     if (!loading && profile) {
-      if (profile.user_type === 'agent') {
+      if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });

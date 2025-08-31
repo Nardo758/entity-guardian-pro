@@ -10,7 +10,7 @@ const AgentRedirectUpdated: React.FC = () => {
 
   useEffect(() => {
     if (!loading && profile) {
-      if (profile.user_type === 'agent') {
+      if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard', { replace: true });
       }
       // If entity owner, stay on this page and show EntityOwnerDashboard
