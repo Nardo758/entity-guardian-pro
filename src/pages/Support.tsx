@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { HelpCircle, MessageSquare, Phone, Mail, Book, Video, FileText, Search, Send, Clock } from "lucide-react";
+import { HelpCircle, MessageSquare, Phone, Mail, Book, Video, FileText, Search, Send, Clock, ArrowLeft, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface SupportTicket {
   id: string;
@@ -141,9 +142,20 @@ const Support = () => {
       <div className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Help Center</h1>
-              <p className="text-muted-foreground mt-1">Get the help you need, when you need it</p>
+            <div className="flex items-center gap-4">
+              <Link 
+                to="/" 
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                <Home className="w-4 h-4" />
+                <span className="text-sm font-medium">Back to Home</span>
+              </Link>
+              <div className="h-6 w-px bg-border" />
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Help Center</h1>
+                <p className="text-muted-foreground mt-1">Get the help you need, when you need it</p>
+              </div>
             </div>
             <Dialog open={isTicketOpen} onOpenChange={setIsTicketOpen}>
               <DialogTrigger asChild>
