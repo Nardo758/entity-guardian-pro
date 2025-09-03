@@ -20,6 +20,7 @@ serve(async (req) => {
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
   const webhookSecretTest = Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST");
   const cliWebhookSecret = Deno.env.get("STRIPE_CLI_WEBHOOK_SECRET");
+  
   if (!stripeSecretKey || !webhookSecret) {
     return new Response(JSON.stringify({ error: "Stripe secrets not configured" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -28,43 +29,54 @@ serve(async (req) => {
   }
 
   const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
-
   const body = await req.text();
 
-  // Test bypass: allow injection with shared token for simulation
-  const testBypass = req.headers.get('x-test-webhook');
-  const simulateToken = Deno.env.get('SIMULATE_TOKEN');
+  // Secure webhook signature verification - no test bypasses
+  const signature = req.headers.get("stripe-signature") || req.headers.get("Stripe-Signature");
   let event: Stripe.Event;
-  if (testBypass && simulateToken && testBypass === simulateToken) {
-    log('Bypassing signature for test webhook');
-    event = JSON.parse(body);
-  } else {
-    const signature = req.headers.get("stripe-signature") || req.headers.get("Stripe-Signature");
-    let verified: Stripe.Event | null = null;
-    try {
-      verified = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
-    } catch (_) {
-      if (webhookSecretTest) {
-        try {
-          verified = stripe.webhooks.constructEvent(body, signature || "", webhookSecretTest);
-        } catch (_) {}
-      }
-      if (cliWebhookSecret) {
-        try {
-          verified = stripe.webhooks.constructEvent(body, signature || "", cliWebhookSecret);
-        } catch (err) {
-          verified = null;
+  
+  try {
+    // Try primary webhook secret first
+    event = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
+  } catch (primaryError) {
+    // Fallback to test secret only in development environments
+    if (webhookSecretTest) {
+      try {
+        event = stripe.webhooks.constructEvent(body, signature || "", webhookSecretTest);
+      } catch (testError) {
+        // Final fallback to CLI secret for local development
+        if (cliWebhookSecret) {
+          try {
+            event = stripe.webhooks.constructEvent(body, signature || "", cliWebhookSecret);
+          } catch (cliError) {
+            log("Signature verification failed for all secrets", { 
+              primaryError: (primaryError as Error).message,
+              testError: (testError as Error).message,
+              cliError: (cliError as Error).message
+            });
+            return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 400,
+            });
+          }
+        } else {
+          log("Signature verification failed", { 
+            primaryError: (primaryError as Error).message,
+            testError: (testError as Error).message
+          });
+          return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          });
         }
       }
-    }
-    if (!verified) {
-      log("Signature verification failed for all known secrets");
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+    } else {
+      log("Signature verification failed", { error: (primaryError as Error).message });
+      return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
     }
-    event = verified;
   }
 
   // Supabase client with service role for writes
@@ -144,8 +156,11 @@ serve(async (req) => {
       status: 200,
     });
   } catch (err) {
-    log('handler error', { message: (err as Error).message });
-    return new Response(JSON.stringify({ error: 'handler error' }), {
+    log('Processing error', { 
+      message: (err as Error).message,
+      stack: (err as Error).stack 
+    });
+    return new Response(JSON.stringify({ error: 'Webhook processing failed' }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

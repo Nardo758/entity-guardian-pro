@@ -12,86 +12,14 @@ const AdminSetup: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const setupAdminAccess = async () => {
-    if (!user) {
-      toast({
-        title: "Please log in first",
-        description: "You need to be logged in to set up admin access.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Create/update profile with unlimited plan
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          plan: 'unlimited',
-          user_type: 'entity_owner',
-          first_name: 'Admin',
-          last_name: 'User',
-          company: 'System Administrator',
-          updated_at: new Date().toISOString()
-        });
-
-      if (profileError) throw profileError;
-
-      // Grant admin role
-      const { error: adminRoleError } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: user.id,
-          role: 'admin',
-          created_by: user.id
-        });
-
-      if (adminRoleError) throw adminRoleError;
-
-      // Grant manager role
-      const { error: managerRoleError } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: user.id,
-          role: 'manager',
-          created_by: user.id
-        });
-
-      if (managerRoleError) throw managerRoleError;
-
-      // Grant user role
-      const { error: userRoleError } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: user.id,
-          role: 'user',
-          created_by: user.id
-        });
-
-      if (userRoleError) throw userRoleError;
-
-      // Refresh profile to get updated data
-      await refreshProfile();
-
-      toast({
-        title: "Admin Access Granted! 🎉",
-        description: "You now have unlimited access to all features.",
-      });
-
-    } catch (error: any) {
-      console.error('Error setting up admin access:', error);
-      toast({
-        title: "Setup Failed",
-        description: error.message || "Failed to set up admin access. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    toast({
+      title: "Access Restricted",
+      description: "Admin access must be granted by an existing administrator. Contact your system administrator for access.",
+      variant: "destructive"
+    });
   };
 
-  const isAlreadyAdmin = profile?.is_admin || profile?.plan === 'unlimited';
+  const isAlreadyAdmin = profile?.roles?.includes('admin') || false;
 
   return (
     <Card className="max-w-md mx-auto">

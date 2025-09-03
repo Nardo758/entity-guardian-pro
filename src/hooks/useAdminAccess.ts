@@ -3,9 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 export const useAdminAccess = () => {
   const { profile } = useAuth();
   
-  const isAdmin = profile?.is_admin || profile?.roles?.includes('admin') || false;
-  const hasUnlimitedPlan = profile?.plan === 'unlimited';
-  const hasAdminAccess = isAdmin || hasUnlimitedPlan;
+  // Only check explicit admin roles, not subscription plans
+  const isAdmin = profile?.roles?.includes('admin') || false;
+  const hasAdminAccess = isAdmin;
   
   const checkPermission = (requiredRole?: string) => {
     if (hasAdminAccess) return true;
@@ -17,7 +17,7 @@ export const useAdminAccess = () => {
 
   return {
     isAdmin,
-    hasUnlimitedPlan,
+    hasUnlimitedPlan: profile?.plan === 'unlimited',
     hasAdminAccess,
     checkPermission,
     getUserRoles,

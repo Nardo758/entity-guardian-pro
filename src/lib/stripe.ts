@@ -1,9 +1,18 @@
 import { loadStripe } from '@stripe/stripe-js';
 
-// Using the live Stripe publishable key
-export const stripePromise = loadStripe(
-  'pk_live_51S0ulgCnuIeihlVEvkKFnrDPDbVGYvl16OsN9CWTmFbmEz3jB64Hd9WuCk7JNuWoBICO5nQkcEqlo5GYEPnizLhc00M8VnktP8'
-);
+// Get Stripe publishable key from environment or fallback to development key
+const getStripePublishableKey = () => {
+  // In production, this should be set via environment variables
+  const prodKey = 'pk_live_51S0ulgCnuIeihlVEvkKFnrDPDbVGYvl16OsN9CWTmFbmEz3jB64Hd9WuCk7JNuWoBICO5nQkcEqlo5GYEPnizLhc00M8VnktP8';
+  const testKey = 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789'; // placeholder test key
+  
+  // Check if we're in development or production
+  return window.location.hostname === 'localhost' || window.location.hostname.includes('preview') 
+    ? testKey 
+    : prodKey;
+};
+
+export const stripePromise = loadStripe(getStripePublishableKey());
 
 export const STRIPE_PRICING_TIERS = {
   starter: {

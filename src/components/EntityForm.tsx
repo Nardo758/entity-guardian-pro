@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,16 +34,28 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
   const [agentFeeDisplay, setAgentFeeDisplay] = useState('');
   const [directorFeeDisplay, setDirectorFeeDisplay] = useState('');
 
+  // Sanitize input to prevent XSS attacks
+  const sanitizeInput = (input: string): string => {
+    return DOMPurify.sanitize(input.trim());
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name && formData.formation_date && formData.registered_agent_name) {
-      // Clean up the data before submitting - convert empty strings to null for optional date fields
-      const cleanedData = {
+      // Sanitize all text inputs before submitting
+      const sanitizedData = {
         ...formData,
+        name: sanitizeInput(formData.name),
+        registered_agent_name: sanitizeInput(formData.registered_agent_name),
+        registered_agent_email: sanitizeInput(formData.registered_agent_email),
+        registered_agent_phone: sanitizeInput(formData.registered_agent_phone),
+        independent_director_name: formData.independent_director_name ? sanitizeInput(formData.independent_director_name) : '',
+        independent_director_email: formData.independent_director_email ? sanitizeInput(formData.independent_director_email) : '',
+        independent_director_phone: formData.independent_director_phone ? sanitizeInput(formData.independent_director_phone) : '',
         registered_agent_fee_due_date: formData.registered_agent_fee_due_date || null,
         independent_director_fee_due_date: formData.independent_director_fee_due_date || null,
       };
-      onSubmit(cleanedData);
+      onSubmit(sanitizedData);
     }
   };
 
