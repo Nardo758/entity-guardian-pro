@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,6 +86,9 @@ const AgentSignup = () => {
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Join our network of professional registered agents and connect with businesses 
           that need your services. Set your rates, choose your states, and grow your practice.
+        </p>
+        <p className="text-sm text-muted-foreground mt-3">
+          Are you a Business Owner looking to manage entities? <Link to="/register" className="text-primary hover:underline font-medium">Sign up as Entity Owner instead</Link>
         </p>
       </div>
 

@@ -126,7 +126,10 @@ const Register = () => {
             Join Entity Renewal Pro
           </h1>
           <p className="text-muted-foreground mt-2">
-            Create your account and start managing your business entities
+            Create your <strong>Entity Owner</strong> account and start managing your business entities
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Are you a Registered Agent? <Link to="/agent-signup" className="text-primary hover:underline font-medium">Sign up here instead</Link>
           </p>
         </div>
 
@@ -380,9 +383,18 @@ const Register = () => {
             </div>
 
             {/* Sign In Link */}
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
+                <Link 
+                  to="/login" 
+                  className="font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  Sign In
+                </Link>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Or{" "}
                 <Link 
                   to="/paid-register" 
                   className="font-medium text-primary hover:text-primary/80 transition-colors"

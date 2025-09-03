@@ -21,7 +21,8 @@ import {
   Phone,
   Check,
   Star,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -29,6 +30,7 @@ import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager'
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Invoice {
   id: string;
@@ -42,6 +44,7 @@ interface Invoice {
 }
 
 const Billing = () => {
+  const navigate = useNavigate();
   const [showPaymentMethodDialog, setShowPaymentMethodDialog] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [activeTab, setActiveTab] = useState('plans');
@@ -121,9 +124,20 @@ const Billing = () => {
       <div className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Billing & Subscription</h1>
-              <p className="text-muted-foreground mt-1">Manage your subscription and billing information</p>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Billing & Subscription</h1>
+                <p className="text-muted-foreground mt-1">Manage your subscription and billing information</p>
+              </div>
             </div>
             <div className="flex gap-3">
               <Button 
