@@ -20,7 +20,7 @@ const US_STATES = [
 ];
 
 const AgentDirectory = () => {
-  const { agents, loading, fetchAgents } = useAgents();
+  const { agents, loading, fetchAgentsDirectory } = useAgents();
   const { user } = useAuth();
   const [filters, setFilters] = useState<AgentSearchFilters>({ availableOnly: true });
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,7 +45,7 @@ const AgentDirectory = () => {
   }, [user]);
 
   useEffect(() => {
-    fetchAgents(filters);
+    fetchAgentsDirectory(filters);
   }, [filters]);
 
   const filteredAgents = agents.filter(agent => {
@@ -106,16 +106,13 @@ const AgentDirectory = () => {
             onValueChange={(value) => 
               setFilters(prev => ({ ...prev, maxPrice: value ? parseInt(value) : undefined }))
             }
+            disabled
           >
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Max Price" />
+            <SelectTrigger className="w-48 opacity-50">
+              <SelectValue placeholder="Price filtering unavailable" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Price</SelectItem>
-              <SelectItem value="199">Under $199</SelectItem>
-              <SelectItem value="299">Under $299</SelectItem>
-              <SelectItem value="399">Under $399</SelectItem>
-              <SelectItem value="499">Under $499</SelectItem>
+              <SelectItem value="">Pricing details shown after connection</SelectItem>
             </SelectContent>
           </Select>
 
@@ -163,7 +160,7 @@ const AgentDirectory = () => {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <DollarSign className="w-3 h-3" />
-                    ${agent.price_per_entity}/entity
+                    <span className="text-xs bg-muted px-2 py-1 rounded">Contact for pricing</span>
                   </div>
                   {agent.years_experience && (
                     <div className="flex items-center gap-1">
@@ -200,17 +197,8 @@ const AgentDirectory = () => {
                     className="flex-1"
                     onClick={() => handleInviteAgent(agent)}
                   >
-                    Invite Agent
+                    Connect with Agent
                   </Button>
-                  {agent.contact_email && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => window.open(`mailto:${agent.contact_email}`, '_blank')}
-                    >
-                      <Mail className="w-4 h-4" />
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>

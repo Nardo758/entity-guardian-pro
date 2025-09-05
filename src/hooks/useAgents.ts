@@ -44,6 +44,48 @@ export const useAgents = () => {
     }
   };
 
+  // Fetch agents for directory browsing (limited public info only)
+  const fetchAgentsDirectory = async (filters?: AgentSearchFilters) => {
+    try {
+      let query = supabase
+        .from('agents')
+        .select(`
+          id,
+          user_id,
+          company_name,
+          bio,
+          states,
+          is_available,
+          years_experience,
+          created_at,
+          updated_at
+        `)
+        .order('created_at', { ascending: false });
+
+      if (filters?.state) {
+        query = query.contains('states', [filters.state]);
+      }
+      
+      if (filters?.minExperience) {
+        query = query.gte('years_experience', filters.minExperience);
+      }
+      
+      if (filters?.availableOnly) {
+        query = query.eq('is_available', true);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setAgents((data || []) as Agent[]);
+    } catch (error) {
+      console.error('Error fetching agents directory:', error);
+      toast.error('Failed to load registered agents');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const createAgentProfile = async (agentData: Partial<Omit<Agent, 'id' | 'user_id' | 'created_at' | 'updated_at'>> & Pick<Agent, 'states' | 'price_per_entity' | 'is_available'>) => {
     if (!user) return;
 
@@ -129,6 +171,7 @@ export const useAgents = () => {
     agents,
     loading,
     fetchAgents,
+    fetchAgentsDirectory,
     createAgentProfile,
     updateAgentProfile,
     getUserAgent,
