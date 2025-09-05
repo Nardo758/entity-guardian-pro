@@ -44,9 +44,11 @@ export const useAgents = () => {
     }
   };
 
-  // Fetch agents for directory browsing (limited public info only)
+  // Fetch agents for directory browsing - returns only non-sensitive data
   const fetchAgentsDirectory = async (filters?: AgentSearchFilters) => {
     try {
+      // Query the agents table but only select non-sensitive fields
+      // RLS will ensure users only see agents they have relationships with
       let query = supabase
         .from('agents')
         .select(`
@@ -60,6 +62,7 @@ export const useAgents = () => {
           created_at,
           updated_at
         `)
+        .eq('is_available', true) // Only show available agents in directory
         .order('created_at', { ascending: false });
 
       if (filters?.state) {
@@ -69,18 +72,22 @@ export const useAgents = () => {
       if (filters?.minExperience) {
         query = query.gte('years_experience', filters.minExperience);
       }
-      
-      if (filters?.availableOnly) {
-        query = query.eq('is_available', true);
-      }
 
       const { data, error } = await query;
 
       if (error) throw error;
-      setAgents((data || []) as Agent[]);
+      
+      // Transform the data to match Agent interface, excluding sensitive fields
+      const agentData = (data || []).map(agent => ({
+        ...agent,
+        contact_email: '', // Hide sensitive contact info
+        price_per_entity: 0, // Hide pricing in directory view
+      })) as Agent[];
+      
+      setAgents(agentData);
     } catch (error) {
       console.error('Error fetching agents directory:', error);
-      toast.error('Failed to load registered agents');
+      toast.error('Failed to load registered agents directory. You may need to create business relationships first.');
     } finally {
       setLoading(false);
     }
