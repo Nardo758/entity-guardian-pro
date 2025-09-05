@@ -63,6 +63,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agent_invitations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_directory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agent_invitations_entity_id_fkey"
             columns: ["entity_id"]
             isOneToOne: false
@@ -425,6 +432,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_agent_assignments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents_directory"
             referencedColumns: ["id"]
           },
           {
@@ -933,7 +947,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      agents_directory: {
+        Row: {
+          bio: string | null
+          company_name: string | null
+          created_at: string | null
+          id: string | null
+          is_available: boolean | null
+          states: string[] | null
+          updated_at: string | null
+          user_id: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_available?: boolean | null
+          states?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_available?: boolean | null
+          states?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_agent_invitation_token: {
