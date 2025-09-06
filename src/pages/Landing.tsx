@@ -123,7 +123,7 @@ const Landing = () => {
                 <Link to="/login">Sign In</Link>
               </Button>
               <Button asChild className="bg-gradient-to-r from-primary to-primary-dark">
-                <Link to="/paid-register">Start Free Trial</Link>
+                <Link to="/paid-register">Free Trial</Link>
               </Button>
             </div>
           </div>
@@ -151,7 +151,7 @@ const Landing = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button size="lg" asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-lg px-8">
                 <Link to="/paid-register">
-                  Start Your Free Trial
+                  Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -238,7 +238,7 @@ const Landing = () => {
 
               <Button size="lg" asChild className="mt-8 bg-gradient-to-r from-primary to-primary-dark">
                 <Link to="/paid-register">
-                  Get Started Now
+                  Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -330,7 +330,7 @@ const Landing = () => {
                     variant={tier.popular ? 'default' : 'outline'}
                     asChild
                   >
-                    <Link to="/paid-register">Start Free Trial</Link>
+                    <Link to="/paid-register">Subscribe Now</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -464,6 +464,9 @@ const Landing = () => {
               © 2024 Entity Renewal Pro. All rights reserved.
             </p>
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
+              <Button asChild className="bg-gradient-to-r from-primary to-primary-dark">
+                <Link to="/paid-register">Subscribe Now</Link>
+              </Button>
               <a href="mailto:support@entityrenewal.pro" className="text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="h-5 w-5" />
               </a>
