@@ -12,6 +12,7 @@ import { EntityDistributionChart } from '@/components/charts/EntityDistributionC
 import { OperationalMetricsChart } from '@/components/charts/OperationalMetricsChart';
 import { AdvancedUserAnalytics } from '@/components/charts/AdvancedUserAnalytics';
 import { SystemPerformanceChart } from '@/components/charts/SystemPerformanceChart';
+import { EnhancedFinancialChart } from '@/components/charts/EnhancedFinancialChart';
 import { AdvancedFinancialAnalytics } from '@/components/charts/AdvancedFinancialAnalytics';
 import { 
   BarChart3, 
