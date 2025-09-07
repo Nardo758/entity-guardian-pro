@@ -140,8 +140,8 @@ const AdminDashboard = () => {
           <div className="flex items-center space-x-4 flex-1">
             <Crown className="h-6 w-6 text-warning" />
             <div>
-              <h1 className="text-xl font-bold text-foreground">System Administration</h1>
-              <p className="text-sm text-muted-foreground">Manage users, security, and system settings</p>
+              <h1 className="text-xl font-bold text-foreground">System Administration Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Comprehensive platform management and oversight</p>
             </div>
           </div>
           
