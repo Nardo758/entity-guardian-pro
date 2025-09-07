@@ -220,7 +220,7 @@ const ModernDashboard = () => {
       <div className="lg:ml-60">
         {/* Clean Header */}
         <header className="bg-background border-b border-border sticky top-0 z-30">
-          <div className="flex items-center justify-between px-6" style={{ paddingTop: '0.2rem', paddingBottom: '0.2rem' }}>
+          <div className="flex items-center justify-between px-6 py-0.5">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
