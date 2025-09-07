@@ -56,11 +56,24 @@ const DashboardSidebar = () => {
             <Building className="h-5 w-5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h1 className="font-bold text-lg text-sidebar-foreground truncate">Entity Renewal Pro</h1>
               <p className="text-xs text-sidebar-foreground/60 truncate">Business Management</p>
             </div>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(!collapsed)}
+            className="h-8 w-8 p-0 hover:bg-sidebar-accent"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4 text-sidebar-foreground/70" />
+            ) : (
+              <ChevronLeft className="h-4 w-4 text-sidebar-foreground/70" />
+            )}
+          </Button>
         </div>
 
         {/* Team Switcher */}
