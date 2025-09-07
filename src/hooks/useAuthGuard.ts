@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdminAccess } from './useAdminAccess';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -89,6 +90,26 @@ export const useAuthGuard = () => {
   }, [user]);
 
   const handleSessionTimeout = async () => {
+    // Log security event for session timeout
+    if (user) {
+      try {
+        await supabase.from('analytics_data').insert({
+          user_id: user.id,
+          metric_type: 'security_event',
+          metric_name: 'session_timeout',
+          metric_value: 1,
+          metric_date: new Date().toISOString().split('T')[0],
+          metadata: {
+            last_activity: lastActivity?.toISOString(),
+            timeout_duration: SESSION_TIMEOUT,
+            user_agent: navigator.userAgent,
+          }
+        });
+      } catch (error) {
+        console.error('Failed to log session timeout event:', error);
+      }
+    }
+
     await signOut();
     setAuthState(prev => ({
       ...prev,

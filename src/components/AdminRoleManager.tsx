@@ -72,54 +72,109 @@ const AdminRoleManager: React.FC = () => {
   };
 
   const assignRole = async () => {
-    if (!email || !selectedRole) {
+    if (!email.trim() || !selectedRole) {
       toast({
-        title: "Missing Information",
-        description: "Please enter email and select a role",
-        variant: "destructive"
+        title: "Validation Error",
+        description: "Please enter a valid email and select a role",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Enhanced email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
     try {
-      // Get user by email - simplified approach
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: '00000000-0000-0000-0000-000000000000', // Placeholder - would need proper user lookup
-          role: selectedRole
-        });
-
-      if (roleError) throw roleError;
-
-      // Log security event
-      await supabase.from('analytics_data').insert({
-        user_id: '00000000-0000-0000-0000-000000000000',
-        metric_name: 'Role Assignment',
-        metric_value: 1,
-        metric_type: 'security_event',
-        metric_date: new Date().toISOString().split('T')[0],
-        metadata: {
-          assigned_role: selectedRole,
-          assigned_by: (await supabase.auth.getUser()).data.user?.id,
-          timestamp: new Date().toISOString(),
-          target_email: email
-        }
+      // First, find the user by email using admin API
+      const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000
       });
 
+      if (userError) throw userError;
+
+      const targetUser = userData.users.find((user: any) => user.email === email.trim());
+      
+      if (!targetUser) {
+        toast({
+          title: "User Not Found",
+          description: "No user found with this email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if user already has this role
+      const { data: existingRole } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', targetUser.id)
+        .eq('role', selectedRole)
+        .single();
+
+      if (existingRole) {
+        toast({
+          title: "Role Already Exists",
+          description: `User already has the ${selectedRole} role`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .insert([
+          {
+            user_id: targetUser.id,
+            role: selectedRole,
+            created_by: (await supabase.auth.getUser()).data.user?.id,
+          },
+        ]);
+
+      if (error) throw error;
+
+      // Log security event
+      const currentUser = await supabase.auth.getUser();
+      await supabase
+        .from('analytics_data')
+        .insert([
+          {
+            user_id: currentUser.data.user?.id || '',
+            metric_type: 'security_event',
+            metric_name: 'role_assigned',
+            metric_value: 1,
+            metric_date: new Date().toISOString().split('T')[0],
+            metadata: {
+              assigned_role: selectedRole,
+              assigned_to_email: email,
+              assigned_to_user_id: targetUser.id,
+              assigned_by: currentUser.data.user?.email,
+            },
+          },
+        ]);
+
       toast({
-        title: "Role Assigned",
-        description: `${selectedRole} role assigned to ${email}`,
+        title: "Success",
+        description: `Role ${selectedRole} assigned to ${email} successfully`,
       });
 
       setEmail('');
+      setSelectedRole('user');
       fetchUserRoles();
     } catch (error: any) {
       toast({
-        title: "Assignment Failed",
-        description: error.message,
-        variant: "destructive"
+        title: "Error",
+        description: error.message || "Failed to assign role",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);

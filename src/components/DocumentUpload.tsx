@@ -36,7 +36,45 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    setSelectedFiles(prev => [...prev, ...files]);
+    
+    // Enhanced security validation
+    const validFiles = files.filter(file => {
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        console.warn(`File ${file.name} exceeds 10MB limit`);
+        return false;
+      }
+      
+      // Validate file type based on actual MIME type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif'
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        console.warn(`File ${file.name} has invalid type: ${file.type}`);
+        return false;
+      }
+      
+      // Check file extension as additional security layer
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      const allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png', 'gif'];
+      
+      if (!extension || !allowedExtensions.includes(extension)) {
+        console.warn(`File ${file.name} has invalid extension`);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    setSelectedFiles(prev => [...prev, ...validFiles]);
   };
 
   const removeFile = (index: number) => {

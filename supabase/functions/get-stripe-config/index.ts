@@ -1,0 +1,55 @@
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Get Stripe publishable key from Supabase secrets
+    const stripePublishableKey = Deno.env.get('STRIPE_PUBLISHABLE_KEY');
+    
+    if (!stripePublishableKey) {
+      console.error('STRIPE_PUBLISHABLE_KEY not configured in Supabase secrets');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Stripe configuration not available',
+          publishableKey: 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789' // fallback test key
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        publishableKey: stripePublishableKey 
+      }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+
+  } catch (error) {
+    console.error('Error getting Stripe config:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to get Stripe configuration',
+        publishableKey: 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789' // fallback test key
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+});

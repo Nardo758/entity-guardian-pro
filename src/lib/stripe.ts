@@ -1,18 +1,38 @@
 import { loadStripe } from '@stripe/stripe-js';
 
-// Get Stripe publishable key from environment or fallback to development key
-const getStripePublishableKey = () => {
-  // In production, this should be set via environment variables
-  const prodKey = 'pk_live_51S0ulgCnuIeihlVEvkKFnrDPDbVGYvl16OsN9CWTmFbmEz3jB64Hd9WuCk7JNuWoBICO5nQkcEqlo5GYEPnizLhc00M8VnktP8';
-  const testKey = 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789'; // placeholder test key
+// Get Stripe publishable key securely via edge function
+const getStripePublishableKey = async (): Promise<string> => {
+  // Use test key for development environments
+  const testKey = 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789';
   
-  // Check if we're in development or production
-  return window.location.hostname === 'localhost' || window.location.hostname.includes('preview') 
-    ? testKey 
-    : prodKey;
+  if (window.location.hostname === 'localhost' || window.location.hostname.includes('preview')) {
+    return testKey;
+  }
+  
+  try {
+    // In production, get the key securely from Supabase edge function
+    const response = await fetch('https://wcuxqopfcgivypbiynjp.supabase.co/functions/v1/get-stripe-config', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    return data.publishableKey || testKey;
+  } catch (error) {
+    console.warn('Failed to get secure Stripe key, using test key:', error);
+    return testKey;
+  }
 };
 
-export const stripePromise = loadStripe(getStripePublishableKey());
+// Initialize Stripe with secure key loading
+const initializeStripe = async () => {
+  const key = await getStripePublishableKey();
+  return (await import('@stripe/stripe-js')).loadStripe(key);
+};
+
+export const stripePromise = initializeStripe();
 
 export const STRIPE_PRICING_TIERS = {
   starter: {
