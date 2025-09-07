@@ -1,5 +1,5 @@
 import React from 'react';
-import ModernDashboard from './ModernDashboard';
+import ModernDashboard from './dashboard/ModernDashboard';
 
 const EntityOwnerDashboard: React.FC = () => {
   return <ModernDashboard />;
