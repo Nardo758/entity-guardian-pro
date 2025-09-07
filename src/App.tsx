@@ -12,6 +12,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PaidRegister from "./pages/PaidRegister";
+import UserTypeSelection from "./pages/UserTypeSelection";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Settings from "./pages/Settings";
@@ -49,6 +50,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Landing />} />
+            <Route path="/signup" element={<UserTypeSelection />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/paid-register" element={<PaidRegister />} />

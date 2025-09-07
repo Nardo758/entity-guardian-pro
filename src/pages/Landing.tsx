@@ -123,7 +123,7 @@ const Landing = () => {
                 <Link to="/login">Sign In</Link>
               </Button>
               <Button asChild className="bg-gradient-to-r from-primary to-primary-dark">
-                <Link to="/paid-register">Free Trial</Link>
+                <Link to="/signup">Get Started</Link>
               </Button>
             </div>
           </div>
@@ -150,7 +150,7 @@ const Landing = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button size="lg" asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-lg px-8">
-                <Link to="/paid-register">
+                <Link to="/signup">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -237,7 +237,7 @@ const Landing = () => {
               </div>
 
               <Button size="lg" asChild className="mt-8 bg-gradient-to-r from-primary to-primary-dark">
-                <Link to="/paid-register">
+                <Link to="/signup">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -465,7 +465,7 @@ const Landing = () => {
             </p>
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
               <Button asChild className="bg-gradient-to-r from-primary to-primary-dark">
-                <Link to="/paid-register">Subscribe Now</Link>
+                <Link to="/signup">Subscribe Now</Link>
               </Button>
               <a href="mailto:support@entityrenewal.pro" className="text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="h-5 w-5" />
