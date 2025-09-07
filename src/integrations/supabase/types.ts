@@ -972,6 +972,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_admin_system_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_entities: number
+          total_payments: number
+          total_revenue: number
+          total_users: number
+        }[]
+      }
       get_user_team_role: {
         Args: { team_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["team_role"]
