@@ -25,6 +25,7 @@ import PaymentHistory from "./pages/PaymentHistory";
 import Integrations from "./pages/Integrations";
 import Support from "./pages/Support";
 import Documents from "./pages/Documents";
+import AdminAnalyticsDashboard from "./pages/AdminAnalyticsDashboard";
 import Analytics from "./pages/Analytics";
 import AuditTrail from "./pages/AuditTrail";
 import EntityDetails from "./pages/EntityDetails";
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+            <Route path="/admin-analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/team" element={<ProtectedRoute><TeamManagement /></ProtectedRoute>} />
             <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />

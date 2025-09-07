@@ -981,6 +981,28 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_business_intelligence: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          churn_risk_indicators: Json
+          customer_satisfaction_score: number
+          feature_adoption_rates: Json
+          seasonal_patterns: Json
+          state_compliance_trends: Json
+        }[]
+      }
+      get_entity_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_entities_per_customer: number
+          entities_by_state: Json
+          entities_by_type: Json
+          entity_creation_rate_30d: number
+          most_popular_entity_type: string
+          most_popular_state: string
+          total_entities: number
+        }[]
+      }
       get_financial_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -992,6 +1014,17 @@ export type Database = {
           revenue_by_tier: Json
           revenue_growth_rate: number
           total_revenue: number
+        }[]
+      }
+      get_operational_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_processing_time_days: number
+          compliance_completion_rate: number
+          document_processing_volume: number
+          failed_renewals_30d: number
+          support_ticket_volume: number
+          system_uptime_percentage: number
         }[]
       }
       get_user_analytics: {
