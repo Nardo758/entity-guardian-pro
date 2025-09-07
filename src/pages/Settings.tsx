@@ -12,9 +12,13 @@ import { Bell, User, Shield, CreditCard, Users, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { NotificationPreferences } from "@/components/NotificationPreferences";
+import AdminRoleManager from "@/components/AdminRoleManager";
+import SecurityAuditLog from "@/components/SecurityAuditLog";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { hasAdminAccess } = useAdminAccess();
   const [profile, setProfile] = useState({
     name: "Sarah Johnson",
     email: "sarah.johnson@company.com",
@@ -99,7 +103,7 @@ const Settings = () => {
           {/* Main Settings Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="profile" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className={`grid w-full ${hasAdminAccess ? 'grid-cols-6' : 'grid-cols-4'}`}>
                 <TabsTrigger value="profile" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Profile
@@ -116,6 +120,18 @@ const Settings = () => {
                   <CreditCard className="h-4 w-4" />
                   Billing
                 </TabsTrigger>
+                {hasAdminAccess && (
+                  <>
+                    <TabsTrigger value="admin" className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Admin
+                    </TabsTrigger>
+                    <TabsTrigger value="audit" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Audit
+                    </TabsTrigger>
+                  </>
+                )}
               </TabsList>
 
               <TabsContent value="profile" className="space-y-6">
@@ -255,6 +271,18 @@ const Settings = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {hasAdminAccess && (
+                <>
+                  <TabsContent value="admin" className="space-y-6">
+                    <AdminRoleManager />
+                  </TabsContent>
+                  
+                  <TabsContent value="audit" className="space-y-6">
+                    <SecurityAuditLog />
+                  </TabsContent>
+                </>
+              )}
             </Tabs>
           </div>
         </div>

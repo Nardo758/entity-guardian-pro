@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Building } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import QuickAccountSetup from "@/components/QuickAccountSetup";
-import DirectAdminAccess from "@/components/DirectAdminAccess";
+import SecureAdminAccess from "@/components/DirectAdminAccess";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -35,9 +35,9 @@ const Login = () => {
         {/* Quick Account Setup Component */}
         <QuickAccountSetup />
         
-        {/* Direct Admin Access - For Immediate Resolution */}
+        {/* Secure Admin Access */}
         <div className="mt-8">
-          <DirectAdminAccess />
+          <SecureAdminAccess />
         </div>
       </div>
     </div>
