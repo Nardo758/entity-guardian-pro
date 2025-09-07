@@ -959,6 +959,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_invited_agent: {
+        Args: { invitation_id: string; user_uuid: string }
+        Returns: boolean
+      }
+      owns_invited_agent: {
+        Args: { invitation_id: string; user_uuid: string }
+        Returns: boolean
+      }
       user_has_team_permission: {
         Args: {
           required_role: Database["public"]["Enums"]["team_role"]
