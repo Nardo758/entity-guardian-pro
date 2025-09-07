@@ -1015,6 +1015,10 @@ export type Database = {
         Args: { method_user_id: string }
         Returns: boolean
       }
+      validate_payment_method_owner: {
+        Args: { method_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "manager" | "user"
