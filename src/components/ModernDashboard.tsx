@@ -11,9 +11,7 @@ import {
   Crown,
   DollarSign,
   AlertTriangle,
-  Menu,
-  TrendingUp,
-  Bell
+  Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +21,7 @@ import { ScheduleModal } from './ScheduleModal';
 import { NotificationBanner } from './NotificationBanner';
 import { EnhancedNotificationBanner } from './EnhancedNotificationBanner';
 import { UserAccount } from './UserAccount';
-import { SimpleEntityCard } from './SimpleEntityCard';
+// import { SimpleEntityCard } from './SimpleEntityCard';
 import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { TeamSwitcher } from './TeamSwitcher';
 import { useEntities } from '@/hooks/useEntities';
@@ -34,6 +32,7 @@ import { useTeams } from '@/hooks/useTeams';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { stateRequirements } from '@/lib/state-requirements';
+import { Entity } from '@/types/entity';
 
 const ModernDashboard = () => {
   const navigate = useNavigate();
@@ -51,7 +50,9 @@ const ModernDashboard = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleAddEntity = async (entityData: any) => {
+  const handleAddEntity = async (
+    entityData: Omit<Entity, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+  ) => {
     try {
       const entityWithTeam = {
         ...entityData,
@@ -92,7 +93,7 @@ const ModernDashboard = () => {
   };
 
   const navigationItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/', current: true },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', current: true },
     { name: 'Entities', icon: Building, path: '/entities' },
     { name: 'Documents', icon: FileText, path: '/documents' },
     { name: 'Payments', icon: CreditCard, path: '/payments' },
