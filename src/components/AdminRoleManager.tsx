@@ -92,15 +92,44 @@ const AdminRoleManager: React.FC = () => {
       return;
     }
 
+    if (!hasAdminAccess) {
+      toast({
+        title: "Access Denied",
+        description: "Insufficient permissions to assign roles",
+        variant: "destructive",
+      });
+      // Log security event for unauthorized access attempt
+      await supabase.rpc('log_security_event', {
+        event_type: 'role_assignment_unauthorized_attempt',
+        event_data: { attempted_email: email.trim(), attempted_role: selectedRole }
+      });
+      return;
+    }
+
     setLoading(true);
     try {
+      // Get current user for security checks
+      const currentUser = await supabase.auth.getUser();
+      
       // First, find the user by email using admin API
       const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
         page: 1,
         perPage: 1000
       });
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error('Error fetching users:', userError);
+        toast({
+          title: "Error",
+          description: "Failed to find user",
+          variant: "destructive",
+        });
+        await supabase.rpc('log_security_event', {
+          event_type: 'user_lookup_failed',
+          event_data: { error: userError.message, attempted_email: email.trim() }
+        });
+        return;
+      }
 
       const targetUser = userData.users.find((user: any) => user.email === email.trim());
       
@@ -109,6 +138,24 @@ const AdminRoleManager: React.FC = () => {
           title: "User Not Found",
           description: "No user found with this email address",
           variant: "destructive",
+        });
+        await supabase.rpc('log_security_event', {
+          event_type: 'user_not_found',
+          event_data: { attempted_email: email.trim() }
+        });
+        return;
+      }
+
+      // Security check: Prevent self-role assignment to non-admin users
+      if (targetUser.id === currentUser.data.user?.id && selectedRole !== 'admin') {
+        toast({
+          title: "Security Error",
+          description: "Cannot modify your own role",
+          variant: "destructive",
+        });
+        await supabase.rpc('log_security_event', {
+          event_type: 'self_role_modification_attempt',
+          event_data: { attempted_role: selectedRole }
         });
         return;
       }
@@ -136,32 +183,29 @@ const AdminRoleManager: React.FC = () => {
           {
             user_id: targetUser.id,
             role: selectedRole,
-            created_by: (await supabase.auth.getUser()).data.user?.id,
+            created_by: currentUser.data.user?.id,
           },
         ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error assigning role:', error);
+        toast({
+          title: "Error",
+          description: "Failed to assign role",
+          variant: "destructive",
+        });
+        await supabase.rpc('log_security_event', {
+          event_type: 'role_assignment_failed',
+          event_data: { 
+            error: error.message, 
+            target_user_id: targetUser.id,
+            attempted_role: selectedRole 
+          }
+        });
+        return;
+      }
 
-      // Log security event
-      const currentUser = await supabase.auth.getUser();
-      await supabase
-        .from('analytics_data')
-        .insert([
-          {
-            user_id: currentUser.data.user?.id || '',
-            metric_type: 'security_event',
-            metric_name: 'role_assigned',
-            metric_value: 1,
-            metric_date: new Date().toISOString().split('T')[0],
-            metadata: {
-              assigned_role: selectedRole,
-              assigned_to_email: email,
-              assigned_to_user_id: targetUser.id,
-              assigned_by: currentUser.data.user?.email,
-            },
-          },
-        ]);
-
+      // Success logging is handled by the database trigger
       toast({
         title: "Success",
         description: `Role ${selectedRole} assigned to ${email} successfully`,
@@ -171,10 +215,15 @@ const AdminRoleManager: React.FC = () => {
       setSelectedRole('user');
       fetchUserRoles();
     } catch (error: any) {
+      console.error('Unexpected error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to assign role",
         variant: "destructive",
+      });
+      await supabase.rpc('log_security_event', {
+        event_type: 'role_assignment_unexpected_error',
+        event_data: { error: String(error) }
       });
     } finally {
       setLoading(false);
@@ -182,6 +231,34 @@ const AdminRoleManager: React.FC = () => {
   };
 
   const removeRole = async (userRoleId: string, targetUserId: string) => {
+    if (!hasAdminAccess) {
+      toast({
+        title: "Access Denied",
+        description: "Insufficient permissions to remove roles",
+        variant: "destructive",
+      });
+      await supabase.rpc('log_security_event', {
+        event_type: 'role_removal_unauthorized_attempt',
+        event_data: { target_user_id: targetUserId }
+      });
+      return;
+    }
+
+    // Security check: Prevent removing own admin role
+    const currentUser = await supabase.auth.getUser();
+    if (targetUserId === currentUser.data.user?.id) {
+      toast({
+        title: "Security Error",
+        description: "Cannot remove your own role",
+        variant: "destructive",
+      });
+      await supabase.rpc('log_security_event', {
+        event_type: 'self_role_removal_attempt',
+        event_data: { user_role_id: userRoleId }
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -189,21 +266,25 @@ const AdminRoleManager: React.FC = () => {
         .delete()
         .eq('id', userRoleId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error removing role:', error);
+        toast({
+          title: "Removal Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        await supabase.rpc('log_security_event', {
+          event_type: 'role_removal_failed',
+          event_data: { 
+            error: error.message, 
+            target_user_id: targetUserId,
+            user_role_id: userRoleId 
+          }
+        });
+        return;
+      }
 
-      // Log security event
-      await supabase.from('analytics_data').insert({
-        user_id: targetUserId,
-        metric_name: 'Role Removal',
-        metric_value: 1,
-        metric_type: 'security_event',
-        metric_date: new Date().toISOString().split('T')[0],
-        metadata: {
-          removed_by: (await supabase.auth.getUser()).data.user?.id,
-          timestamp: new Date().toISOString()
-        }
-      });
-
+      // Success logging is handled by the database trigger
       toast({
         title: "Role Removed",
         description: "User role has been removed",
@@ -211,10 +292,15 @@ const AdminRoleManager: React.FC = () => {
 
       fetchUserRoles();
     } catch (error: any) {
+      console.error('Unexpected error:', error);
       toast({
         title: "Removal Failed",
         description: error.message,
         variant: "destructive"
+      });
+      await supabase.rpc('log_security_event', {
+        event_type: 'role_removal_unexpected_error',
+        event_data: { error: String(error), target_user_id: targetUserId }
       });
     } finally {
       setLoading(false);

@@ -1059,6 +1059,10 @@ export type Database = {
         Args: { invitation_id: string; user_uuid: string }
         Returns: boolean
       }
+      log_security_event: {
+        Args: { event_data?: Json; event_type: string }
+        Returns: undefined
+      }
       owns_assignment_agent: {
         Args: { assignment_id: string; user_uuid: string }
         Returns: boolean
