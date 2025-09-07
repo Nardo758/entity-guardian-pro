@@ -63,7 +63,7 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             
             {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><EntityOwnerDashboard /></ProtectedRoute>} />
             <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
