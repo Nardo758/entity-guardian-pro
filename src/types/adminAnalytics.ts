@@ -7,6 +7,11 @@ export interface UserAnalytics {
   entities_this_month: number;
   geographic_distribution: Record<string, number>;
   user_retention_rate: number;
+  trial_to_paid_conversion: number;
+  upgrade_rate: number;
+  downgrade_rate: number;
+  clv_by_segment: Record<string, number>;
+  revenue_concentration: Record<string, number>;
 }
 
 export interface FinancialAnalytics {
@@ -18,6 +23,10 @@ export interface FinancialAnalytics {
   outstanding_invoices: number;
   arpu: number;
   revenue_growth_rate: number;
+  agent_service_revenue: number;
+  agent_commission_tracking: Record<string, number>;
+  accounts_receivable_aging: Record<string, number>;
+  revenue_forecast: Record<string, number>;
 }
 
 export interface EntityAnalytics {
@@ -26,8 +35,11 @@ export interface EntityAnalytics {
   entities_by_state: Record<string, number>;
   avg_entities_per_customer: number;
   entity_creation_rate_30d: number;
+  entity_deletion_rate_30d: number;
   most_popular_entity_type: string;
   most_popular_state: string;
+  entity_lifecycle_metrics: Record<string, number>;
+  geographic_heat_map: Record<string, number>;
 }
 
 export interface OperationalAnalytics {
@@ -37,6 +49,10 @@ export interface OperationalAnalytics {
   document_processing_volume: number;
   support_ticket_volume: number;
   system_uptime_percentage: number;
+  database_performance_metrics: Record<string, number>;
+  api_usage_patterns: Record<string, number>;
+  security_incidents: number;
+  response_times: Record<string, number>;
 }
 
 export interface BusinessIntelligence {
