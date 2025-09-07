@@ -389,7 +389,6 @@ export type Database = {
           entity_id: string
           expires_at: string
           id: string
-          invitation_token: string | null
           invited_at: string
           responded_at: string | null
           status: string
@@ -401,7 +400,6 @@ export type Database = {
           entity_id: string
           expires_at?: string
           id?: string
-          invitation_token?: string | null
           invited_at?: string
           responded_at?: string | null
           status?: string
@@ -413,7 +411,6 @@ export type Database = {
           entity_id?: string
           expires_at?: string
           id?: string
-          invitation_token?: string | null
           invited_at?: string
           responded_at?: string | null
           status?: string
@@ -936,6 +933,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_create_assignment_for_entity: {
+        Args: { entity_uuid: string; user_uuid: string }
+        Returns: boolean
+      }
       generate_agent_invitation_token: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -961,6 +962,14 @@ export type Database = {
       }
       is_invited_agent: {
         Args: { invitation_id: string; user_uuid: string }
+        Returns: boolean
+      }
+      owns_assignment_agent: {
+        Args: { assignment_id: string; user_uuid: string }
+        Returns: boolean
+      }
+      owns_assignment_entity: {
+        Args: { assignment_id: string; user_uuid: string }
         Returns: boolean
       }
       owns_invited_agent: {
