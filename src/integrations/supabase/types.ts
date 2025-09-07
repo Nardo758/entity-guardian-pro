@@ -981,6 +981,32 @@ export type Database = {
           total_users: number
         }[]
       }
+      get_financial_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          arpu: number
+          arr: number
+          mrr: number
+          outstanding_invoices: number
+          payment_volume_30d: number
+          revenue_by_tier: Json
+          revenue_growth_rate: number
+          total_revenue: number
+        }[]
+      }
+      get_user_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          entities_this_month: number
+          geographic_distribution: Json
+          total_entities: number
+          total_users: number
+          user_growth_30d: number
+          user_growth_7d: number
+          user_retention_rate: number
+          users_by_role: Json
+        }[]
+      }
       get_user_team_role: {
         Args: { team_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["team_role"]
