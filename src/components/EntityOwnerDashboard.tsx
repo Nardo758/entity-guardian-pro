@@ -1,8 +1,8 @@
 import React from 'react';
-import EntityRenewalPro from './EntityRenewalPro';
+import ModernDashboard from './ModernDashboard';
 
 const EntityOwnerDashboard: React.FC = () => {
-  return <EntityRenewalPro />;
+  return <ModernDashboard />;
 };
 
 export default EntityOwnerDashboard;
