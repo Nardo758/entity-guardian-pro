@@ -12,6 +12,7 @@ import { EntityDistributionChart } from '@/components/charts/EntityDistributionC
 import { OperationalMetricsChart } from '@/components/charts/OperationalMetricsChart';
 import { AdvancedUserAnalytics } from '@/components/charts/AdvancedUserAnalytics';
 import { SystemPerformanceChart } from '@/components/charts/SystemPerformanceChart';
+import { AdvancedFinancialAnalytics } from '@/components/charts/AdvancedFinancialAnalytics';
 import { 
   BarChart3, 
   Users, 
@@ -238,10 +239,13 @@ const AdminAnalyticsDashboard: React.FC = () => {
 
         <TabsContent value="financial" className="space-y-6">
           {financialAnalytics ? (
-            <RevenueChart 
-              data={financialAnalytics} 
-              title="Financial Performance Dashboard"
-            />
+            <div className="space-y-6">
+              <RevenueChart 
+                data={financialAnalytics} 
+                title="Financial Performance Dashboard"
+              />
+              <AdvancedFinancialAnalytics data={financialAnalytics} />
+            </div>
           ) : (
             <Card>
               <CardContent className="pt-6">
