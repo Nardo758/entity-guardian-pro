@@ -11,6 +11,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import Register from "./pages/Register";
 import PaidRegister from "./pages/PaidRegister";
 import UserTypeSelection from "./pages/UserTypeSelection";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/signup" element={<UserTypeSelection />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/register" element={<Register />} />
             <Route path="/paid-register" element={<PaidRegister />} />
             <Route path="/registration-success" element={<RegistrationSuccess />} />
