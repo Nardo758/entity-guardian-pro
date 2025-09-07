@@ -196,14 +196,6 @@ const QuickAccountSetup: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-            <p className="text-sm text-blue-800">
-              <strong>Existing users:</strong> leon@traveloure.com, m.dixon5030@gmail.com, ldixon@myersapartmentgroup.com
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              If you're one of these users, use your original password. Otherwise, create a new account.
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

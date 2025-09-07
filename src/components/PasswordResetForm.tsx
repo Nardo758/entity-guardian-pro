@@ -107,11 +107,6 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
           Back to Sign In
         </Button>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
-            <strong>Known accounts:</strong> leon@traveloure.com, m.dixon5030@gmail.com, ldixon@myersapartmentgroup.com
-          </p>
-        </div>
       </CardContent>
     </Card>
   );
