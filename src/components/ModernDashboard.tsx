@@ -241,7 +241,7 @@ const ModernDashboard = () => {
       <div className="lg:ml-72">
         {/* Enhanced Top Header */}
         <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-8 py-8">
             <div className="flex items-center gap-6">
               <Button
                 variant="ghost"
@@ -253,12 +253,12 @@ const ModernDashboard = () => {
               </Button>
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Dashboard</h2>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Dashboard</h2>
                   <div className="px-3 py-1 bg-primary/10 text-primary text-xs font-semibold rounded-full">
                     Live
                   </div>
                 </div>
-                <p className="text-muted-foreground font-medium">Monitor your business entities and renewals</p>
+                <p className="text-sm text-muted-foreground font-medium">Monitor your business entities and renewals</p>
               </div>
             </div>
 
