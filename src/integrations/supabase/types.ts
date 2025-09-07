@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_documents: {
+        Row: {
+          agent_id: string
+          created_at: string
+          document_type: string
+          entity_id: string
+          entity_owner_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          forwarded_date: string | null
+          forwarding_method: string | null
+          id: string
+          metadata: Json | null
+          notes: string | null
+          received_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          document_type: string
+          entity_id: string
+          entity_owner_id: string
+          file_name: string
+          file_path: string
+          file_size: number
+          forwarded_date?: string | null
+          forwarding_method?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          received_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          document_type?: string
+          entity_id?: string
+          entity_owner_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          forwarded_date?: string | null
+          forwarding_method?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          received_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_invitations: {
         Row: {
           agent_email: string
@@ -70,6 +127,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_invoices: {
+        Row: {
+          agent_id: string
+          amount: number
+          created_at: string
+          due_date: string
+          entity_id: string
+          entity_owner_id: string
+          id: string
+          invoice_number: string
+          metadata: Json | null
+          notes: string | null
+          paid_at: string | null
+          service_period_end: string
+          service_period_start: string
+          services_provided: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          amount: number
+          created_at?: string
+          due_date: string
+          entity_id: string
+          entity_owner_id: string
+          id?: string
+          invoice_number: string
+          metadata?: Json | null
+          notes?: string | null
+          paid_at?: string | null
+          service_period_end: string
+          service_period_start: string
+          services_provided?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          amount?: number
+          created_at?: string
+          due_date?: string
+          entity_id?: string
+          entity_owner_id?: string
+          id?: string
+          invoice_number?: string
+          metadata?: Json | null
+          notes?: string | null
+          paid_at?: string | null
+          service_period_end?: string
+          service_period_start?: string
+          services_provided?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       agents: {
         Row: {
@@ -209,6 +323,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      compliance_deadlines: {
+        Row: {
+          agent_id: string | null
+          completed_at: string | null
+          created_at: string
+          deadline_type: string
+          description: string | null
+          due_date: string
+          entity_id: string
+          filing_fee: number | null
+          id: string
+          metadata: Json | null
+          reminder_sent: boolean | null
+          state: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deadline_type: string
+          description?: string | null
+          due_date: string
+          entity_id: string
+          filing_fee?: number | null
+          id?: string
+          metadata?: Json | null
+          reminder_sent?: boolean | null
+          state: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          deadline_type?: string
+          description?: string | null
+          due_date?: string
+          entity_id?: string
+          filing_fee?: number | null
+          id?: string
+          metadata?: Json | null
+          reminder_sent?: boolean | null
+          state?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       cost_projections: {
         Row: {
@@ -706,6 +877,7 @@ export type Database = {
           id: string
           last_name: string | null
           plan: string | null
+          unified_role: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at: string | null
           user_id: string
           user_type: string | null
@@ -718,6 +890,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           plan?: string | null
+          unified_role?: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at?: string | null
           user_id: string
           user_type?: string | null
@@ -730,6 +903,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           plan?: string | null
+          unified_role?: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at?: string | null
           user_id?: string
           user_type?: string | null
@@ -823,6 +997,51 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          priority: string
+          resolved_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1117,6 +1336,7 @@ export type Database = {
         | "failed"
         | "canceled"
       team_role: "owner" | "admin" | "manager" | "member"
+      unified_user_role: "admin" | "registered_agent" | "entity_owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1253,6 +1473,7 @@ export const Constants = {
         "canceled",
       ],
       team_role: ["owner", "admin", "manager", "member"],
+      unified_user_role: ["admin", "registered_agent", "entity_owner"],
     },
   },
 } as const
