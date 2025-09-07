@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import AdminDashboard from "./components/AdminDashboard";
 import AdminSetupPage from "./pages/AdminSetupPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 // Pages
@@ -61,6 +62,7 @@ const App = () => (
             
             {/* Protected routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />

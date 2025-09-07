@@ -16,6 +16,7 @@ import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { stateRequirements } from '@/lib/state-requirements';
 import { TeamSwitcher } from './TeamSwitcher';
@@ -23,6 +24,7 @@ import NavigationMenu from './NavigationMenu';
 
 const EntityRenewalPro = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useAdminAccess();
   
   const { entities, addEntity, deleteEntity } = useEntities();
   const { payments } = usePayments();
@@ -114,6 +116,17 @@ const EntityRenewalPro = () => {
                 <Users className="mr-2 h-4 w-4" />
                 Find Agents
               </Button>
+              {isAdmin && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/admin-dashboard')}
+                  className="text-purple-600 border-purple-600/20 hover:bg-purple-600 hover:text-white"
+                >
+                  <Crown className="mr-2 h-4 w-4" />
+                  Admin Dashboard
+                </Button>
+              )}
               <Button 
                 variant="outline"
                 size="sm"

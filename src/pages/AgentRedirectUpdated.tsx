@@ -12,8 +12,10 @@ const AgentRedirectUpdated: React.FC = () => {
     if (!loading && profile) {
       if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard', { replace: true });
+      } else if (profile.is_admin || profile.roles?.includes('admin')) {
+        navigate('/admin-dashboard', { replace: true });
       }
-      // If entity owner, stay on this page and show EntityOwnerDashboard
+      // If entity owner or no user type set, stay on this page and show EntityOwnerDashboard
     }
   }, [profile, loading, navigate]);
 

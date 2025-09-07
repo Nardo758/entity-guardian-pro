@@ -10,6 +10,8 @@ const AgentRedirect: React.FC = () => {
     if (!loading && profile) {
       if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard', { replace: true });
+      } else if (profile.is_admin || profile.roles?.includes('admin')) {
+        navigate('/admin-dashboard', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }

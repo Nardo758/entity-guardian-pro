@@ -14,6 +14,8 @@ const Login = () => {
     if (!loading && user && profile) {
       if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard');
+      } else if (profile.is_admin || profile.roles?.includes('admin')) {
+        navigate('/admin-dashboard');
       } else {
         navigate('/dashboard');
       }
