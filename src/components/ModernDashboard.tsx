@@ -218,9 +218,9 @@ const ModernDashboard = () => {
 
       {/* Main Content */}
       <div className="lg:ml-60">
-        {/* Clean Header */}
+        {/* Clean Header - Reduced padding here */}
         <header className="bg-background border-b border-border sticky top-0 z-30">
-          <div className="flex items-center justify-between px-6 py-0.5">
+          <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -255,8 +255,8 @@ const ModernDashboard = () => {
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main className="p-6 space-y-6">
+        {/* Main Content Area - Reduced top padding */}
+        <main className="p-6 pt-4 space-y-6">
           {/* Admin-Only Security Alerts */}
           {isAdmin && (
             <div className="space-y-3">
@@ -354,72 +354,6 @@ const ModernDashboard = () => {
                   {payments.filter(p => p.status === 'pending').length} payments • Requires attention
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
-                <p className="text-sm text-muted-foreground">Common tasks and shortcuts</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowScheduleView(true)}
-                className="h-auto p-3 justify-start flex-col items-center gap-2 text-center"
-              >
-                <Calendar className="h-5 w-5 text-info" />
-                <div className="text-sm font-medium">View Calendar</div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/payments')}
-                className="h-auto p-3 justify-start flex-col items-center gap-2 text-center"
-              >
-                <CreditCard className="h-5 w-5 text-success" />
-                <div className="text-sm font-medium">Registered Agent</div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/documents')}
-                className="h-auto p-3 justify-start flex-col items-center gap-2 text-center"
-              >
-                <FileText className="h-5 w-5 text-primary" />
-                <div className="text-sm font-medium">Documents</div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/analytics')}
-                className="h-auto p-3 justify-start flex-col items-center gap-2 text-center"
-              >
-                <TrendingUp className="h-5 w-5 text-warning" />
-                <div className="text-sm font-medium">Analytics</div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/find-agents')}
-                className="h-auto p-3 justify-start flex-col items-center gap-2 text-center"
-              >
-                <Users className="h-5 w-5 text-info" />
-                <div className="text-sm font-medium">Find Agents</div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/settings')}
-                className="h-auto p-3 justify-start flex-col items-center gap-2 text-center"
-              >
-                <Settings className="h-5 w-5 text-muted-foreground" />
-                <div className="text-sm font-medium">Settings</div>
-              </Button>
             </div>
           </div>
 
