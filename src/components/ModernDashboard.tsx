@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Bell,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -240,7 +241,7 @@ const ModernDashboard = () => {
       <div className="lg:ml-72">
         {/* Enhanced Top Header */}
         <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center justify-between px-8 py-6">
+          <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-6">
               <Button
                 variant="ghost"
@@ -279,16 +280,20 @@ const ModernDashboard = () => {
         </header>
 
         {/* Enhanced Main Content Area */}
-        <main className="p-6 space-y-6 max-w-7xl mx-auto">
-          {/* Alerts Section - Only show if there are alerts */}
-          {(notifications.filter(n => !n.read).length > 0) && (
-            <div className="space-y-4">
+        <main className="p-4 space-y-4">
+          {/* Admin-Only Security Alerts */}
+          {isAdmin && (
+            <div className="space-y-3">
               <SecurityWarningBanner />
-              <NotificationBanner 
-                notifications={notifications.filter(n => !n.read)}
-                onDismiss={dismissNotification}
-              />
             </div>
+          )}
+
+          {/* Regular User Notifications */}
+          {notifications.filter(n => !n.read).length > 0 && (
+            <NotificationBanner 
+              notifications={notifications.filter(n => !n.read)}
+              onDismiss={dismissNotification}
+            />
           )}
 
           {/* Entity Form */}
@@ -305,12 +310,12 @@ const ModernDashboard = () => {
             </div>
           )}
 
-          {/* Enhanced Metrics Grid */}
+          {/* Enhanced Metrics Grid - Full Width */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Business Overview</h3>
-                <p className="text-sm text-muted-foreground font-medium">Key metrics for your entity portfolio</p>
+                <h3 className="text-2xl font-bold text-foreground tracking-tight">Business Overview</h3>
+                <p className="text-muted-foreground font-medium">Key metrics and performance indicators</p>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full">
                 <div className="h-2 w-2 bg-success rounded-full animate-pulse"></div>
@@ -318,11 +323,12 @@ const ModernDashboard = () => {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {/* Expanded Metrics Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4 gap-4">
               <MetricsCard
                 title="Active Entities"
                 value={metrics.totalEntities}
-                subtitle={`${metrics.delawareEntities} Delaware entities`}
+                subtitle={`${metrics.delawareEntities} Delaware entities • ${entities.length - metrics.delawareEntities} other states`}
                 icon={FileText}
                 iconColor="text-primary"
                 backgroundColor="bg-gradient-to-br from-primary/10 to-primary/5"
@@ -330,23 +336,23 @@ const ModernDashboard = () => {
               <MetricsCard
                 title="Annual Entity Fees"
                 value={`$${metrics.annualEntityFees.toFixed(2)}`}
-                subtitle="State filing fees"
+                subtitle={`Avg $${entities.length > 0 ? (metrics.annualEntityFees / entities.length).toFixed(0) : '0'} per entity • State filings`}
                 icon={DollarSign}
                 iconColor="text-success"
                 backgroundColor="bg-gradient-to-br from-success/10 to-success/5"
               />
               <MetricsCard
-                title="Annual Service Fees"
+                title="Service Fees"
                 value={`$${metrics.annualServiceFees.toFixed(2)}`}
-                subtitle="Registered agents & directors"
+                subtitle={`Registered agents • Independent directors • Annual total`}
                 icon={Users}
                 iconColor="text-info"
                 backgroundColor="bg-gradient-to-br from-info/10 to-info/5"
               />
               <MetricsCard
-                title="Pending Payments"
+                title="Pending Actions"
                 value={`$${metrics.pendingPayments.toFixed(2)}`}
-                subtitle="Requires attention"
+                subtitle={`${payments.filter(p => p.status === 'pending').length} payments • Requires attention`}
                 icon={AlertTriangle}
                 iconColor="text-warning"
                 backgroundColor="bg-gradient-to-br from-warning/10 to-warning/5"
@@ -354,73 +360,167 @@ const ModernDashboard = () => {
             </div>
           </div>
 
-          {/* Enhanced Quick Actions */}
-          <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border/50 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Quick Actions</h3>
-                <p className="text-sm text-muted-foreground font-medium">Common tasks and shortcuts</p>
-              </div>
-              <div className="p-2 bg-primary/10 rounded-xl">
-                <Sparkles className="h-5 w-5 text-primary" />
+          {/* Two-Column Layout for Better Space Usage */}
+          <div className="grid grid-cols-1 2xl:grid-cols-5 gap-6">
+            {/* Quick Actions - Larger Section */}
+            <div className="2xl:col-span-3">
+              <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border/50 rounded-2xl p-6 shadow-lg h-full">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground tracking-tight">Quick Actions</h3>
+                    <p className="text-sm text-muted-foreground font-medium">Common tasks and shortcuts</p>
+                  </div>
+                  <div className="p-2 bg-primary/10 rounded-xl">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowScheduleView(true)}
+                    className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-info/30 hover:shadow-lg transition-all duration-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-info/10 group-hover:bg-info/20 rounded-lg transition-colors">
+                        <Calendar className="h-4 w-4 text-info" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-foreground group-hover:text-info transition-colors">View Calendar</div>
+                        <div className="text-xs text-muted-foreground">Track renewals</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-info ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/payments')}
+                    className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-success/30 hover:shadow-lg transition-all duration-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-success/10 group-hover:bg-success/20 rounded-lg transition-colors">
+                        <CreditCard className="h-4 w-4 text-success" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-foreground group-hover:text-success transition-colors">Payment Center</div>
+                        <div className="text-xs text-muted-foreground">Manage billing</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-success ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/find-agents')}
+                    className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-primary/10 group-hover:bg-primary/20 rounded-lg transition-colors">
+                        <Users className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-foreground group-hover:text-primary transition-colors">Find Agents</div>
+                        <div className="text-xs text-muted-foreground">Connect agents</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/documents')}
+                    className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-purple-500/30 hover:shadow-lg transition-all duration-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-purple-100 group-hover:bg-purple-200 rounded-lg transition-colors">
+                        <FileText className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-foreground group-hover:text-purple-600 transition-colors">Documents</div>
+                        <div className="text-xs text-muted-foreground">Manage files</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-purple-600 ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/analytics')}
+                    className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-orange-500/30 hover:shadow-lg transition-all duration-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-orange-100 group-hover:bg-orange-200 rounded-lg transition-colors">
+                        <TrendingUp className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-foreground group-hover:text-orange-600 transition-colors">Analytics</div>
+                        <div className="text-xs text-muted-foreground">View reports</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-orange-600 ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/settings')}
+                    className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-gray-500/30 hover:shadow-lg transition-all duration-200 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="p-2 bg-gray-100 group-hover:bg-gray-200 rounded-lg transition-colors">
+                        <Settings className="h-4 w-4 text-gray-600" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-foreground group-hover:text-gray-600 transition-colors">Settings</div>
+                        <div className="text-xs text-muted-foreground">Preferences</div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-gray-600 ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                    </div>
+                  </Button>
+                </div>
               </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowScheduleView(true)}
-                className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-info/30 hover:shadow-lg transition-all duration-200 rounded-xl"
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <div className="p-2 bg-info/10 group-hover:bg-info/20 rounded-lg transition-colors">
-                    <Calendar className="h-4 w-4 text-info" />
+
+            {/* Recent Activity Sidebar */}
+            <div className="2xl:col-span-2">
+              <div className="bg-gradient-to-br from-card via-card to-muted/10 border border-border/50 rounded-2xl p-6 shadow-lg h-full">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Recent Activity</h3>
+                    <p className="text-sm text-muted-foreground">Latest updates and actions</p>
                   </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-foreground group-hover:text-info transition-colors">View Calendar</div>
-                    <div className="text-xs text-muted-foreground">Track upcoming renewals</div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-info ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                  <Bell className="h-5 w-5 text-muted-foreground" />
                 </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/payments')}
-                className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-success/30 hover:shadow-lg transition-all duration-200 rounded-xl"
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <div className="p-2 bg-success/10 group-hover:bg-success/20 rounded-lg transition-colors">
-                    <CreditCard className="h-4 w-4 text-success" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-foreground group-hover:text-success transition-colors">Payment Center</div>
-                    <div className="text-xs text-muted-foreground">Manage payments and billing</div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-success ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                
+                <div className="space-y-4">
+                  {entities.slice(0, 3).map((entity, index) => (
+                    <div key={entity.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-xl">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Building2 className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm text-foreground">{entity.name}</p>
+                        <p className="text-xs text-muted-foreground">Entity created</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">Recent</span>
+                    </div>
+                  ))}
+                  
+                  {entities.length === 0 && (
+                    <div className="text-center py-8">
+                      <div className="p-4 bg-muted/30 rounded-2xl inline-flex mb-3">
+                        <Building2 className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">No recent activity</p>
+                      <p className="text-xs text-muted-foreground">Start by adding your first entity</p>
+                    </div>
+                  )}
                 </div>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => navigate('/find-agents')}
-                className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-200 rounded-xl"
-              >
-                <div className="flex items-center gap-3 w-full">
-                  <div className="p-2 bg-primary/10 group-hover:bg-primary/20 rounded-lg transition-colors">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-semibold text-foreground group-hover:text-primary transition-colors">Find Agents</div>
-                    <div className="text-xs text-muted-foreground">Connect with registered agents</div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all" />
-                </div>
-              </Button>
+              </div>
             </div>
           </div>
 
-          {/* Enhanced Entity Cards Section */}
+          {/* Enhanced Entity Cards Section - Full Width */}
           {entities.length > 0 ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
