@@ -279,22 +279,24 @@ const ModernDashboard = () => {
         </header>
 
         {/* Enhanced Main Content Area */}
-        <main className="p-8 space-y-8 max-w-8xl mx-auto">
-          {/* Alerts Section */}
-          <div className="space-y-4">
-            <SecurityWarningBanner />
-            <NotificationBanner 
-              notifications={notifications.filter(n => !n.read)}
-              onDismiss={dismissNotification}
-            />
-          </div>
+        <main className="p-6 space-y-6 max-w-7xl mx-auto">
+          {/* Alerts Section - Only show if there are alerts */}
+          {(notifications.filter(n => !n.read).length > 0) && (
+            <div className="space-y-4">
+              <SecurityWarningBanner />
+              <NotificationBanner 
+                notifications={notifications.filter(n => !n.read)}
+                onDismiss={dismissNotification}
+              />
+            </div>
+          )}
 
           {/* Entity Form */}
           {showAddForm && (
-            <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-3xl p-8 shadow-xl animate-fade-in">
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-foreground mb-2">Add New Entity</h3>
-                <p className="text-muted-foreground">Create a new business entity in your portfolio</p>
+            <div className="bg-card/60 backdrop-blur-sm border border-border/50 rounded-2xl p-6 shadow-xl animate-fade-in">
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-foreground mb-1">Add New Entity</h3>
+                <p className="text-sm text-muted-foreground">Create a new business entity in your portfolio</p>
               </div>
               <EntityForm 
                 onSubmit={handleAddEntity}
@@ -304,19 +306,19 @@ const ModernDashboard = () => {
           )}
 
           {/* Enhanced Metrics Grid */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-2xl font-bold text-foreground tracking-tight">Business Overview</h3>
-                <p className="text-muted-foreground font-medium mt-1">Key metrics for your entity portfolio</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">Business Overview</h3>
+                <p className="text-sm text-muted-foreground font-medium">Key metrics for your entity portfolio</p>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 rounded-full">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full">
                 <div className="h-2 w-2 bg-success rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-muted-foreground">Live Data</span>
+                <span className="text-xs font-medium text-muted-foreground">Live Data</span>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               <MetricsCard
                 title="Active Entities"
                 value={metrics.totalEntities}
@@ -353,66 +355,66 @@ const ModernDashboard = () => {
           </div>
 
           {/* Enhanced Quick Actions */}
-          <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border/50 rounded-3xl p-8 shadow-lg">
-            <div className="flex items-center justify-between mb-8">
+          <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border/50 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-2xl font-bold text-foreground tracking-tight">Quick Actions</h3>
-                <p className="text-muted-foreground font-medium mt-1">Common tasks and shortcuts</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">Quick Actions</h3>
+                <p className="text-sm text-muted-foreground font-medium">Common tasks and shortcuts</p>
               </div>
-              <div className="p-3 bg-primary/10 rounded-2xl">
-                <Sparkles className="h-6 w-6 text-primary" />
+              <div className="p-2 bg-primary/10 rounded-xl">
+                <Sparkles className="h-5 w-5 text-primary" />
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
                 onClick={() => setShowScheduleView(true)}
-                className="group h-auto p-6 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-info/30 hover:shadow-lg transition-all duration-200 rounded-2xl"
+                className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-info/30 hover:shadow-lg transition-all duration-200 rounded-xl"
               >
-                <div className="flex items-start gap-4 w-full">
-                  <div className="p-3 bg-info/10 group-hover:bg-info/20 rounded-xl transition-colors">
-                    <Calendar className="h-6 w-6 text-info" />
+                <div className="flex items-center gap-3 w-full">
+                  <div className="p-2 bg-info/10 group-hover:bg-info/20 rounded-lg transition-colors">
+                    <Calendar className="h-4 w-4 text-info" />
                   </div>
-                  <div className="text-left space-y-1">
+                  <div className="text-left">
                     <div className="font-semibold text-foreground group-hover:text-info transition-colors">View Calendar</div>
-                    <div className="text-sm text-muted-foreground">Track upcoming renewals and deadlines</div>
+                    <div className="text-xs text-muted-foreground">Track upcoming renewals</div>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-info ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-info ml-auto opacity-0 group-hover:opacity-100 transition-all" />
                 </div>
               </Button>
               
               <Button
                 variant="outline"
                 onClick={() => navigate('/payments')}
-                className="group h-auto p-6 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-success/30 hover:shadow-lg transition-all duration-200 rounded-2xl"
+                className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-success/30 hover:shadow-lg transition-all duration-200 rounded-xl"
               >
-                <div className="flex items-start gap-4 w-full">
-                  <div className="p-3 bg-success/10 group-hover:bg-success/20 rounded-xl transition-colors">
-                    <CreditCard className="h-6 w-6 text-success" />
+                <div className="flex items-center gap-3 w-full">
+                  <div className="p-2 bg-success/10 group-hover:bg-success/20 rounded-lg transition-colors">
+                    <CreditCard className="h-4 w-4 text-success" />
                   </div>
-                  <div className="text-left space-y-1">
+                  <div className="text-left">
                     <div className="font-semibold text-foreground group-hover:text-success transition-colors">Payment Center</div>
-                    <div className="text-sm text-muted-foreground">Manage payments and billing</div>
+                    <div className="text-xs text-muted-foreground">Manage payments and billing</div>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-success ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-success ml-auto opacity-0 group-hover:opacity-100 transition-all" />
                 </div>
               </Button>
               
               <Button
                 variant="outline"
                 onClick={() => navigate('/find-agents')}
-                className="group h-auto p-6 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-200 rounded-2xl"
+                className="group h-auto p-4 justify-start bg-card/50 hover:bg-card border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-200 rounded-xl"
               >
-                <div className="flex items-start gap-4 w-full">
-                  <div className="p-3 bg-primary/10 group-hover:bg-primary/20 rounded-xl transition-colors">
-                    <Users className="h-6 w-6 text-primary" />
+                <div className="flex items-center gap-3 w-full">
+                  <div className="p-2 bg-primary/10 group-hover:bg-primary/20 rounded-lg transition-colors">
+                    <Users className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="text-left space-y-1">
+                  <div className="text-left">
                     <div className="font-semibold text-foreground group-hover:text-primary transition-colors">Find Agents</div>
-                    <div className="text-sm text-muted-foreground">Connect with registered agents</div>
+                    <div className="text-xs text-muted-foreground">Connect with registered agents</div>
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary ml-auto opacity-0 group-hover:opacity-100 transition-all" />
                 </div>
               </Button>
             </div>
@@ -420,26 +422,24 @@ const ModernDashboard = () => {
 
           {/* Enhanced Entity Cards Section */}
           {entities.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-foreground tracking-tight">Entity Portfolio</h3>
-                  <p className="text-muted-foreground font-medium mt-1">{entities.length} active business entities</p>
+                  <h3 className="text-xl font-bold text-foreground tracking-tight">Entity Portfolio</h3>
+                  <p className="text-sm text-muted-foreground font-medium">{entities.length} active business entities</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="font-medium"
-                    onClick={() => navigate('/entities')}
-                  >
-                    View All
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="font-medium"
+                  onClick={() => navigate('/entities')}
+                >
+                  View All
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
               
-              <div className="grid gap-6">
+              <div className="grid gap-4">
                 {entities.map((entity, index) => (
                   <div 
                     key={entity.id} 
@@ -455,30 +455,30 @@ const ModernDashboard = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-card via-muted/20 to-card border border-border/50 rounded-3xl p-12 text-center shadow-lg">
-              <div className="max-w-md mx-auto space-y-6">
+            <div className="bg-gradient-to-br from-card via-muted/20 to-card border border-border/50 rounded-2xl p-8 text-center shadow-lg">
+              <div className="max-w-lg mx-auto space-y-6">
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl p-6 inline-flex">
-                    <Building className="h-16 w-16 text-primary" />
+                  <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl p-6 inline-flex">
+                    <Building className="h-12 w-12 text-primary" />
                   </div>
-                  <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
-                    <Plus className="h-4 w-4 text-primary-foreground" />
+                  <div className="absolute -top-1 -right-1 h-5 w-5 bg-primary rounded-full flex items-center justify-center">
+                    <Plus className="h-3 w-3 text-primary-foreground" />
                   </div>
                 </div>
                 
-                <div className="space-y-3">
-                  <h3 className="text-2xl font-bold text-foreground">Welcome to Entity Renewal Pro</h3>
-                  <p className="text-muted-foreground font-medium leading-relaxed">
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-foreground">Welcome to Entity Renewal Pro</h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     Start managing your business entities efficiently. Add your first entity to track renewals, fees, and compliance requirements.
                   </p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                   <Button 
                     onClick={() => setShowAddForm(true)} 
-                    className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary shadow-lg font-semibold px-8"
+                    className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary shadow-lg font-semibold"
                   >
-                    <Plus className="mr-2 h-5 w-5" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Add Your First Entity
                   </Button>
                   <Button 
