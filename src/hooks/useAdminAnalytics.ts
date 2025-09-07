@@ -33,7 +33,9 @@ export const useAdminAnalytics = () => {
       return {
         ...result,
         users_by_role: result.users_by_role as Record<string, number>,
-        geographic_distribution: result.geographic_distribution as Record<string, number>
+        geographic_distribution: result.geographic_distribution as Record<string, number>,
+        clv_by_segment: result.clv_by_segment as Record<string, number>,
+        revenue_concentration: result.revenue_concentration as Record<string, number>
       };
     } catch (err) {
       console.error('Error fetching user analytics:', err);
@@ -50,7 +52,10 @@ export const useAdminAnalytics = () => {
       
       return {
         ...result,
-        revenue_by_tier: result.revenue_by_tier as Record<string, number>
+        revenue_by_tier: result.revenue_by_tier as Record<string, number>,
+        agent_commission_tracking: result.agent_commission_tracking as Record<string, number>,
+        accounts_receivable_aging: result.accounts_receivable_aging as Record<string, number>,
+        revenue_forecast: result.revenue_forecast as Record<string, number>
       };
     } catch (err) {
       console.error('Error fetching financial analytics:', err);
@@ -68,7 +73,9 @@ export const useAdminAnalytics = () => {
       return {
         ...result,
         entities_by_type: result.entities_by_type as Record<string, number>,
-        entities_by_state: result.entities_by_state as Record<string, number>
+        entities_by_state: result.entities_by_state as Record<string, number>,
+        entity_lifecycle_metrics: result.entity_lifecycle_metrics as Record<string, number>,
+        geographic_heat_map: result.geographic_heat_map as Record<string, number>
       };
     } catch (err) {
       console.error('Error fetching entity analytics:', err);
@@ -80,7 +87,15 @@ export const useAdminAnalytics = () => {
     try {
       const { data, error } = await supabase.rpc('get_operational_analytics');
       if (error) throw error;
-      return data?.[0] || null;
+      const result = data?.[0];
+      if (!result) return null;
+      
+      return {
+        ...result,
+        database_performance_metrics: result.database_performance_metrics as Record<string, number>,
+        api_usage_patterns: result.api_usage_patterns as Record<string, number>,
+        response_times: result.response_times as Record<string, number>
+      };
     } catch (err) {
       console.error('Error fetching operational analytics:', err);
       return null;

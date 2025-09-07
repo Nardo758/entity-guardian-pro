@@ -998,6 +998,9 @@ export type Database = {
           entities_by_state: Json
           entities_by_type: Json
           entity_creation_rate_30d: number
+          entity_deletion_rate_30d: number
+          entity_lifecycle_metrics: Json
+          geographic_heat_map: Json
           most_popular_entity_type: string
           most_popular_state: string
           total_entities: number
@@ -1006,12 +1009,16 @@ export type Database = {
       get_financial_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
+          accounts_receivable_aging: Json
+          agent_commission_tracking: Json
+          agent_service_revenue: number
           arpu: number
           arr: number
           mrr: number
           outstanding_invoices: number
           payment_volume_30d: number
           revenue_by_tier: Json
+          revenue_forecast: Json
           revenue_growth_rate: number
           total_revenue: number
         }[]
@@ -1019,10 +1026,14 @@ export type Database = {
       get_operational_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
+          api_usage_patterns: Json
           avg_processing_time_days: number
           compliance_completion_rate: number
+          database_performance_metrics: Json
           document_processing_volume: number
           failed_renewals_30d: number
+          response_times: Json
+          security_incidents: number
           support_ticket_volume: number
           system_uptime_percentage: number
         }[]
@@ -1030,10 +1041,15 @@ export type Database = {
       get_user_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
+          clv_by_segment: Json
+          downgrade_rate: number
           entities_this_month: number
           geographic_distribution: Json
+          revenue_concentration: Json
           total_entities: number
           total_users: number
+          trial_to_paid_conversion: number
+          upgrade_rate: number
           user_growth_30d: number
           user_growth_7d: number
           user_retention_rate: number

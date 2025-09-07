@@ -10,6 +10,8 @@ import { UserGrowthChart } from '@/components/charts/UserGrowthChart';
 import { RevenueChart } from '@/components/charts/RevenueChart';
 import { EntityDistributionChart } from '@/components/charts/EntityDistributionChart';
 import { OperationalMetricsChart } from '@/components/charts/OperationalMetricsChart';
+import { AdvancedUserAnalytics } from '@/components/charts/AdvancedUserAnalytics';
+import { SystemPerformanceChart } from '@/components/charts/SystemPerformanceChart';
 import { 
   BarChart3, 
   Users, 
@@ -218,10 +220,13 @@ const AdminAnalyticsDashboard: React.FC = () => {
 
         <TabsContent value="users" className="space-y-6">
           {userAnalytics ? (
-            <UserGrowthChart 
-              data={userAnalytics} 
-              title="User & Account Analytics"
-            />
+            <div className="space-y-6">
+              <UserGrowthChart 
+                data={userAnalytics} 
+                title="User & Account Analytics"
+              />
+              <AdvancedUserAnalytics data={userAnalytics} />
+            </div>
           ) : (
             <Card>
               <CardContent className="pt-6">
@@ -263,10 +268,13 @@ const AdminAnalyticsDashboard: React.FC = () => {
 
         <TabsContent value="operations" className="space-y-6">
           {operationalAnalytics ? (
-            <OperationalMetricsChart 
-              data={operationalAnalytics} 
-              title="Operational Efficiency Dashboard"
-            />
+            <div className="space-y-6">
+              <OperationalMetricsChart 
+                data={operationalAnalytics} 
+                title="Operational Efficiency Dashboard"
+              />
+              <SystemPerformanceChart data={operationalAnalytics} />
+            </div>
           ) : (
             <Card>
               <CardContent className="pt-6">
