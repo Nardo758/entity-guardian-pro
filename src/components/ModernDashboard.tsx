@@ -280,7 +280,7 @@ const ModernDashboard = () => {
         </header>
 
         {/* Enhanced Main Content Area */}
-        <main className="p-4 space-y-4">
+        <main className="px-4 pb-4 pt-2 space-y-4">
           {/* Admin-Only Security Alerts */}
           {isAdmin && (
             <div className="space-y-3">
