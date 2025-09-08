@@ -8,17 +8,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Bell, User, Shield, CreditCard, Users, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { NotificationPreferences } from "@/components/NotificationPreferences";
 import AdminRoleManager from "@/components/AdminRoleManager";
 import SecurityAuditLog from "@/components/SecurityAuditLog";
+import MFASetup from "@/components/MFASetup";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { hasAdminAccess } = useAdminAccess();
+  const [showMFASetup, setShowMFASetup] = useState(false);
   const [profile, setProfile] = useState({
     name: "Sarah Johnson",
     email: "sarah.johnson@company.com",
@@ -200,9 +203,18 @@ const Settings = () => {
                         <Label>Two-Factor Authentication</Label>
                         <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
                       </div>
-                      <Badge variant={security.twoFactorEnabled ? "default" : "secondary"}>
-                        {security.twoFactorEnabled ? "Enabled" : "Disabled"}
-                      </Badge>
+                      <div className="flex items-center gap-3">
+                        <Badge variant={security.twoFactorEnabled ? "default" : "secondary"}>
+                          {security.twoFactorEnabled ? "Enabled" : "Disabled"}
+                        </Badge>
+                        <Button 
+                          variant={security.twoFactorEnabled ? "outline" : "default"} 
+                          size="sm"
+                          onClick={() => setShowMFASetup(true)}
+                        >
+                          {security.twoFactorEnabled ? "Manage" : "Enable MFA"}
+                        </Button>
+                      </div>
                     </div>
                     <Separator />
                     <div className="space-y-4">

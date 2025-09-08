@@ -501,6 +501,39 @@ export type Database = {
           },
         ]
       }
+      api_rate_limits: {
+        Row: {
+          created_at: string | null
+          endpoint: string
+          id: string
+          ip_address: unknown | null
+          request_count: number | null
+          updated_at: string | null
+          user_id: string | null
+          window_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: unknown | null
+          request_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       api_usage_logs: {
         Row: {
           api_key_id: string | null
@@ -1923,6 +1956,15 @@ export type Database = {
       }
       log_security_event: {
         Args: { event_data?: Json; event_type: string }
+        Returns: undefined
+      }
+      log_security_violation: {
+        Args: {
+          details?: Json
+          ip_address_param?: unknown
+          user_id_param?: string
+          violation_type: string
+        }
         Returns: undefined
       }
       owns_assignment_agent: {
