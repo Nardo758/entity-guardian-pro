@@ -177,6 +177,9 @@ const Calendar: React.FC = () => {
           #calendar-print-area, #calendar-print-area * { visibility: visible; }
           #calendar-print-area { position: absolute; left: 0; top: 0; width: 100%; }
           .no-print { display: none !important; }
+          .print-header { margin-bottom: 20px !important; text-align: center !important; }
+          .print-header h1 { font-size: 24px !important; font-weight: bold !important; margin: 0 !important; }
+          .print-header p { font-size: 14px !important; color: #666 !important; margin: 5px 0 0 0 !important; }
           table { font-size: 10px; }
           th, td { padding: 2px 4px; }
           .bg-red-100 { background-color: #fee2e2 !important; -webkit-print-color-adjust: exact; }
@@ -252,6 +255,15 @@ const Calendar: React.FC = () => {
 
         {/* Spreadsheet Calendar */}
         <div id="calendar-print-area">
+          {/* Print Header */}
+          <div className="mb-6 text-center print-header">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <CalendarIcon className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold">Entity Renewal Calendar</h1>
+            </div>
+            <p className="text-muted-foreground">Annual payment schedule by entity and month</p>
+          </div>
+          
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
