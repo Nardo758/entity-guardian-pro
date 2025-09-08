@@ -180,16 +180,16 @@ const Calendar: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted">
-                    <TableHead className="font-bold text-foreground border-r border-border min-w-[200px]">
+                    <TableHead className="font-bold text-foreground border-r border-border w-[180px]">
                       Entity
                     </TableHead>
                     {months.map(month => (
-                      <TableHead key={month} className="font-bold text-foreground text-center border-r border-border min-w-[100px]">
-                        {month}-{selectedYear}
+                      <TableHead key={month} className="font-bold text-foreground text-center border-r border-border w-[75px] px-1 text-xs">
+                        {month}-{selectedYear.toString().slice(-2)}
                       </TableHead>
                     ))}
-                    <TableHead className="font-bold text-foreground text-center bg-green-50 min-w-[120px]">
-                      TOTAL ANNUAL
+                    <TableHead className="font-bold text-foreground text-center bg-green-50 w-[90px] px-1 text-xs">
+                      TOTAL
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -216,16 +216,16 @@ const Calendar: React.FC = () => {
                         return (
                           <TableCell 
                             key={monthIndex} 
-                            className={`text-center border-r border-border ${cellColor}`}
+                            className={`text-center border-r border-border px-1 text-xs ${cellColor}`}
                           >
                             <span className={hasPayment ? 'font-medium' : 'text-muted-foreground'}>
-                              {formatAmount(totalAmount)}
+                              {totalAmount > 0 ? `$${totalAmount.toFixed(0)}` : '$0'}
                             </span>
                           </TableCell>
                         );
                       })}
-                      <TableCell className="text-center font-bold bg-green-50">
-                        ${totalAnnual.toFixed(2)}
+                      <TableCell className="text-center font-bold bg-green-50 px-1 text-xs">
+                        ${totalAnnual.toFixed(0)}
                       </TableCell>
                     </TableRow>
                   ))}
