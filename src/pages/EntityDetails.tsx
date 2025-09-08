@@ -260,6 +260,7 @@ const EntityDetails = () => {
               <EntityRegisteredAgentSection 
                 entityId={entity.id} 
                 entityState={entity.address.state}
+                entityName={entity.name}
               />
 
               {/* Contact Information */}
