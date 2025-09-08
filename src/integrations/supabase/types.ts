@@ -1893,6 +1893,14 @@ export type Database = {
         Args: { invitation_id: string; user_uuid: string }
         Returns: boolean
       }
+      log_admin_operation: {
+        Args: {
+          operation_data?: Json
+          operation_type: string
+          target_user_id?: string
+        }
+        Returns: undefined
+      }
       log_security_event: {
         Args: { event_data?: Json; event_type: string }
         Returns: undefined
@@ -1929,6 +1937,10 @@ export type Database = {
       }
       user_is_admin: {
         Args: { user_uuid: string }
+        Returns: boolean
+      }
+      validate_admin_action: {
+        Args: { action_name: string }
         Returns: boolean
       }
       validate_payment_method_access: {
