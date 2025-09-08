@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { DashboardLayout } from './DashboardLayout';
-import { DashboardHeader } from './DashboardHeader';
 import { EntityPortfolio } from './EntityPortfolio';
 import { EntityForm } from '@/components/EntityForm';
 import { PaymentModal } from '@/components/PaymentModal';
@@ -27,6 +25,8 @@ import { Building2, DollarSign, FileText, Clock, AlertTriangle,
          TrendingUp, Calendar, CheckCircle2, Plus, MapPin, Users, Settings, LogOut, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const ModernDashboard = () => {
   const navigate = useNavigate();
@@ -106,14 +106,17 @@ const ModernDashboard = () => {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between px-6 py-4 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
-            <div className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-md font-medium">
-              Live
+        <div className="flex items-center gap-4">
+          <SidebarTrigger className="lg:hidden" />
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
+              <div className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-md font-medium">
+                Live
+              </div>
             </div>
+            <p className="text-sm text-muted-foreground mt-0.5">Monitor your business entities and compliance requirements</p>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">Monitor your business entities and compliance requirements</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -126,44 +129,6 @@ const ModernDashboard = () => {
             <Building2 className="mr-2 h-4 w-4" />
             Add Entity
           </Button>
-          
-          {/* User Menu with Sign Out */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <Users className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm">Menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem disabled>
-                <Building2 className="w-4 h-4 mr-2" />
-                Entity Owner
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/team')}>
-                <Users className="w-4 h-4 mr-2" />
-                Team Management
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  navigate('/login');
-                }}
-                className="text-red-600"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
@@ -419,22 +384,26 @@ const ModernDashboard = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           )}
+
+          {/* Modals */}
+          {showScheduleView && (
+            <ScheduleModal
+              isOpen={showScheduleView}
+              onClose={() => setShowScheduleView(false)}
+              entities={entities}
+            />
+          )}
+          
+          {showPaymentModal && (
+            <PaymentModal
+              isOpen={showPaymentModal}
+              onClose={() => setShowPaymentModal(false)}
+              payments={payments}
+              paymentMethods={paymentMethods}
+            />
+          )}
         </div>
       </div>
-
-      {/* Modals */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        payments={payments}
-        paymentMethods={paymentMethods}
-      />
-
-      <ScheduleModal
-        isOpen={showScheduleView}
-        onClose={() => setShowScheduleView(false)}
-        entities={entities}
-      />
     </DashboardLayout>
   );
 };

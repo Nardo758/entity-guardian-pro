@@ -23,6 +23,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { EntityAgentAssignment } from '@/types/agent';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const AgentDashboard = () => {
   const { user } = useAuth();
@@ -156,16 +158,20 @@ const AgentDashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Registered Agent Dashboard</h1>
-            <p className="text-muted-foreground">
-              Comprehensive management platform for your registered agent services
-            </p>
-          </div>
+    <DashboardLayout>
+      <div className="container mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="lg:hidden" />
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Agent Dashboard</h1>
+                <p className="text-muted-foreground">
+                  Comprehensive management platform for your registered agent services
+                </p>
+              </div>
+            </div>
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="bg-green-50">
               Licensed in {agent.states.length} states
@@ -998,7 +1004,8 @@ const AgentDashboard = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

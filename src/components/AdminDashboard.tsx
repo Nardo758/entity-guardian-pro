@@ -20,6 +20,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
 import { supabase } from '@/integrations/supabase/client';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -216,14 +218,17 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <DashboardLayout>
       {/* Header */}
       <div className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <Building className="w-8 h-8 text-primary mr-3" />
-              <h1 className="text-xl font-semibold text-foreground">Entity Renewal Pro - Admin</h1>
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="lg:hidden" />
+              <div>
+                <Building className="w-8 h-8 text-primary mr-3 inline" />
+                <h1 className="text-xl font-semibold text-foreground inline">Admin Dashboard</h1>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -239,40 +244,6 @@ const AdminDashboard = () => {
                 <Download className="w-4 h-4 mr-2" />
                 Export Data
               </Button>
-              
-              {/* User Menu with Sign Out */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Users className="w-4 h-4 text-primary" />
-                    </div>
-                    <span className="text-sm">Admin</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem disabled>
-                    <Users className="w-4 h-4 mr-2" />
-                    Administrator
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/settings')}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={async () => {
-                      await supabase.auth.signOut();
-                      navigate('/login');
-                    }}
-                    className="text-red-600"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -392,277 +363,149 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* User Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Entity Owners</span>
-                      <span className="text-sm font-medium">{metrics.users.entityOwners.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Registered Agents</span>
-                      <span className="text-sm font-medium">{metrics.users.registeredAgents.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Administrators</span>
-                      <span className="text-sm font-medium">{metrics.users.admins}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Entity Types */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Entity Types</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">LLC</span>
-                      <span className="text-sm font-medium">{metrics.entities.llc.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Corporation</span>
-                      <span className="text-sm font-medium">{metrics.entities.corp.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Partnership</span>
-                      <span className="text-sm font-medium">{metrics.entities.partnership.toLocaleString()}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Sole Proprietorship</span>
-                      <span className="text-sm font-medium">{metrics.entities.soleProprietorship.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         )}
 
+        {/* User Management Tab */}
         {activeTab === 'users' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-foreground">User Management</h2>
-              <Button className="flex items-center">
-                <Plus className="w-4 h-4 mr-2" />
-                Add User
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Input 
+                  placeholder="Search users..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-64"
+                />
+                <Button variant="outline">
+                  <Filter className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-
-            {/* Search and Filters */}
+            
             <Card>
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      type="text"
-                      placeholder="Search users..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <select className="border border-input rounded-lg px-3 py-2 bg-background text-foreground">
-                    <option>All Roles</option>
-                    <option>Entity Owner</option>
-                    <option>Registered Agent</option>
-                    <option>Admin</option>
-                  </select>
-                  <select className="border border-input rounded-lg px-3 py-2 bg-background text-foreground">
-                    <option>All Status</option>
-                    <option>Active</option>
-                    <option>Trial</option>
-                    <option>Suspended</option>
-                  </select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Users Table */}
-            <Card>
-              <div className="overflow-x-auto">
+              <CardContent className="p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead>Plan</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground">
-                          Loading users...
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredUsers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground">
-                          No users found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredUsers.slice(0, 10).map((user) => (
-                        <TableRow key={user.id} className="hover:bg-muted/50">
-                          <TableCell>
+                    {filteredUsers.slice(0, 10).map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                              <UserCheck className="w-4 h-4 text-primary" />
+                            </div>
                             <div>
-                              <div className="text-sm font-medium text-foreground">
-                                {user.first_name} {user.last_name}
-                              </div>
-                              <div className="text-sm text-muted-foreground">{user.user_id}</div>
+                              <p className="font-medium">{user.first_name} {user.last_name}</p>
+                              <p className="text-xs text-muted-foreground">{user.company}</p>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {user.user_type || 'owner'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={user.plan === 'unlimited' ? 'default' : 'outline'}>
-                              {user.plan || 'starter'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button variant="ghost" size="sm">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="text-destructive">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{user.user_id}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.user_type}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.plan === 'unlimited' ? 'default' : 'secondary'}>
+                            {user.plan}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
-              </div>
+              </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Placeholder for other tabs */}
+        {/* Entity Oversight Tab */}
         {activeTab === 'entities' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-foreground">Entity Oversight</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-foreground">Entity Oversight</h2>
+              <div className="flex items-center space-x-2">
+                <Input 
+                  placeholder="Search entities..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-64"
+                />
+                <Button variant="outline">
+                  <Filter className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            
             <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">System-wide entity monitoring and compliance tracking.</p>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Total Entities</h4>
-                    <p className="text-2xl font-bold">{systemStats.totalEntities}</p>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">This Month</h4>
-                    <p className="text-2xl font-bold">+{metrics.entities.newThisMonth}</p>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Compliance Rate</h4>
-                    <p className="text-2xl font-bold">{metrics.compliance.renewalsCompleted}%</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === 'financial' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-foreground">Financial Administration</h2>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Revenue analytics and payment processing oversight.</p>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Total Revenue</h4>
-                    <p className="text-2xl font-bold">${systemStats.totalRevenue.toLocaleString()}</p>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Monthly Recurring</h4>
-                    <p className="text-2xl font-bold">${(metrics.revenue.mrr / 1000).toFixed(0)}K</p>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">ARPU</h4>
-                    <p className="text-2xl font-bold">${metrics.revenue.arpu}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === 'system' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-foreground">System Health</h2>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">System performance and infrastructure monitoring.</p>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">System Status</h4>
-                    <Badge variant="default">All Systems Operational</Badge>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Uptime</h4>
-                    <p className="text-2xl font-bold">99.9%</p>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Response Time</h4>
-                    <p className="text-2xl font-bold">125ms</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === 'security' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-foreground">Security Management</h2>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Security monitoring and access control management.</p>
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Security Score</h4>
-                    <p className="text-2xl font-bold text-green-600">A+</p>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Active Threats</h4>
-                    <p className="text-2xl font-bold">0</p>
-                  </div>
-                  <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-medium mb-2">Failed Logins</h4>
-                    <p className="text-2xl font-bold">23</p>
-                  </div>
-                </div>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Entity</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>State</TableHead>
+                      <TableHead>Owner</TableHead>
+                      <TableHead>Formation Date</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEntities.slice(0, 10).map((entity) => (
+                      <TableRow key={entity.id}>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Building className="w-4 h-4 text-primary" />
+                            <span className="font-medium">{entity.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{entity.type}</Badge>
+                        </TableCell>
+                        <TableCell>{entity.state}</TableCell>
+                        <TableCell>{entity.profiles?.first_name} {entity.profiles?.last_name}</TableCell>
+                        <TableCell>{entity.formation_date}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </div>
         )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
