@@ -93,7 +93,7 @@ export const useAgents = () => {
     }
   };
 
-  const createAgentProfile = async (agentData: Partial<Omit<Agent, 'id' | 'user_id' | 'created_at' | 'updated_at'>> & Pick<Agent, 'states' | 'is_available'>) => {
+  const createAgentProfile = async (agentData: Partial<Omit<Agent, 'id' | 'user_id' | 'created_at' | 'updated_at'>> & Pick<Agent, 'states' | 'price_per_entity' | 'is_available'>) => {
     if (!user) return;
 
     try {
@@ -102,17 +102,16 @@ export const useAgents = () => {
         .insert({
           ...agentData,
           user_id: user.id,
-          price_per_entity: 199, // Default price, can be updated later
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      // Update user profile to indicate they're a registered agent
+      // Update user profile to indicate they're an agent
       await supabase
         .from('profiles')
-        .update({ user_type: 'registered_agent' })
+        .update({ user_type: 'agent' })
         .eq('user_id', user.id);
 
       toast.success('Agent profile created successfully');

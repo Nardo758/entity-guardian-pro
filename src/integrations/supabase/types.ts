@@ -14,110 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_user_actions: {
-        Row: {
-          action_type: string
-          admin_user_id: string
-          created_at: string | null
-          id: string
-          metadata: Json | null
-          new_value: Json | null
-          previous_value: Json | null
-          reason: string | null
-          target_user_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          action_type: string
-          admin_user_id: string
-          created_at?: string | null
-          id?: string
-          metadata?: Json | null
-          new_value?: Json | null
-          previous_value?: Json | null
-          reason?: string | null
-          target_user_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          action_type?: string
-          admin_user_id?: string
-          created_at?: string | null
-          id?: string
-          metadata?: Json | null
-          new_value?: Json | null
-          previous_value?: Json | null
-          reason?: string | null
-          target_user_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      agent_directory_profiles: {
-        Row: {
-          agent_id: string
-          average_rating: number | null
-          certifications: string[] | null
-          client_testimonials: Json | null
-          completion_rate: number | null
-          created_at: string
-          id: string
-          is_featured: boolean
-          is_public: boolean
-          languages_spoken: string[] | null
-          professional_summary: string | null
-          response_time_hours: number | null
-          specializations: string[] | null
-          success_stories: string | null
-          total_reviews: number | null
-          updated_at: string
-        }
-        Insert: {
-          agent_id: string
-          average_rating?: number | null
-          certifications?: string[] | null
-          client_testimonials?: Json | null
-          completion_rate?: number | null
-          created_at?: string
-          id?: string
-          is_featured?: boolean
-          is_public?: boolean
-          languages_spoken?: string[] | null
-          professional_summary?: string | null
-          response_time_hours?: number | null
-          specializations?: string[] | null
-          success_stories?: string | null
-          total_reviews?: number | null
-          updated_at?: string
-        }
-        Update: {
-          agent_id?: string
-          average_rating?: number | null
-          certifications?: string[] | null
-          client_testimonials?: Json | null
-          completion_rate?: number | null
-          created_at?: string
-          id?: string
-          is_featured?: boolean
-          is_public?: boolean
-          languages_spoken?: string[] | null
-          professional_summary?: string | null
-          response_time_hours?: number | null
-          specializations?: string[] | null
-          success_stories?: string | null
-          total_reviews?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "agent_directory_profiles_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: true
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agent_documents: {
         Row: {
           agent_id: string
@@ -289,120 +185,6 @@ export type Database = {
         }
         Relationships: []
       }
-      agent_notifications: {
-        Row: {
-          action_label: string | null
-          action_url: string | null
-          agent_id: string
-          created_at: string
-          entity_id: string
-          entity_owner_id: string
-          expires_at: string | null
-          id: string
-          is_read: boolean
-          message: string
-          metadata: Json | null
-          notification_type: string
-          read_at: string | null
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          action_label?: string | null
-          action_url?: string | null
-          agent_id: string
-          created_at?: string
-          entity_id: string
-          entity_owner_id: string
-          expires_at?: string | null
-          id?: string
-          is_read?: boolean
-          message: string
-          metadata?: Json | null
-          notification_type: string
-          read_at?: string | null
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          action_label?: string | null
-          action_url?: string | null
-          agent_id?: string
-          created_at?: string
-          entity_id?: string
-          entity_owner_id?: string
-          expires_at?: string | null
-          id?: string
-          is_read?: boolean
-          message?: string
-          metadata?: Json | null
-          notification_type?: string
-          read_at?: string | null
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      agent_reviews: {
-        Row: {
-          agent_id: string
-          created_at: string
-          entity_id: string | null
-          helpful_votes: number | null
-          id: string
-          is_public: boolean
-          is_verified: boolean
-          rating: number
-          review_text: string | null
-          reviewer_id: string
-          service_type: string | null
-          updated_at: string
-        }
-        Insert: {
-          agent_id: string
-          created_at?: string
-          entity_id?: string | null
-          helpful_votes?: number | null
-          id?: string
-          is_public?: boolean
-          is_verified?: boolean
-          rating: number
-          review_text?: string | null
-          reviewer_id: string
-          service_type?: string | null
-          updated_at?: string
-        }
-        Update: {
-          agent_id?: string
-          created_at?: string
-          entity_id?: string | null
-          helpful_votes?: number | null
-          id?: string
-          is_public?: boolean
-          is_verified?: boolean
-          rating?: number
-          review_text?: string | null
-          reviewer_id?: string
-          service_type?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "agent_reviews_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "agent_reviews_entity_id_fkey"
-            columns: ["entity_id"]
-            isOneToOne: false
-            referencedRelation: "entities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       agents: {
         Row: {
           bio: string | null
@@ -491,57 +273,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      api_usage_logs: {
-        Row: {
-          api_key_id: string | null
-          created_at: string | null
-          endpoint: string
-          id: string
-          ip_address: unknown | null
-          metadata: Json | null
-          method: string
-          rate_limit_exceeded: boolean | null
-          request_size_bytes: number | null
-          response_size_bytes: number | null
-          response_time_ms: number | null
-          status_code: number
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          api_key_id?: string | null
-          created_at?: string | null
-          endpoint: string
-          id?: string
-          ip_address?: unknown | null
-          metadata?: Json | null
-          method: string
-          rate_limit_exceeded?: boolean | null
-          request_size_bytes?: number | null
-          response_size_bytes?: number | null
-          response_time_ms?: number | null
-          status_code: number
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          api_key_id?: string | null
-          created_at?: string | null
-          endpoint?: string
-          id?: string
-          ip_address?: unknown | null
-          metadata?: Json | null
-          method?: string
-          rate_limit_exceeded?: boolean | null
-          request_size_bytes?: number | null
-          response_size_bytes?: number | null
-          response_time_ms?: number | null
-          status_code?: number
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
       compliance_checks: {
         Row: {
@@ -758,8 +489,6 @@ export type Database = {
       }
       entities: {
         Row: {
-          annual_report_due_date: string | null
-          compliance_status: string | null
           created_at: string
           formation_date: string
           id: string
@@ -769,25 +498,18 @@ export type Database = {
           independent_director_name: string | null
           independent_director_phone: string | null
           name: string
-          next_filing_date: string | null
-          notes: string | null
-          priority: number | null
           registered_agent_email: string
           registered_agent_fee: number
           registered_agent_fee_due_date: string | null
           registered_agent_name: string
           registered_agent_phone: string
           state: string
-          status: string | null
-          tags: string[] | null
           team_id: string | null
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          annual_report_due_date?: string | null
-          compliance_status?: string | null
           created_at?: string
           formation_date: string
           id?: string
@@ -797,25 +519,18 @@ export type Database = {
           independent_director_name?: string | null
           independent_director_phone?: string | null
           name: string
-          next_filing_date?: string | null
-          notes?: string | null
-          priority?: number | null
           registered_agent_email: string
           registered_agent_fee: number
           registered_agent_fee_due_date?: string | null
           registered_agent_name: string
           registered_agent_phone: string
           state: string
-          status?: string | null
-          tags?: string[] | null
           team_id?: string | null
           type: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          annual_report_due_date?: string | null
-          compliance_status?: string | null
           created_at?: string
           formation_date?: string
           id?: string
@@ -825,17 +540,12 @@ export type Database = {
           independent_director_name?: string | null
           independent_director_phone?: string | null
           name?: string
-          next_filing_date?: string | null
-          notes?: string | null
-          priority?: number | null
           registered_agent_email?: string
           registered_agent_fee?: number
           registered_agent_fee_due_date?: string | null
           registered_agent_name?: string
           registered_agent_phone?: string
           state?: string
-          status?: string | null
-          tags?: string[] | null
           team_id?: string | null
           type?: string
           updated_at?: string
@@ -890,104 +600,6 @@ export type Database = {
             columns: ["entity_id"]
             isOneToOne: false
             referencedRelation: "entities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      financial_adjustments: {
-        Row: {
-          adjustment_type: string
-          admin_id: string
-          amount: number
-          created_at: string | null
-          currency: string | null
-          id: string
-          metadata: Json | null
-          processed_at: string | null
-          reason: string
-          reference_payment_id: string | null
-          status: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          adjustment_type: string
-          admin_id: string
-          amount: number
-          created_at?: string | null
-          currency?: string | null
-          id?: string
-          metadata?: Json | null
-          processed_at?: string | null
-          reason: string
-          reference_payment_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          adjustment_type?: string
-          admin_id?: string
-          amount?: number
-          created_at?: string | null
-          currency?: string | null
-          id?: string
-          metadata?: Json | null
-          processed_at?: string | null
-          reason?: string
-          reference_payment_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      invitation_analytics: {
-        Row: {
-          created_at: string
-          event_type: string
-          id: string
-          invitation_id: string | null
-          ip_address: unknown | null
-          metadata: Json | null
-          referral_id: string | null
-          user_agent: string | null
-          utm_campaign: string | null
-          utm_medium: string | null
-          utm_source: string | null
-        }
-        Insert: {
-          created_at?: string
-          event_type: string
-          id?: string
-          invitation_id?: string | null
-          ip_address?: unknown | null
-          metadata?: Json | null
-          referral_id?: string | null
-          user_agent?: string | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Update: {
-          created_at?: string
-          event_type?: string
-          id?: string
-          invitation_id?: string | null
-          ip_address?: unknown | null
-          metadata?: Json | null
-          referral_id?: string | null
-          user_agent?: string | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invitation_analytics_referral_id_fkey"
-            columns: ["referral_id"]
-            isOneToOne: false
-            referencedRelation: "user_referrals"
             referencedColumns: ["id"]
           },
         ]
@@ -1258,7 +870,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          account_status: string | null
           company: string | null
           company_size: string | null
           created_at: string | null
@@ -1266,16 +877,12 @@ export type Database = {
           id: string
           last_name: string | null
           plan: string | null
-          suspended_at: string | null
-          suspended_by: string | null
-          suspension_reason: string | null
           unified_role: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at: string | null
           user_id: string
           user_type: string | null
         }
         Insert: {
-          account_status?: string | null
           company?: string | null
           company_size?: string | null
           created_at?: string | null
@@ -1283,16 +890,12 @@ export type Database = {
           id?: string
           last_name?: string | null
           plan?: string | null
-          suspended_at?: string | null
-          suspended_by?: string | null
-          suspension_reason?: string | null
           unified_role?: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at?: string | null
           user_id: string
           user_type?: string | null
         }
         Update: {
-          account_status?: string | null
           company?: string | null
           company_size?: string | null
           created_at?: string | null
@@ -1300,64 +903,10 @@ export type Database = {
           id?: string
           last_name?: string | null
           plan?: string | null
-          suspended_at?: string | null
-          suspended_by?: string | null
-          suspension_reason?: string | null
           unified_role?: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at?: string | null
           user_id?: string
           user_type?: string | null
-        }
-        Relationships: []
-      }
-      referral_programs: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean
-          max_rewards_per_user: number | null
-          min_referrals_for_tier: number | null
-          name: string
-          referee_reward_type: string | null
-          referee_reward_value: number | null
-          referrer_reward_type: string
-          referrer_reward_value: number
-          updated_at: string
-          valid_from: string | null
-          valid_until: string | null
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          max_rewards_per_user?: number | null
-          min_referrals_for_tier?: number | null
-          name: string
-          referee_reward_type?: string | null
-          referee_reward_value?: number | null
-          referrer_reward_type: string
-          referrer_reward_value: number
-          updated_at?: string
-          valid_from?: string | null
-          valid_until?: string | null
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          max_rewards_per_user?: number | null
-          min_referrals_for_tier?: number | null
-          name?: string
-          referee_reward_type?: string | null
-          referee_reward_value?: number | null
-          referrer_reward_type?: string
-          referrer_reward_value?: number
-          updated_at?: string
-          valid_from?: string | null
-          valid_until?: string | null
         }
         Relationships: []
       }
@@ -1496,36 +1045,6 @@ export type Database = {
         }
         Relationships: []
       }
-      system_health_metrics: {
-        Row: {
-          id: string
-          metadata: Json | null
-          metric_name: string
-          metric_unit: string | null
-          metric_value: number
-          recorded_at: string | null
-          status: string | null
-        }
-        Insert: {
-          id?: string
-          metadata?: Json | null
-          metric_name: string
-          metric_unit?: string | null
-          metric_value: number
-          recorded_at?: string | null
-          status?: string | null
-        }
-        Update: {
-          id?: string
-          metadata?: Json | null
-          metric_name?: string
-          metric_unit?: string | null
-          metric_value?: number
-          recorded_at?: string | null
-          status?: string | null
-        }
-        Relationships: []
-      }
       team_invitations: {
         Row: {
           accepted_at: string | null
@@ -1628,71 +1147,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_referrals: {
-        Row: {
-          converted_at: string | null
-          created_at: string
-          entity_id: string | null
-          id: string
-          invitation_sent_at: string | null
-          metadata: Json | null
-          program_id: string | null
-          referee_id: string | null
-          referral_code: string
-          referral_type: string
-          referrer_id: string
-          reward_amount: number | null
-          rewarded_at: string | null
-          signed_up_at: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          converted_at?: string | null
-          created_at?: string
-          entity_id?: string | null
-          id?: string
-          invitation_sent_at?: string | null
-          metadata?: Json | null
-          program_id?: string | null
-          referee_id?: string | null
-          referral_code: string
-          referral_type: string
-          referrer_id: string
-          reward_amount?: number | null
-          rewarded_at?: string | null
-          signed_up_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          converted_at?: string | null
-          created_at?: string
-          entity_id?: string | null
-          id?: string
-          invitation_sent_at?: string | null
-          metadata?: Json | null
-          program_id?: string | null
-          referee_id?: string | null
-          referral_code?: string
-          referral_type?: string
-          referrer_id?: string
-          reward_amount?: number | null
-          rewarded_at?: string | null
-          signed_up_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_referrals_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "referral_programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1720,51 +1174,6 @@ export type Database = {
         }
         Relationships: []
       }
-      viral_content: {
-        Row: {
-          branding_elements: Json | null
-          content_html: string | null
-          content_text: string | null
-          content_type: string
-          created_at: string
-          id: string
-          is_active: boolean
-          subject_line: string | null
-          template_name: string
-          updated_at: string
-          usage_count: number | null
-          variables: Json | null
-        }
-        Insert: {
-          branding_elements?: Json | null
-          content_html?: string | null
-          content_text?: string | null
-          content_type: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          subject_line?: string | null
-          template_name: string
-          updated_at?: string
-          usage_count?: number | null
-          variables?: Json | null
-        }
-        Update: {
-          branding_elements?: Json | null
-          content_html?: string | null
-          content_text?: string | null
-          content_type?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          subject_line?: string | null
-          template_name?: string
-          updated_at?: string
-          usage_count?: number | null
-          variables?: Json | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -1779,10 +1188,6 @@ export type Database = {
         Returns: string
       }
       generate_invitation_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_referral_code: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -1804,10 +1209,6 @@ export type Database = {
           seasonal_patterns: Json
           state_compliance_trends: Json
         }[]
-      }
-      get_current_user_admin_status: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
       }
       get_entity_analytics: {
         Args: Record<PropertyKey, never>
@@ -1893,14 +1294,6 @@ export type Database = {
         Args: { invitation_id: string; user_uuid: string }
         Returns: boolean
       }
-      log_admin_operation: {
-        Args: {
-          operation_data?: Json
-          operation_type: string
-          target_user_id?: string
-        }
-        Returns: undefined
-      }
       log_security_event: {
         Args: { event_data?: Json; event_type: string }
         Returns: undefined
@@ -1917,30 +1310,12 @@ export type Database = {
         Args: { invitation_id: string; user_uuid: string }
         Returns: boolean
       }
-      track_invitation_event: {
-        Args: {
-          event_type_param: string
-          ip_address_param?: unknown
-          metadata_param?: Json
-          referral_uuid: string
-          user_agent_param?: string
-        }
-        Returns: string
-      }
       user_has_team_permission: {
         Args: {
           required_role: Database["public"]["Enums"]["team_role"]
           team_uuid: string
           user_uuid: string
         }
-        Returns: boolean
-      }
-      user_is_admin: {
-        Args: { user_uuid: string }
-        Returns: boolean
-      }
-      validate_admin_action: {
-        Args: { action_name: string }
         Returns: boolean
       }
       validate_payment_method_access: {

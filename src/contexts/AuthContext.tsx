@@ -172,19 +172,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    // Validate password complexity before sending to Supabase
-    const { validatePasswordComplexity } = await import('@/lib/security');
-    const passwordValidation = validatePasswordComplexity(password);
-    
-    if (!passwordValidation.isValid) {
-      return { 
-        error: { 
-          message: passwordValidation.errors.join('. '),
-          name: 'PasswordComplexityError'
-        }
-      };
-    }
-
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -192,33 +179,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: {
-          ...metadata,
-          password_validated: true,
-          signup_timestamp: new Date().toISOString()
-        }
+        data: metadata
       }
     });
-    
-    // Log security event
-    if (!error) {
-      const { logSecurityEvent, SecurityEventType } = await import('@/lib/security');
-      logSecurityEvent(SecurityEventType.LOGIN_SUCCESS, {
-        action: 'signup',
-        email,
-        user_type: metadata?.user_type
-      });
-    }
     
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
     console.log('Attempting sign in for email:', email);
-    
-    // Log security event for login attempt
-    const { logSecurityEvent, SecurityEventType } = await import('@/lib/security');
-    logSecurityEvent(SecurityEventType.LOGIN_ATTEMPT, { email });
     
     // Clean up any existing state
     try {
@@ -231,19 +200,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
     });
-    
-    // Log security event for result
-    if (error) {
-      logSecurityEvent(SecurityEventType.LOGIN_FAILURE, { 
-        email, 
-        error: error.message 
-      });
-    } else {
-      logSecurityEvent(SecurityEventType.LOGIN_SUCCESS, { 
-        email,
-        user_id: data?.user?.id 
-      });
-    }
     
     console.log('Sign in result:', { data: data?.user?.email, error: error?.message });
     

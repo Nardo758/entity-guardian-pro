@@ -36,15 +36,8 @@ export const useAuthGuard = () => {
 
   const [lastActivity, setLastActivity] = useState<Date | null>(null);
   
-  // Role-based session timeouts for enhanced security
-  const getSessionTimeout = () => {
-    if (isAdmin) {
-      return 15 * 60 * 1000; // 15 minutes for admins
-    }
-    return 30 * 60 * 1000; // 30 minutes for regular users
-  };
-  
-  const SESSION_TIMEOUT = getSessionTimeout();
+  // Session timeout in milliseconds (30 minutes)
+  const SESSION_TIMEOUT = 30 * 60 * 1000;
 
   // Update authentication state when user/profile changes
   useEffect(() => {
