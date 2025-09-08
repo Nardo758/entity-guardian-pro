@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EntityRegisteredAgentSection } from '@/components/EntityRegisteredAgentSection';
+import EntityEditModal from '@/components/EntityEditModal';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -78,6 +79,7 @@ const EntityDetails = () => {
   const navigate = useNavigate();
   const [entity, setEntity] = useState(mockEntity);
   const [loading, setLoading] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Calculate days until renewal
   const daysUntilRenewal = Math.ceil(
@@ -111,6 +113,18 @@ const EntityDetails = () => {
     toast({
       title: "Share Link Copied",
       description: "Entity details link copied to clipboard",
+    });
+  };
+
+  const handleEditEntity = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEntity = (updatedEntity: any) => {
+    setEntity(updatedEntity);
+    toast({
+      title: "Entity Updated",
+      description: "Entity information has been successfully updated",
     });
   };
 
@@ -153,7 +167,7 @@ const EntityDetails = () => {
               <Share className="h-4 w-4 mr-2" />
               Share
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleEditEntity}>
               <Edit className="h-4 w-4 mr-2" />
               Edit
             </Button>
@@ -465,6 +479,14 @@ const EntityDetails = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Modal */}
+        <EntityEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          entity={entity}
+          onSave={handleSaveEntity}
+        />
       </div>
     </div>
   );
