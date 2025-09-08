@@ -22,6 +22,9 @@ import { useTeams } from '@/hooks/useTeams';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import UserManagementPanel from '@/components/admin/UserManagementPanel';
+import FinancialManagementPanel from '@/components/admin/FinancialManagementPanel';
+import SystemHealthPanel from '@/components/admin/SystemHealthPanel';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -368,21 +371,18 @@ const AdminDashboard = () => {
 
         {/* User Management Tab */}
         {activeTab === 'users' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-foreground">User Management</h2>
-              <div className="flex items-center space-x-2">
-                <Input 
-                  placeholder="Search users..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-64"
-                />
-                <Button variant="outline">
-                  <Filter className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+          <UserManagementPanel />
+        )}
+
+        {/* Financial Management Tab */}
+        {activeTab === 'financial' && (
+          <FinancialManagementPanel />
+        )}
+
+        {/* System Health Tab */}
+        {activeTab === 'system' && (
+          <SystemHealthPanel />
+        )}
             
             <Card>
               <CardContent className="p-0">
