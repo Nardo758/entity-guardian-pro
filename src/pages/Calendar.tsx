@@ -1,249 +1,136 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar as CalendarIcon, Bell, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useEntities } from '@/hooks/useEntities';
-import { usePayments } from '@/hooks/usePayments';
+import { stateRequirements } from '@/lib/state-requirements';
 
-interface CalendarEvent {
-  id: string;
-  title: string;
-  date: Date;
-  type: 'renewal' | 'payment' | 'filing' | 'other';
-  entityName?: string;
-  amount?: number;
-  status: 'upcoming' | 'overdue' | 'completed';
+interface EntityPayment {
+  month: number;
+  amount: number;
+  type: 'agent_fee' | 'renewal_fee' | 'director_fee';
+  status: 'overdue' | 'due_this_month' | 'due_next_month' | 'future';
 }
 
 const Calendar: React.FC = () => {
   const navigate = useNavigate();
   const { entities } = useEntities();
-  const { payments } = usePayments();
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedView, setSelectedView] = useState<'month' | 'list'>('month');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [selectedYear, setSelectedYear] = useState(2025);
 
-  // Generate calendar events from entities and payments
-  const events = useMemo((): CalendarEvent[] => {
-    const events: CalendarEvent[] = [];
-    
-    // Add renewal events from entities
-    entities.forEach(entity => {
-      if (entity.registered_agent_fee_due_date) {
-        events.push({
-          id: `renewal-${entity.id}`,
-          title: `Agent Fee Due - ${entity.name}`,
-          date: new Date(entity.registered_agent_fee_due_date),
-          type: 'renewal',
-          entityName: entity.name,
-          amount: entity.registered_agent_fee,
-          status: new Date(entity.registered_agent_fee_due_date) < new Date() ? 'overdue' : 'upcoming'
-        });
-      }
-      
-      if (entity.independent_director_fee_due_date) {
-        events.push({
-          id: `director-${entity.id}`,
-          title: `Director Fee Due - ${entity.name}`,
-          date: new Date(entity.independent_director_fee_due_date),
-          type: 'renewal',
-          entityName: entity.name,
-          amount: entity.independent_director_fee,
-          status: new Date(entity.independent_director_fee_due_date) < new Date() ? 'overdue' : 'upcoming'
-        });
-      }
-
-      // Add annual filing reminder (1 year from formation)
-      const formationDate = new Date(entity.formation_date);
-      const annualFilingDate = new Date(formationDate);
-      annualFilingDate.setFullYear(annualFilingDate.getFullYear() + 1);
-      
-      events.push({
-        id: `filing-${entity.id}`,
-        title: `Annual Filing - ${entity.name}`,
-        date: annualFilingDate,
-        type: 'filing',
-        entityName: entity.name,
-        status: annualFilingDate < new Date() ? 'overdue' : 'upcoming'
-      });
-    });
-
-    // Add payment events
-    payments.forEach(payment => {
-      if (payment.due_date && payment.status === 'pending') {
-        events.push({
-          id: `payment-${payment.id}`,
-          title: `Payment Due - ${payment.entity_name}`,
-          date: new Date(payment.due_date),
-          type: 'payment',
-          entityName: payment.entity_name,
-          amount: payment.amount,
-          status: new Date(payment.due_date) < new Date() ? 'overdue' : 'upcoming'
-        });
-      }
-    });
-
-    return events.sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [entities, payments]);
-
-  const filteredEvents = events.filter(event => 
-    typeFilter === 'all' || event.type === typeFilter
-  );
-
-  const getEventColor = (type: string, status: string) => {
-    if (status === 'overdue') return 'bg-red-100 text-red-800 border-red-200';
-    
-    switch (type) {
-      case 'renewal':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'payment':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'filing':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
-
-  const getEventsForDate = (date: Date) => {
-    return filteredEvents.filter(event => 
-      event.date.toDateString() === date.toDateString()
-    );
-  };
-
-  const renderMonthView = () => {
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate);
-    const days = [];
-
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="p-2 border border-border/50"></div>);
-    }
-
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const dayEvents = getEventsForDate(date);
-      const isToday = date.toDateString() === new Date().toDateString();
-
-      days.push(
-        <div key={day} className={`p-2 border border-border/50 min-h-[100px] ${
-          isToday ? 'bg-primary/5 border-primary/20' : ''
-        }`}>
-          <div className={`text-sm font-medium mb-1 ${
-            isToday ? 'text-primary' : 'text-foreground'
-          }`}>
-            {day}
-          </div>
-          <div className="space-y-1">
-            {dayEvents.slice(0, 2).map(event => (
-              <div
-                key={event.id}
-                className={`text-xs p-1 rounded border ${getEventColor(event.type, event.status)}`}
-              >
-                {event.title.length > 20 ? `${event.title.slice(0, 20)}...` : event.title}
-              </div>
-            ))}
-            {dayEvents.length > 2 && (
-              <div className="text-xs text-muted-foreground">
-                +{dayEvents.length - 2} more
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-7 gap-0 border border-border rounded-lg overflow-hidden">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="p-3 bg-muted font-medium text-center border-b border-border">
-            {day}
-          </div>
-        ))}
-        {days}
-      </div>
-    );
-  };
-
-  const renderListView = () => {
-    const upcomingEvents = filteredEvents.filter(event => 
-      event.date >= new Date()
-    ).slice(0, 20);
-
-    return (
-      <div className="space-y-4">
-        {upcomingEvents.map(event => (
-          <Card key={event.id} className={`border-l-4 ${
-            event.status === 'overdue' ? 'border-l-red-500' : 'border-l-blue-500'
-          }`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-medium">{event.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {event.date.toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                  {event.entityName && (
-                    <p className="text-sm text-muted-foreground">
-                      Entity: {event.entityName}
-                    </p>
-                  )}
-                </div>
-                <div className="text-right space-y-2">
-                  <Badge variant={event.status === 'overdue' ? 'destructive' : 'default'}>
-                    {event.status === 'overdue' ? 'Overdue' : 'Upcoming'}
-                  </Badge>
-                  {event.amount && (
-                    <p className="text-sm font-medium">${event.amount}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {upcomingEvents.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No upcoming events</h3>
-              <p className="text-muted-foreground text-center">
-                All your renewal deadlines and payments are up to date!
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    );
-  };
-
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ];
 
-  const overdue = filteredEvents.filter(e => e.status === 'overdue').length;
-  const upcoming = filteredEvents.filter(e => e.status === 'upcoming' && 
-    e.date >= new Date() && e.date <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  ).length;
+  const entityPaymentData = useMemo(() => {
+    return entities.map(entity => {
+      const payments: EntityPayment[] = [];
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+
+      // Agent fees - typically due in January
+      if (entity.registered_agent_fee) {
+        const agentFeeMonth = 0; // January
+        let status: EntityPayment['status'] = 'future';
+        
+        if (selectedYear === currentYear) {
+          if (agentFeeMonth < currentMonth) status = 'overdue';
+          else if (agentFeeMonth === currentMonth) status = 'due_this_month';
+          else if (agentFeeMonth === currentMonth + 1) status = 'due_next_month';
+        }
+
+        payments.push({
+          month: agentFeeMonth,
+          amount: entity.registered_agent_fee,
+          type: 'agent_fee',
+          status
+        });
+      }
+
+      // Director fees for Delaware entities - combined with agent fees in January
+      if (entity.state === 'DE' && entity.independent_director_fee) {
+        const existingJanPayment = payments.find(p => p.month === 0);
+        if (existingJanPayment) {
+          existingJanPayment.amount += entity.independent_director_fee;
+        } else {
+          let status: EntityPayment['status'] = 'future';
+          
+          if (selectedYear === currentYear) {
+            if (0 < currentMonth) status = 'overdue';
+            else if (0 === currentMonth) status = 'due_this_month';
+            else if (0 === currentMonth + 1) status = 'due_next_month';
+          }
+
+          payments.push({
+            month: 0,
+            amount: entity.independent_director_fee,
+            type: 'director_fee',
+            status
+          });
+        }
+      }
+
+      // Entity renewal fees - based on formation date or state requirements
+      const formationDate = new Date(entity.formation_date);
+      const renewalMonth = formationDate.getMonth();
+      const stateReq = stateRequirements[entity.state as keyof typeof stateRequirements];
+      const entityTypeKey = entity.type as keyof typeof stateReq;
+      const renewalFee = stateReq && typeof stateReq === 'object' && entityTypeKey in stateReq 
+        ? (stateReq[entityTypeKey] as { fee: number }).fee 
+        : 0;
+
+      if (renewalFee > 0) {
+        let status: EntityPayment['status'] = 'future';
+        
+        if (selectedYear === currentYear) {
+          if (renewalMonth < currentMonth) status = 'overdue';
+          else if (renewalMonth === currentMonth) status = 'due_this_month';
+          else if (renewalMonth === currentMonth + 1) status = 'due_next_month';
+        }
+
+        payments.push({
+          month: renewalMonth,
+          amount: renewalFee,
+          type: 'renewal_fee',
+          status
+        });
+      }
+
+      return {
+        entity,
+        payments,
+        totalAnnual: payments.reduce((sum, p) => sum + p.amount, 0)
+      };
+    });
+  }, [entities, selectedYear]);
+
+  const getPaymentForMonth = (entityPayments: EntityPayment[], month: number) => {
+    return entityPayments.filter(p => p.month === month);
+  };
+
+  const getCellColor = (status: EntityPayment['status']) => {
+    switch (status) {
+      case 'overdue':
+        return 'bg-red-100 text-red-800';
+      case 'due_this_month':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'due_next_month':
+        return 'bg-orange-100 text-orange-800';
+      case 'future':
+        return 'bg-blue-50 text-blue-700';
+      default:
+        return '';
+    }
+  };
+
+  const formatAmount = (amount: number) => {
+    return amount > 0 ? `$${amount.toFixed(2)}` : '$0.00';
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
@@ -260,130 +147,121 @@ const Calendar: React.FC = () => {
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Calendar & Deadlines</h1>
-              <p className="text-muted-foreground">Track renewal deadlines and important dates</p>
+            <div className="flex items-center gap-3">
+              <CalendarIcon className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-3xl font-bold">Entity Renewal Calendar</h1>
+                <p className="text-muted-foreground">Annual payment schedule by entity and month</p>
+              </div>
             </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2026">2026</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-              <Bell className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{overdue}</div>
-              <p className="text-xs text-muted-foreground">Requires immediate attention</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Next 30 Days</CardTitle>
-              <CalendarIcon className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{upcoming}</div>
-              <p className="text-xs text-muted-foreground">Upcoming deadlines</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{filteredEvents.length}</div>
-              <p className="text-xs text-muted-foreground">All tracked events</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Controls */}
+        {/* Spreadsheet Calendar */}
         <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newDate = new Date(currentDate);
-                      newDate.setMonth(newDate.getMonth() - 1);
-                      setCurrentDate(newDate);
-                    }}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <h2 className="text-lg font-semibold min-w-[200px] text-center">
-                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                  </h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newDate = new Date(currentDate);
-                      newDate.setMonth(newDate.getMonth() + 1);
-                      setCurrentDate(newDate);
-                    }}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentDate(new Date())}
-                >
-                  Today
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="renewal">Renewals</SelectItem>
-                    <SelectItem value="payment">Payments</SelectItem>
-                    <SelectItem value="filing">Filings</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <div className="flex border border-border rounded-lg">
-                  <Button
-                    variant={selectedView === 'month' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setSelectedView('month')}
-                    className="rounded-r-none"
-                  >
-                    Month
-                  </Button>
-                  <Button
-                    variant={selectedView === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setSelectedView('list')}
-                    className="rounded-l-none"
-                  >
-                    List
-                  </Button>
-                </div>
-              </div>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted">
+                    <TableHead className="font-bold text-foreground border-r border-border min-w-[200px]">
+                      Entity
+                    </TableHead>
+                    {months.map(month => (
+                      <TableHead key={month} className="font-bold text-foreground text-center border-r border-border min-w-[100px]">
+                        {month}-{selectedYear}
+                      </TableHead>
+                    ))}
+                    <TableHead className="font-bold text-foreground text-center bg-green-50 min-w-[120px]">
+                      TOTAL ANNUAL
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {entityPaymentData.map(({ entity, payments, totalAnnual }, index) => (
+                    <TableRow 
+                      key={entity.id} 
+                      className={`hover:bg-muted/50 ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}
+                    >
+                      <TableCell className="border-r border-border font-medium">
+                        <div>
+                          <div className="font-semibold">{entity.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {entity.type} • {entity.state}
+                          </div>
+                        </div>
+                      </TableCell>
+                      {months.map((_, monthIndex) => {
+                        const monthPayments = getPaymentForMonth(payments, monthIndex);
+                        const totalAmount = monthPayments.reduce((sum, p) => sum + p.amount, 0);
+                        const hasPayment = totalAmount > 0;
+                        const cellColor = hasPayment ? getCellColor(monthPayments[0].status) : '';
+                        
+                        return (
+                          <TableCell 
+                            key={monthIndex} 
+                            className={`text-center border-r border-border ${cellColor}`}
+                          >
+                            <span className={hasPayment ? 'font-medium' : 'text-muted-foreground'}>
+                              {formatAmount(totalAmount)}
+                            </span>
+                          </TableCell>
+                        );
+                      })}
+                      <TableCell className="text-center font-bold bg-green-50">
+                        ${totalAnnual.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
 
-        {/* Calendar Content */}
-        <div className="space-y-6">
-          {selectedView === 'month' ? renderMonthView() : renderListView()}
-        </div>
+        {/* Color Legend */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-center gap-8 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-red-100 border border-red-200 rounded"></div>
+                <span>Overdue</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-yellow-100 border border-yellow-200 rounded"></div>
+                <span>Due This Month</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-orange-100 border border-orange-200 rounded"></div>
+                <span>Due Next Month</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-blue-50 border border-blue-200 rounded"></div>
+                <span>Future Payment</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-50 border border-gray-200 rounded"></div>
+                <span className="text-muted-foreground">No Payment</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
