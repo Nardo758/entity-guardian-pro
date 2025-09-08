@@ -6,20 +6,35 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useEntities } from '@/hooks/useEntities';
-import { FileText, Upload, FolderOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, FileText, Upload, FolderOpen } from 'lucide-react';
+
+import { useNavigate } from "react-router-dom";
 
 const Documents: React.FC = () => {
+  const navigate = useNavigate();
   const { entities, loading: entitiesLoading } = useEntities();
   const [selectedEntityId, setSelectedEntityId] = useState<string | undefined>(undefined);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Document Management</h1>
-          <p className="text-muted-foreground">
-            Upload, organize, and manage your business documents
-          </p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/dashboard')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Document Management</h1>
+            <p className="text-muted-foreground">
+              Upload, organize, and manage your business documents
+            </p>
+          </div>
         </div>
       </div>
 

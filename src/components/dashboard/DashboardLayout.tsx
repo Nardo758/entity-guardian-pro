@@ -35,9 +35,9 @@ const DashboardSidebar = () => {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { name: 'Entities', icon: Building, path: '/entities' },
     { name: 'Documents', icon: FileText, path: '/documents' },
-    { name: 'Payments', icon: CreditCard, path: '/payment-history' },
+    { name: 'Payments', icon: CreditCard, path: '/payments' },
     { name: 'Calendar', icon: Calendar, path: '/calendar' },
-    { name: 'Agents', icon: Users, path: '/agent-directory' },
+    { name: 'Agents', icon: Users, path: '/agents' },
   ];
 
   if (isAdmin) {
