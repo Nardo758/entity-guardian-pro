@@ -5,7 +5,7 @@ import {
   Calendar, FileText, CreditCard, Map, BarChart3, 
   Activity, UserCheck, Mail, Phone, Edit, Trash2,
   CheckCircle, XCircle, Clock, Eye, Filter, Plus,
-  Crown, UserCog, RefreshCw, Globe
+  Crown, UserCog, RefreshCw, Globe, Workflow
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,6 +29,8 @@ import AdvancedAnalyticsPanel from '@/components/admin/AdvancedAnalyticsPanel';
 import AutomationPanel from '@/components/admin/AutomationPanel';
 import AdvancedReportingPanel from '@/components/admin/AdvancedReportingPanel';
 import APIManagementPanel from '@/components/admin/APIManagementPanel';
+import WorkflowManagementPanel from '@/components/admin/WorkflowManagementPanel';
+import AuditTrailPanel from '@/components/admin/AuditTrailPanel';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -270,6 +272,8 @@ const AdminDashboard = () => {
               { id: 'automation', label: 'Automation', icon: Settings },
               { id: 'reports', label: 'Reports', icon: FileText },
               { id: 'api', label: 'API Management', icon: Globe },
+              { id: 'workflows', label: 'Workflows', icon: Workflow },
+              { id: 'audit', label: 'Audit Trail', icon: Shield },
               { id: 'security', label: 'Security', icon: Shield }
             ].map((tab) => {
               const TabIcon = tab.icon;
@@ -410,6 +414,16 @@ const AdminDashboard = () => {
         {/* API Management Tab */}
         {activeTab === 'api' && (
           <APIManagementPanel />
+        )}
+
+        {/* Workflow Management Tab */}
+        {activeTab === 'workflows' && (
+          <WorkflowManagementPanel />
+        )}
+
+        {/* Audit Trail Tab */}
+        {activeTab === 'audit' && (
+          <AuditTrailPanel />
         )}
 
         {/* Entity Oversight Tab */}
