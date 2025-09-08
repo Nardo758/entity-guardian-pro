@@ -18,22 +18,18 @@ import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { stateRequirements } from '@/lib/state-requirements';
 import { Entity } from '@/types/entity';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  TrendingUp, 
-  AlertTriangle, 
-  Calendar, 
-  DollarSign, 
-  FileText, 
-  Users,
-  Building2,
-  Clock,
-  Shield
-} from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Building2, DollarSign, FileText, Clock, AlertTriangle, 
+         TrendingUp, Calendar, CheckCircle2, Plus, MapPin, Users, Settings, LogOut, Shield } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const ModernDashboard = () => {
+  const navigate = useNavigate();
   const { isAdmin } = useAdminAccess();
   
   const { entities, addEntity, deleteEntity, loading: entitiesLoading } = useEntities();
@@ -130,6 +126,44 @@ const ModernDashboard = () => {
             <Building2 className="mr-2 h-4 w-4" />
             Add Entity
           </Button>
+          
+          {/* User Menu with Sign Out */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Users className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-sm">Menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem disabled>
+                <Building2 className="w-4 h-4 mr-2" />
+                Entity Owner
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/settings')}>
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/team')}>
+                <Users className="w-4 h-4 mr-2" />
+                Team Management
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate('/login');
+                }}
+                className="text-red-600"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

@@ -21,9 +21,12 @@ import { useAgents } from '@/hooks/useAgents';
 import { useAgentInvitations } from '@/hooks/useAgentInvitations';
 import { supabase } from '@/integrations/supabase/client';
 import { EntityAgentAssignment } from '@/types/agent';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
 
 const AgentDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { getUserAgent } = useAgents();
   const { invitations, respondToInvitation, refetch } = useAgentInvitations();
   const [agent, setAgent] = useState(null);
@@ -171,6 +174,44 @@ const AgentDashboard = () => {
               <Plus className="w-4 h-4 mr-2" />
               New Client
             </Button>
+            
+            {/* User Menu with Sign Out */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Users className="w-4 h-4 text-primary" />
+                  </div>
+                  <span className="text-sm">Agent</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem disabled>
+                  <Building className="w-4 h-4 mr-2" />
+                  Registered Agent
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/agent-signup')}>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    navigate('/login');
+                  }}
+                  className="text-red-600"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
