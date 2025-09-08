@@ -131,6 +131,43 @@ const Calendar: React.FC = () => {
     return amount > 0 ? `$${amount.toFixed(2)}` : '$0.00';
   };
 
+  const handleExport = () => {
+    // Prepare CSV data
+    const headers = ['Entity', 'Type', 'State', ...months.map(m => `${m}-${selectedYear}`), 'Total Annual'];
+    
+    const csvData = entityPaymentData.map(({ entity, payments, totalAnnual }) => {
+      const row = [
+        entity.name,
+        entity.type,
+        entity.state,
+        ...months.map((_, monthIndex) => {
+          const monthPayments = getPaymentForMonth(payments, monthIndex);
+          const totalAmount = monthPayments.reduce((sum, p) => sum + p.amount, 0);
+          return totalAmount > 0 ? totalAmount.toFixed(2) : '0.00';
+        }),
+        totalAnnual.toFixed(2)
+      ];
+      return row;
+    });
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `entity-renewal-calendar-${selectedYear}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
@@ -166,7 +203,7 @@ const Calendar: React.FC = () => {
                 <SelectItem value="2026">2026</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
               <Download className="h-4 w-4" />
               Export
             </Button>
