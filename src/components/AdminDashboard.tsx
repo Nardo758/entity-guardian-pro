@@ -25,6 +25,8 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import UserManagementPanel from '@/components/admin/UserManagementPanel';
 import FinancialManagementPanel from '@/components/admin/FinancialManagementPanel';
 import SystemHealthPanel from '@/components/admin/SystemHealthPanel';
+import AdvancedAnalyticsPanel from '@/components/admin/AdvancedAnalyticsPanel';
+import AutomationPanel from '@/components/admin/AutomationPanel';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -258,10 +260,12 @@ const AdminDashboard = () => {
           <nav className="-mb-px flex space-x-8">
             {[
               { id: 'overview', label: 'Overview', icon: BarChart3 },
+              { id: 'analytics', label: 'Advanced Analytics', icon: TrendingUp },
               { id: 'users', label: 'User Management', icon: Users },
               { id: 'entities', label: 'Entity Oversight', icon: Building },
               { id: 'financial', label: 'Financial', icon: DollarSign },
               { id: 'system', label: 'System Health', icon: Activity },
+              { id: 'automation', label: 'Automation', icon: Settings },
               { id: 'security', label: 'Security', icon: Shield }
             ].map((tab) => {
               const TabIcon = tab.icon;
@@ -369,6 +373,11 @@ const AdminDashboard = () => {
           </div>
         )}
 
+        {/* Advanced Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <AdvancedAnalyticsPanel />
+        )}
+
         {/* User Management Tab */}
         {activeTab === 'users' && (
           <UserManagementPanel />
@@ -382,6 +391,11 @@ const AdminDashboard = () => {
         {/* System Health Tab */}
         {activeTab === 'system' && (
           <SystemHealthPanel />
+        )}
+
+        {/* Automation Tab */}
+        {activeTab === 'automation' && (
+          <AutomationPanel />
         )}
 
         {/* Entity Oversight Tab */}
