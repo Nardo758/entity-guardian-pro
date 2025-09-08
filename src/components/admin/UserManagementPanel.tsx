@@ -12,6 +12,8 @@ import {
   Search, Filter, AlertTriangle, Eye, Crown 
 } from 'lucide-react';
 import { useAdminUserManagement } from '@/hooks/useAdminUserManagement';
+import { useAdminSecurity } from '@/hooks/useAdminSecurity';
+import { useSecurityValidation } from '@/hooks/useSecurityValidation';
 
 const UserManagementPanel = () => {
   const { 
