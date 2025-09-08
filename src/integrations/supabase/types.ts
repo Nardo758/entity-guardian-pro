@@ -489,6 +489,8 @@ export type Database = {
       }
       entities: {
         Row: {
+          annual_report_due_date: string | null
+          compliance_status: string | null
           created_at: string
           formation_date: string
           id: string
@@ -498,18 +500,25 @@ export type Database = {
           independent_director_name: string | null
           independent_director_phone: string | null
           name: string
+          next_filing_date: string | null
+          notes: string | null
+          priority: number | null
           registered_agent_email: string
           registered_agent_fee: number
           registered_agent_fee_due_date: string | null
           registered_agent_name: string
           registered_agent_phone: string
           state: string
+          status: string | null
+          tags: string[] | null
           team_id: string | null
           type: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          annual_report_due_date?: string | null
+          compliance_status?: string | null
           created_at?: string
           formation_date: string
           id?: string
@@ -519,18 +528,25 @@ export type Database = {
           independent_director_name?: string | null
           independent_director_phone?: string | null
           name: string
+          next_filing_date?: string | null
+          notes?: string | null
+          priority?: number | null
           registered_agent_email: string
           registered_agent_fee: number
           registered_agent_fee_due_date?: string | null
           registered_agent_name: string
           registered_agent_phone: string
           state: string
+          status?: string | null
+          tags?: string[] | null
           team_id?: string | null
           type: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          annual_report_due_date?: string | null
+          compliance_status?: string | null
           created_at?: string
           formation_date?: string
           id?: string
@@ -540,12 +556,17 @@ export type Database = {
           independent_director_name?: string | null
           independent_director_phone?: string | null
           name?: string
+          next_filing_date?: string | null
+          notes?: string | null
+          priority?: number | null
           registered_agent_email?: string
           registered_agent_fee?: number
           registered_agent_fee_due_date?: string | null
           registered_agent_name?: string
           registered_agent_phone?: string
           state?: string
+          status?: string | null
+          tags?: string[] | null
           team_id?: string | null
           type?: string
           updated_at?: string
