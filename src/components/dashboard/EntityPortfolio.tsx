@@ -224,21 +224,13 @@ export const EntityPortfolio: React.FC<EntityPortfolioProps> = ({
   return (
     <Card className="border-border/50 bg-card/30 backdrop-blur-sm">
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-xl font-bold text-foreground">
-              Entity Portfolio
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {entities.length} {entities.length === 1 ? 'entity' : 'entities'} in your business portfolio
-            </p>
-          </div>
-          {entities.length > 0 && (
-            <Button onClick={onAddEntity} variant="outline" size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Entity
-            </Button>
-          )}
+        <div>
+          <CardTitle className="text-xl font-bold text-foreground">
+            Entity Portfolio
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            {entities.length} {entities.length === 1 ? 'entity' : 'entities'} in your business portfolio
+          </p>
         </div>
       </CardHeader>
       <CardContent>
