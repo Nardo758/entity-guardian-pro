@@ -416,10 +416,38 @@ const AgentDashboard = () => {
             <Card>
               <CardContent className="p-8 text-center">
                 <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Active Entities</h3>
-                <p className="text-muted-foreground">
-                  You don't have any active entity assignments yet. Check your invitations tab for pending requests.
+                <h3 className="text-lg font-semibold mb-2">Welcome to Your Agent Dashboard!</h3>
+                <p className="text-muted-foreground mb-4">
+                  Your agent account is now active. Here's how to get started:
                 </p>
+                <div className="space-y-2 text-sm text-left max-w-md mx-auto mb-6">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span>Complete your professional profile</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-orange-500" />
+                    <span>Set your pricing in Settings</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-blue-500" />
+                    <span>Check Invitations tab for client requests</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-purple-500" />
+                    <span>Start managing entity compliance</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={() => navigate('/settings')}>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Complete Setup
+                  </Button>
+                  <Button variant="outline" onClick={() => setActiveTab('invitations')}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Check Invitations
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (

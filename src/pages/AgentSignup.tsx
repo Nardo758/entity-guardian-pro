@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAgents } from '@/hooks/useAgents';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Building, MapPin, DollarSign, FileText } from 'lucide-react';
 
@@ -24,12 +25,21 @@ const US_STATES = [
 ];
 
 const agentSchema = z.object({
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
   company_name: z.string().min(1, 'Company name is required'),
   contact_email: z.string().email('Valid email is required'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+  confirm_password: z.string(),
   states: z.array(z.string()).min(1, 'Select at least one state'),
-  price_per_entity: z.number().min(50, 'Minimum price is $50').max(2000, 'Maximum price is $2000'),
-  years_experience: z.number().min(0).max(50).optional(),
+  years_experience: z.number().min(0, 'Experience must be 0 or more').max(50, 'Maximum 50 years').optional(),
   bio: z.string().max(500, 'Bio must be under 500 characters').optional(),
+  terms_accepted: z.boolean().refine(val => val === true, 'You must accept the terms of service'),
+}).refine((data) => data.password === data.confirm_password, {
+  message: "Passwords don't match",
+  path: ["confirm_password"],
 });
 
 type AgentFormData = z.infer<typeof agentSchema>;
@@ -37,17 +47,23 @@ type AgentFormData = z.infer<typeof agentSchema>;
 const AgentSignup = () => {
   const navigate = useNavigate();
   const { createAgentProfile } = useAgents();
+  const { signUp } = useAuth();
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<AgentFormData>({
     resolver: zodResolver(agentSchema),
     defaultValues: {
+      first_name: '',
+      last_name: '',
       company_name: '',
       contact_email: '',
+      password: '',
+      confirm_password: '',
       states: [],
-      price_per_entity: 199,
       years_experience: 0,
       bio: '',
+      terms_accepted: false,
     },
   });
 
@@ -61,21 +77,38 @@ const AgentSignup = () => {
   };
 
   const onSubmit = async (data: AgentFormData) => {
+    setIsSubmitting(true);
     try {
+      // First, create the user account
+      const { error: authError } = await signUp(data.contact_email, data.password, {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        company: data.company_name,
+        user_type: 'registered_agent'
+      });
+
+      if (authError) {
+        toast.error(authError.message || 'Failed to create account');
+        return;
+      }
+
+      // Then create the agent profile
       await createAgentProfile({
         company_name: data.company_name,
         contact_email: data.contact_email,
         states: selectedStates,
-        price_per_entity: data.price_per_entity,
         years_experience: data.years_experience,
         bio: data.bio,
         is_available: true,
       });
       
-      toast.success('Agent profile created successfully!');
+      toast.success('Account created successfully! Please check your email to verify your account.');
       navigate('/agent-dashboard');
     } catch (error) {
+      console.error('Signup error:', error);
       toast.error('Failed to create agent profile');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -144,61 +177,114 @@ const AgentSignup = () => {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="company_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company Name *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your Company or Professional Name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Basic Information</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="first_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="First name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={form.control}
-                    name="contact_email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Contact Email *</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="your@email.com" {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          Clients will use this email to contact you directly
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={form.control}
+                        name="last_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Last name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="price_per_entity"
+                      name="company_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Price Per Entity (Annual) *</FormLabel>
+                          <FormLabel>Company Name *</FormLabel>
                           <FormControl>
-                            <div className="relative">
-                              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                type="number"
-                                className="pl-9"
-                                placeholder="199"
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </div>
+                            <Input placeholder="Your Company or Professional Name" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
+                    <FormField
+                      control={form.control}
+                      name="contact_email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address *</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="your@email.com" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            This will be your login email and client contact email
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Password Section */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Account Security</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password *</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Create a secure password" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Minimum 8 characters with uppercase, lowercase, and number
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="confirm_password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password *</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Confirm your password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Professional Details */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Professional Details</h3>
+                    
                     <FormField
                       control={form.control}
                       name="years_experience"
@@ -208,11 +294,19 @@ const AgentSignup = () => {
                           <FormControl>
                             <Input
                               type="number"
+                              min={0}
+                              max={50}
                               placeholder="5"
                               {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value);
+                                field.onChange(isNaN(value) ? 0 : value);
+                              }}
                             />
                           </FormControl>
+                          <FormDescription>
+                            How many years have you been a registered agent?
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -285,8 +379,30 @@ const AgentSignup = () => {
                     )}
                   />
 
-                  <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Creating Profile...' : 'Create Agent Profile'}
+                  {/* Terms and Conditions */}
+                  <FormField
+                    control={form.control}
+                    name="terms_accepted"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            I accept the <a href="/terms" className="text-primary hover:underline">Terms of Service</a> and <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a> *
+                          </FormLabel>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" className="w-full" disabled={isSubmitting || !form.formState.isValid}>
+                    {isSubmitting ? 'Creating Account...' : 'Create Agent Account'}
                   </Button>
                 </form>
               </Form>
