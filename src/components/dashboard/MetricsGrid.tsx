@@ -85,6 +85,8 @@ interface MetricsGridProps {
     annualServiceFees: number;
     pendingPayments: number;
     upcomingRenewals: number;
+    pendingInvitations?: number;
+    activeAgents?: number;
   };
 }
 
@@ -113,9 +115,10 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
     {
       title: 'Service Fees',
       value: `$${metrics.annualServiceFees.toLocaleString()}`,
-      subtitle: 'Registered agents • Independent directors',
+      subtitle: `${metrics.activeAgents || 0} active agents • ${metrics.pendingInvitations || 0} pending invitations`,
       icon: Users,
-      status: 'info' as const
+      status: 'info' as const,
+      trend: (metrics.pendingInvitations || 0) > 0 ? { value: `+${metrics.pendingInvitations}`, isPositive: true } : undefined
     },
     {
       title: 'Pending Actions',

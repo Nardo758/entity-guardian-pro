@@ -7,13 +7,16 @@ import { EntityForm } from '@/components/EntityForm';
 import { PaymentModal } from '@/components/PaymentModal';
 import { ScheduleModal } from '@/components/ScheduleModal';
 import { NotificationBanner } from '@/components/NotificationBanner';
+import EnhancedNotificationBanner from '@/components/dashboard/EnhancedNotificationBanner';
 import { SecurityWarningBanner } from '@/components/SecurityWarningBanner';
 import { useEntities } from '@/hooks/useEntities';
 import { usePayments } from '@/hooks/usePayments';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useAgentNotifications } from '@/hooks/useAgentNotifications';
 import { useTeams } from '@/hooks/useTeams';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { useAgentInvitations } from '@/hooks/useAgentInvitations';
 import { stateRequirements } from '@/lib/state-requirements';
 import { Entity } from '@/types/entity';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,8 +27,9 @@ const ModernDashboard = () => {
   const { entities, addEntity, deleteEntity, loading: entitiesLoading } = useEntities();
   const { payments } = usePayments();
   const { paymentMethods } = usePaymentMethods();
-  const { notifications, markAsRead } = useNotifications();
+  const { notifications, markAsRead } = useAgentNotifications();
   const { currentTeam } = useTeams();
+  const { invitations } = useAgentInvitations();
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [showScheduleView, setShowScheduleView] = useState(false);
@@ -63,6 +67,9 @@ const ModernDashboard = () => {
   };
 
   // Calculate metrics
+  const pendingInvitations = invitations.filter(inv => inv.status === 'pending').length;
+  const activeAgents = invitations.filter(inv => inv.status === 'accepted').length;
+  
   const metrics = {
     totalEntities: entities.length,
     delawareEntities: entities.filter(e => e.state === 'DE').length,
@@ -71,7 +78,9 @@ const ModernDashboard = () => {
       sum + (e.registered_agent_fee || 0) + (e.independent_director_fee || 0), 0),
     pendingPayments: payments.filter(p => p.status === 'pending' || p.status === 'scheduled')
       .reduce((sum, p) => sum + p.amount, 0),
-    upcomingRenewals: payments.filter(p => p.status === 'pending').length
+    upcomingRenewals: payments.filter(p => p.status === 'pending').length,
+    pendingInvitations,
+    activeAgents
   };
 
   const unreadNotifications = notifications.filter(n => !n.read);
@@ -95,7 +104,7 @@ const ModernDashboard = () => {
 
           {/* User Notifications */}
           {unreadNotifications.length > 0 && (
-            <NotificationBanner 
+            <EnhancedNotificationBanner 
               notifications={unreadNotifications}
               onDismiss={dismissNotification}
             />

@@ -38,7 +38,6 @@ const DashboardSidebar = () => {
     { name: 'Payments', icon: CreditCard, path: '/payment-history' },
     { name: 'Calendar', icon: Calendar, path: '/calendar' },
     { name: 'Agents', icon: Users, path: '/agent-directory' },
-    { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   if (isAdmin) {
