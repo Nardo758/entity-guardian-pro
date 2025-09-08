@@ -1,8 +1,8 @@
 import React from 'react';
-import ModernDashboard from './dashboard/ModernDashboard';
+import { EnhancedDashboard } from '@/components/EnhancedDashboard';
 
 const EntityOwnerDashboard: React.FC = () => {
-  return <ModernDashboard />;
+  return <EnhancedDashboard />;
 };
 
 export default EntityOwnerDashboard;
