@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Send, ArrowLeft, CheckCircle, Clock, Mail, AlertCircle } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from '@/hooks/use-toast';
+import { useAgentInvitations } from '@/hooks/useAgentInvitations';
 
 interface InviteAgentFormProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface InviteAgentFormProps {
 const InviteAgentForm = ({ isOpen, onClose, onBack, entityId, entityState, entityName, onInvitationSent }: InviteAgentFormProps) => {
   const [loading, setLoading] = useState(false);
   const [emailStatus, setEmailStatus] = useState<"checking" | "exists" | "new" | null>(null);
+  const { sendInvitation } = useAgentInvitations();
   const [formData, setFormData] = useState({
     email: "",
     message: `Hello! I would like to invite you to serve as the registered agent for my entity "${entityName}" in ${entityState}. Please review the details and let me know if you're available for this service.`,
@@ -58,38 +60,19 @@ const InviteAgentForm = ({ isOpen, onClose, onBack, entityId, entityState, entit
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const invitation = await sendInvitation(entityId, formData.email, formData.message);
       
-      const invitation = {
-        id: Date.now().toString(),
-        entityId,
-        entityName,
-        agentEmail: formData.email,
-        message: formData.message,
+      // Call the callback with the invitation data
+      onInvitationSent({
+        ...invitation,
         serviceFee: parseFloat(formData.serviceFee) || 0,
-        status: "sent",
-        sentAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        method: "invite",
         urgency: formData.urgency,
         isNewUser: emailStatus === "new"
-      };
-
-      onInvitationSent(invitation);
-      
-      toast({
-        title: "Invitation Sent",
-        description: `Agent invitation sent to ${formData.email}`,
       });
       
       onClose();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send invitation. Please try again.",
-        variant: "destructive"
-      });
+      // Error handling is done in the sendInvitation function
     } finally {
       setLoading(false);
     }

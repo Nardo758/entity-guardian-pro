@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Search, Filter, Star, Mail, Phone, MapPin, Building, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Users, Search, Filter, Star, Mail, Phone, MapPin, Building, MessageCircle, X, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,13 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAgents } from '@/hooks/useAgents';
 import { useAgentInvitations } from '@/hooks/useAgentInvitations';
 
 const Agents: React.FC = () => {
   const navigate = useNavigate();
   const { agents, loading } = useAgents();
-  const { invitations } = useAgentInvitations();
+  const { invitations, metrics, unsendInvitation, loading: invitationsLoading } = useAgentInvitations();
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -58,8 +59,21 @@ const Agents: React.FC = () => {
     return matchesSearch && matchesState && matchesStatus;
   });
 
-  const pendingInvitations = invitations.filter(inv => inv.status === 'pending');
+  const pendingInvitations = invitations.filter(inv => inv.status === 'pending' && !inv.unsent_at);
   const acceptedInvitations = invitations.filter(inv => inv.status === 'accepted');
+  const allInvitations = invitations.filter(inv => !inv.unsent_at);
+
+  const handleUnsendInvitation = async (invitationId: string) => {
+    try {
+      await unsendInvitation(invitationId);
+    } catch (error) {
+      console.error('Failed to unsend invitation:', error);
+    }
+  };
+
+  const canUnsendInvitation = (invitation: any) => {
+    return invitation.status === 'pending' && !invitation.viewed_at && !invitation.unsent_at;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
@@ -95,7 +109,7 @@ const Agents: React.FC = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{workingAgents.length}</div>
+              <div className="text-2xl font-bold">{metrics.acceptedCount}</div>
               <p className="text-xs text-muted-foreground">Currently working with you</p>
             </CardContent>
           </Card>
@@ -106,7 +120,7 @@ const Agents: React.FC = () => {
               <Mail className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingInvitations.length}</div>
+              <div className="text-2xl font-bold">{metrics.pendingCount}</div>
               <p className="text-xs text-muted-foreground">Awaiting response</p>
             </CardContent>
           </Card>
@@ -117,35 +131,28 @@ const Agents: React.FC = () => {
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {workingAgents.reduce((sum, agent) => sum + agent.entitiesServed, 0)}
-              </div>
+              <div className="text-2xl font-bold">{metrics.entitiesWithAgents}</div>
               <p className="text-xs text-muted-foreground">Total entities served</p>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Rating</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Invitations</CardTitle>
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {workingAgents.length > 0 
-                  ? (workingAgents.reduce((sum, agent) => sum + agent.rating, 0) / workingAgents.length).toFixed(1)
-                  : '0.0'
-                }
-              </div>
-              <p className="text-xs text-muted-foreground">Network average</p>
+              <div className="text-2xl font-bold">{metrics.totalSent}</div>
+              <p className="text-xs text-muted-foreground">All-time sent</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">Active Agents ({workingAgents.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pending Invites ({pendingInvitations.length})</TabsTrigger>
-            <TabsTrigger value="invitations">All Invitations ({invitations.length})</TabsTrigger>
+            <TabsTrigger value="active">Active Agents ({metrics.acceptedCount})</TabsTrigger>
+            <TabsTrigger value="pending">Pending Invites ({metrics.pendingCount})</TabsTrigger>
+            <TabsTrigger value="invitations">All Invitations ({allInvitations.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-6">
@@ -299,21 +306,65 @@ const Agents: React.FC = () => {
                       <div className="space-y-1">
                         <h3 className="font-medium">Invitation to {invitation.agent_email}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Sent on {new Date(invitation.created_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
                           Entity: {invitation.entity?.name || 'Unknown Entity'}
                         </p>
+                        <p className="text-sm text-muted-foreground">
+                          Sent on {new Date(invitation.created_at).toLocaleDateString()}
+                        </p>
+                        {invitation.viewed_at && (
+                          <p className="text-xs text-muted-foreground">
+                            Viewed on {new Date(invitation.viewed_at).toLocaleDateString()}
+                          </p>
+                        )}
+                        {invitation.message && (
+                          <p className="text-sm text-muted-foreground italic">
+                            "{invitation.message.substring(0, 100)}..."
+                          </p>
+                        )}
                       </div>
                       <div className="text-right space-y-2">
-                        <Badge variant="secondary">Pending</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">
+                            {invitation.viewed_at ? 'Viewed' : 'Sent'}
+                          </Badge>
+                          {invitation.expires_at && new Date(invitation.expires_at) < new Date() && (
+                            <Badge variant="destructive">Expired</Badge>
+                          )}
+                        </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            Resend
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            Cancel
-                          </Button>
+                          {canUnsendInvitation(invitation) && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                  <X className="h-3 w-3 mr-1" />
+                                  Unsend
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Unsend Invitation</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to cancel this invitation to {invitation.agent_email}? 
+                                    This action cannot be undone and the agent will not be notified.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Keep Invitation</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleUnsendInvitation(invitation.id)}
+                                    className="bg-destructive hover:bg-destructive/90"
+                                  >
+                                    Unsend Invitation
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                          {invitation.expires_at && (
+                            <div className="text-xs text-muted-foreground">
+                              Expires {new Date(invitation.expires_at).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -327,7 +378,7 @@ const Agents: React.FC = () => {
                     <Mail className="h-12 w-12 text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No pending invitations</h3>
                     <p className="text-muted-foreground text-center">
-                      All your agent invitations have been responded to.
+                      All your agent invitations have been responded to or cancelled.
                     </p>
                   </CardContent>
                 </Card>
@@ -337,38 +388,49 @@ const Agents: React.FC = () => {
 
           <TabsContent value="invitations" className="space-y-6">
             <div className="space-y-4">
-              {invitations.map((invitation) => (
+              {allInvitations.map((invitation) => (
                 <Card key={invitation.id}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <h3 className="font-medium">Invitation to {invitation.agent_email}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Sent on {new Date(invitation.created_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
                           Entity: {invitation.entity?.name || 'Unknown Entity'}
                         </p>
-                        {invitation.status !== 'pending' && (
+                        <p className="text-sm text-muted-foreground">
+                          Sent on {new Date(invitation.created_at).toLocaleDateString()}
+                        </p>
+                        {invitation.status !== 'pending' && invitation.responded_at && (
                           <p className="text-sm text-muted-foreground">
-                            Status updated on {new Date(invitation.updated_at).toLocaleDateString()}
+                            {invitation.status === 'accepted' ? 'Accepted' : 'Declined'} on {new Date(invitation.responded_at).toLocaleDateString()}
+                          </p>
+                        )}
+                        {invitation.unsent_at && (
+                          <p className="text-sm text-muted-foreground">
+                            Cancelled on {new Date(invitation.unsent_at).toLocaleDateString()}
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
+                      <div className="text-right space-y-2">
                         <Badge variant={
                           invitation.status === 'accepted' ? 'default' :
-                          invitation.status === 'declined' ? 'destructive' : 'secondary'
+                          invitation.status === 'declined' ? 'destructive' : 
+                          invitation.unsent_at ? 'outline' : 'secondary'
                         }>
-                          {invitation.status}
+                          {invitation.unsent_at ? 'Cancelled' : invitation.status}
                         </Badge>
+                        {invitation.expires_at && !['accepted', 'declined'].includes(invitation.status) && !invitation.unsent_at && (
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(invitation.expires_at) < new Date() ? 'Expired' : `Expires ${new Date(invitation.expires_at).toLocaleDateString()}`}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
               
-              {invitations.length === 0 && (
+              {allInvitations.length === 0 && (
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <Mail className="h-12 w-12 text-muted-foreground mb-4" />

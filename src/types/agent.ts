@@ -19,11 +19,15 @@ export interface AgentInvitation {
   agent_email: string;
   agent_id?: string;
   token: string;
-  status: 'pending' | 'accepted' | 'declined' | 'expired';
+  status: 'pending' | 'accepted' | 'declined' | 'expired' | 'unsent';
   expires_at: string;
   message?: string;
   created_at: string;
   updated_at: string;
+  viewed_at?: string;
+  unsent_at?: string;
+  unsent_by?: string;
+  responded_at?: string;
   // Joined data
   entity?: {
     id: string;
