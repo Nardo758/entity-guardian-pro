@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar as CalendarIcon, Download } from 'lucide-react';
+import { ArrowLeft, Calendar as CalendarIcon, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -168,6 +168,42 @@ const Calendar: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const handlePrint = () => {
+    // Add print-specific styles
+    const printStyles = `
+      <style>
+        @media print {
+          body * { visibility: hidden; }
+          #calendar-print-area, #calendar-print-area * { visibility: visible; }
+          #calendar-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none !important; }
+          table { font-size: 10px; }
+          th, td { padding: 2px 4px; }
+          .bg-red-100 { background-color: #fee2e2 !important; -webkit-print-color-adjust: exact; }
+          .bg-yellow-100 { background-color: #fef3c7 !important; -webkit-print-color-adjust: exact; }
+          .bg-orange-100 { background-color: #fed7aa !important; -webkit-print-color-adjust: exact; }
+          .bg-blue-50 { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; }
+          .bg-green-50 { background-color: #f0fdf4 !important; -webkit-print-color-adjust: exact; }
+          .bg-muted { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; }
+        }
+      </style>
+    `;
+    
+    // Temporarily add styles to head
+    document.head.insertAdjacentHTML('beforeend', printStyles);
+    
+    // Trigger print
+    window.print();
+    
+    // Remove styles after print dialog closes
+    setTimeout(() => {
+      const addedStyle = document.head.lastElementChild;
+      if (addedStyle && addedStyle.tagName === 'STYLE') {
+        document.head.removeChild(addedStyle);
+      }
+    }, 1000);
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
@@ -203,7 +239,11 @@ const Calendar: React.FC = () => {
                 <SelectItem value="2026">2026</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
+            <Button variant="outline" size="sm" className="gap-2 no-print" onClick={handlePrint}>
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+            <Button variant="outline" size="sm" className="gap-2 no-print" onClick={handleExport}>
               <Download className="h-4 w-4" />
               Export
             </Button>
@@ -211,25 +251,26 @@ const Calendar: React.FC = () => {
         </div>
 
         {/* Spreadsheet Calendar */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted">
-                    <TableHead className="font-bold text-foreground border-r border-border w-[180px]">
-                      Entity
-                    </TableHead>
-                    {months.map(month => (
-                      <TableHead key={month} className="font-bold text-foreground text-center border-r border-border w-[75px] px-1 text-xs">
-                        {month}-{selectedYear.toString().slice(-2)}
+        <div id="calendar-print-area">
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted">
+                      <TableHead className="font-bold text-foreground border-r border-border w-[180px]">
+                        Entity
                       </TableHead>
-                    ))}
-                    <TableHead className="font-bold text-foreground text-center bg-green-50 w-[90px] px-1 text-xs">
-                      TOTAL
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+                      {months.map(month => (
+                        <TableHead key={month} className="font-bold text-foreground text-center border-r border-border w-[75px] px-1 text-xs">
+                          {month}-{selectedYear.toString().slice(-2)}
+                        </TableHead>
+                      ))}
+                      <TableHead className="font-bold text-foreground text-center bg-green-50 w-[90px] px-1 text-xs">
+                        TOTAL
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {entityPaymentData.map(({ entity, payments, totalAnnual }, index) => (
                     <TableRow 
@@ -271,6 +312,7 @@ const Calendar: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
 
         {/* Color Legend */}
         <Card>
