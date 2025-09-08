@@ -383,62 +383,6 @@ const AdminDashboard = () => {
         {activeTab === 'system' && (
           <SystemHealthPanel />
         )}
-            
-            <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.slice(0, 10).map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                              <UserCheck className="w-4 h-4 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{user.first_name} {user.last_name}</p>
-                              <p className="text-xs text-muted-foreground">{user.company}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.user_id}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{user.user_type}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.plan === 'unlimited' ? 'default' : 'secondary'}>
-                            {user.plan}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Entity Oversight Tab */}
         {activeTab === 'entities' && (
