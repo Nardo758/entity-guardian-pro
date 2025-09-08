@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { EntityPortfolio } from './EntityPortfolio';
+import { EnhancedEntityPortfolio } from '@/components/EnhancedEntityPortfolio';
 import { EntityForm } from '@/components/EntityForm';
 import { PaymentModal } from '@/components/PaymentModal';
 import { ScheduleModal } from '@/components/ScheduleModal';
@@ -32,7 +33,7 @@ const ModernDashboard = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAdminAccess();
   
-  const { entities, addEntity, deleteEntity, loading: entitiesLoading } = useEntities();
+  const { entities, allEntities, loading: entitiesLoading, filters, addEntity, updateEntity, deleteEntity, bulkOperation, setFilters } = useEntities();
   const { payments } = usePayments();
   const { paymentMethods } = usePaymentMethods();
   const { notifications, markAsRead } = useNotifications();
@@ -73,14 +74,14 @@ const ModernDashboard = () => {
     }
   };
 
-  // Calculate metrics
-  const totalEntities = entities?.length || 0;
+  // Calculate metrics - use allEntities for total counts
+  const totalEntities = allEntities?.length || 0;
   const pendingPayments = payments?.filter(p => p.status === 'pending')?.length || 0;
   const totalRevenue = payments?.filter(p => p.status === 'paid')
     ?.reduce((sum, p) => sum + p.amount, 0) || 0;
-  const delawareEntities = entities?.filter(e => e.state === 'DE')?.length || 0;
+  const delawareEntities = allEntities?.filter(e => e.state === 'DE')?.length || 0;
   
-  const upcomingDeadlines = entities?.filter(entity => {
+  const upcomingDeadlines = allEntities?.filter(entity => {
     const dueDate = entity.registered_agent_fee_due_date;
     if (!dueDate) return false;
     const date = new Date(dueDate);
@@ -91,11 +92,11 @@ const ModernDashboard = () => {
   }) || [];
 
   const metrics = {
-    totalEntities,
+    totalEntities: allEntities?.length || 0,
     delawareEntities,
-    annualEntityFees: entities.reduce((sum, e) => sum + (stateRequirements[e.state]?.[e.type]?.fee || 0), 0),
-    annualServiceFees: entities.reduce((sum, e) => 
-      sum + (e.registered_agent_fee || 0) + (e.independent_director_fee || 0), 0),
+    annualEntityFees: allEntities?.reduce((sum, e) => sum + (stateRequirements[e.state]?.[e.type]?.fee || 0), 0) || 0,
+    annualServiceFees: allEntities?.reduce((sum, e) => 
+      sum + (e.registered_agent_fee || 0) + (e.independent_director_fee || 0), 0) || 0,
     pendingPayments: payments.filter(p => p.status === 'pending' || p.status === 'scheduled')
       .reduce((sum, p) => sum + p.amount, 0),
     upcomingRenewals: payments.filter(p => p.status === 'pending').length
@@ -358,12 +359,16 @@ const ModernDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Entity Portfolio */}
+          {/* Enhanced Entity Portfolio */}
           <div className="space-y-6">
-            <EntityPortfolio
+            <EnhancedEntityPortfolio
               entities={entities}
+              filters={filters}
+              onFiltersChange={setFilters}
               onAddEntity={() => setShowAddForm(true)}
               onDeleteEntity={handleDeleteEntity}
+              onUpdateEntity={updateEntity}
+              onBulkOperation={bulkOperation}
             />
           </div>
 

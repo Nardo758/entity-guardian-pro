@@ -16,8 +16,36 @@ export interface Entity {
   independent_director_phone?: string;
   independent_director_fee?: number;
   independent_director_fee_due_date?: string;
+  status?: 'active' | 'inactive' | 'pending' | 'archived';
+  tags?: string[];
+  priority?: number; // 1-5 scale
+  compliance_status?: 'compliant' | 'pending' | 'overdue' | 'unknown';
+  next_filing_date?: string;
+  annual_report_due_date?: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface EntityFilters {
+  search?: string;
+  states?: string[];
+  types?: Entity['type'][];
+  statuses?: Entity['status'][];
+  complianceStatuses?: Entity['compliance_status'][];
+  priorities?: number[];
+  tags?: string[];
+  dateRange?: {
+    start?: string;
+    end?: string;
+    field?: 'created_at' | 'next_filing_date' | 'annual_report_due_date';
+  };
+}
+
+export interface BulkOperation {
+  type: 'delete' | 'updateStatus' | 'archive' | 'updateTags' | 'setPriority';
+  entityIds: string[];
+  value?: any;
 }
 
 export interface Payment {
