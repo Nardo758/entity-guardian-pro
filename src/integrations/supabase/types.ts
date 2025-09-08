@@ -1210,6 +1210,10 @@ export type Database = {
           state_compliance_trends: Json
         }[]
       }
+      get_current_user_admin_status: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       get_entity_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -1316,6 +1320,10 @@ export type Database = {
           team_uuid: string
           user_uuid: string
         }
+        Returns: boolean
+      }
+      user_is_admin: {
+        Args: { user_uuid: string }
         Returns: boolean
       }
       validate_payment_method_access: {
