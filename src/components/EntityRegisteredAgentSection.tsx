@@ -2,9 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ChevronDown, UserPlus, Send, Search, User, Building, Phone, Mail, CheckCircle } from "lucide-react";
-import AgentAssignmentModal from "./AgentAssignmentModal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserPlus, Send, Search, User, Phone, Mail, CheckCircle } from "lucide-react";
 import ManualAgentForm from "./ManualAgentForm";
 import InviteAgentForm from "./InviteAgentForm";
 import AgentNetworkBrowser from "./AgentNetworkBrowser";
@@ -17,16 +16,13 @@ interface EntityRegisteredAgentSectionProps {
 }
 
 export const EntityRegisteredAgentSection = ({ entityId, entityState, entityName = "Your Entity" }: EntityRegisteredAgentSectionProps) => {
-  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [showManualForm, setShowManualForm] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [showNetworkBrowser, setShowNetworkBrowser] = useState(false);
   const [currentAgent, setCurrentAgent] = useState<any>(null);
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
 
-  const handleAgentMethodSelected = (result: any, method: string) => {
-    setShowAssignmentModal(false);
-    
+  const handleMethodSelection = (method: string) => {
     switch (method) {
       case "manual":
         setShowManualForm(true);
@@ -60,10 +56,14 @@ export const EntityRegisteredAgentSection = ({ entityId, entityState, entityName
   };
 
   const closeAllModals = () => {
-    setShowAssignmentModal(false);
     setShowManualForm(false);
     setShowInviteForm(false);
     setShowNetworkBrowser(false);
+  };
+
+  const handleChangeAgent = () => {
+    setCurrentAgent(null);
+    setPendingInvitations([]);
   };
 
   return (
@@ -75,7 +75,7 @@ export const EntityRegisteredAgentSection = ({ entityId, entityState, entityName
             Registered Agent Assignment
           </CardTitle>
           <CardDescription>
-            Choose from three methods to assign a registered agent to your {entityState} entity
+            Assign a registered agent to your {entityState} entity
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -105,7 +105,16 @@ export const EntityRegisteredAgentSection = ({ entityId, entityState, entityName
                     </div>
                   </div>
                 </div>
-                <Badge variant="default">Active</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="default">Active</Badge>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleChangeAgent}
+                  >
+                    Change Agent
+                  </Button>
+                </div>
               </div>
             </div>
           ) : pendingInvitations.length > 0 ? (
@@ -139,71 +148,32 @@ export const EntityRegisteredAgentSection = ({ entityId, entityState, entityName
             // Show assignment options
             <div className="space-y-4">
               <p className="text-muted-foreground text-sm">
-                No registered agent assigned. Select a method to add one:
+                No registered agent assigned
               </p>
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="w-full gap-2">
-                    <Building className="h-4 w-4" />
-                    Choose Agent Assignment Method
-                    <ChevronDown className="h-4 w-4 ml-auto" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full" align="start">
-                  <DropdownMenuItem 
-                    onClick={() => setShowAssignmentModal(true)}
-                    className="gap-2"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <div className="flex flex-col">
-                      <span>Add Agent Manually</span>
-                      <span className="text-xs text-muted-foreground">Enter agent details directly</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setShowAssignmentModal(true)}
-                    className="gap-2"
-                  >
-                    <Send className="h-4 w-4" />
-                    <div className="flex flex-col">
-                      <span>Invite New Agent</span>
-                      <span className="text-xs text-muted-foreground">Send invitation via email</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setShowAssignmentModal(true)}
-                    className="gap-2"
-                  >
-                    <Search className="h-4 w-4" />
-                    <div className="flex flex-col">
-                      <span>Browse Agent Network</span>
-                      <span className="text-xs text-muted-foreground">Discover registered agents</span>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Assign Registered Agent</label>
+                <Select onValueChange={handleMethodSelection}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select assignment method..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">Add Agent Manually</SelectItem>
+                    <SelectItem value="invite">Invite New Agent</SelectItem>
+                    <SelectItem value="network">Browse Agent Network</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Modals */}
-      <AgentAssignmentModal
-        isOpen={showAssignmentModal}
-        onClose={() => setShowAssignmentModal(false)}
-        entityId={entityId}
-        entityState={entityState}
-        onAgentAssigned={handleAgentMethodSelected}
-      />
-
+      {/* Forms */}
       <ManualAgentForm
         isOpen={showManualForm}
         onClose={closeAllModals}
-        onBack={() => {
-          setShowManualForm(false);
-          setShowAssignmentModal(true);
-        }}
+        onBack={() => setShowManualForm(false)}
         entityId={entityId}
         entityState={entityState}
         onAgentAdded={handleAgentAdded}
@@ -212,10 +182,7 @@ export const EntityRegisteredAgentSection = ({ entityId, entityState, entityName
       <InviteAgentForm
         isOpen={showInviteForm}
         onClose={closeAllModals}
-        onBack={() => {
-          setShowInviteForm(false);
-          setShowAssignmentModal(true);
-        }}
+        onBack={() => setShowInviteForm(false)}
         entityId={entityId}
         entityState={entityState}
         entityName={entityName}
@@ -225,10 +192,7 @@ export const EntityRegisteredAgentSection = ({ entityId, entityState, entityName
       <AgentNetworkBrowser
         isOpen={showNetworkBrowser}
         onClose={closeAllModals}
-        onBack={() => {
-          setShowNetworkBrowser(false);
-          setShowAssignmentModal(true);
-        }}
+        onBack={() => setShowNetworkBrowser(false)}
         entityId={entityId}
         entityState={entityState}
         entityName={entityName}
