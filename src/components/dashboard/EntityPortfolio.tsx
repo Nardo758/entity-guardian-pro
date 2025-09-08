@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building, Plus, MoreVertical, Trash2, Eye, UserPlus, User, Clock, CheckCircle2 } from 'lucide-react';
+import { Building, Plus, MoreVertical, Trash2, Eye, UserPlus, User, Clock, CheckCircle2, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { Entity } from '@/types/entity';
 import { stateRequirements } from '@/lib/state-requirements';
 import { useNavigate } from 'react-router-dom';
 import EntityInviteAgentModal from '@/components/EntityInviteAgentModal';
+import AddAgentModal from '@/components/AddAgentModal';
 import { useAgentInvitations } from '@/hooks/useAgentInvitations';
 
 interface EntityPortfolioProps {
@@ -28,6 +29,7 @@ const EntityCard: React.FC<{
   const navigate = useNavigate();
   const { invitations } = useAgentInvitations();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showAddAgentModal, setShowAddAgentModal] = useState(false);
   
   const entityFee = stateRequirements[entity.state]?.[entity.type]?.fee || 0;
   const totalAnnualFees = entityFee + (entity.registered_agent_fee || 0) + (entity.independent_director_fee || 0);
@@ -171,15 +173,29 @@ const EntityCard: React.FC<{
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm font-medium text-muted-foreground">No Agent</span>
                 </div>
-                <Button
-                  onClick={() => setShowInviteModal(true)}
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-center gap-2"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Invite Agent
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-center gap-2"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Manage Agent
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" className="w-48">
+                    <DropdownMenuItem onClick={() => setShowAddAgentModal(true)}>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Agent
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowInviteModal(true)}>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Invite Agent
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </div>
@@ -189,6 +205,18 @@ const EntityCard: React.FC<{
       <EntityInviteAgentModal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
+        entity={entity}
+      />
+      
+      <AddAgentModal
+        isOpen={showAddAgentModal}
+        onClose={() => setShowAddAgentModal(false)}
+        entity={entity}
+      />
+      
+      <AddAgentModal
+        isOpen={showAddAgentModal}
+        onClose={() => setShowAddAgentModal(false)}
         entity={entity}
       />
     </Card>
