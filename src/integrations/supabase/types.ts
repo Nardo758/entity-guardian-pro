@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_user_actions: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          new_value: Json | null
+          previous_value: Json | null
+          reason: string | null
+          target_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          target_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          target_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       agent_documents: {
         Row: {
           agent_id: string
@@ -273,6 +312,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      api_usage_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string | null
+          endpoint: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          method: string
+          rate_limit_exceeded: boolean | null
+          request_size_bytes: number | null
+          response_size_bytes: number | null
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          method: string
+          rate_limit_exceeded?: boolean | null
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          method?: string
+          rate_limit_exceeded?: boolean | null
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       compliance_checks: {
         Row: {
@@ -625,6 +715,54 @@ export type Database = {
           },
         ]
       }
+      financial_adjustments: {
+        Row: {
+          adjustment_type: string
+          admin_id: string
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          metadata: Json | null
+          processed_at: string | null
+          reason: string
+          reference_payment_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          adjustment_type: string
+          admin_id: string
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          reason: string
+          reference_payment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          adjustment_type?: string
+          admin_id?: string
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          reason?: string
+          reference_payment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -891,6 +1029,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           company: string | null
           company_size: string | null
           created_at: string | null
@@ -898,12 +1037,16 @@ export type Database = {
           id: string
           last_name: string | null
           plan: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           unified_role: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at: string | null
           user_id: string
           user_type: string | null
         }
         Insert: {
+          account_status?: string | null
           company?: string | null
           company_size?: string | null
           created_at?: string | null
@@ -911,12 +1054,16 @@ export type Database = {
           id?: string
           last_name?: string | null
           plan?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           unified_role?: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at?: string | null
           user_id: string
           user_type?: string | null
         }
         Update: {
+          account_status?: string | null
           company?: string | null
           company_size?: string | null
           created_at?: string | null
@@ -924,6 +1071,9 @@ export type Database = {
           id?: string
           last_name?: string | null
           plan?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           unified_role?: Database["public"]["Enums"]["unified_user_role"] | null
           updated_at?: string | null
           user_id?: string
@@ -1063,6 +1213,36 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      system_health_metrics: {
+        Row: {
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_unit: string | null
+          metric_value: number
+          recorded_at: string | null
+          status: string | null
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_unit?: string | null
+          metric_value: number
+          recorded_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_unit?: string | null
+          metric_value?: number
+          recorded_at?: string | null
+          status?: string | null
         }
         Relationships: []
       }
