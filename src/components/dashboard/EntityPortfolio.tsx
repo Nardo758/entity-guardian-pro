@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Building, Plus, MoreVertical, Trash2, Eye, UserPlus, User, Clock, CheckCircle2, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { Building, Plus, MoreVertical, Trash2, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,9 +12,7 @@ import {
 import { Entity } from '@/types/entity';
 import { stateRequirements } from '@/lib/state-requirements';
 import { useNavigate } from 'react-router-dom';
-import EntityInviteAgentModal from '@/components/EntityInviteAgentModal';
-import AddAgentModal from '@/components/AddAgentModal';
-import { useAgentInvitations } from '@/hooks/useAgentInvitations';
+import { EntityRegisteredAgentSection } from '@/components/EntityRegisteredAgentSection';
 
 interface EntityPortfolioProps {
   entities: Entity[];
@@ -27,17 +25,9 @@ const EntityCard: React.FC<{
   onDelete: (id: string) => void;
 }> = ({ entity, onDelete }) => {
   const navigate = useNavigate();
-  const { invitations } = useAgentInvitations();
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showAddAgentModal, setShowAddAgentModal] = useState(false);
   
   const entityFee = stateRequirements[entity.state]?.[entity.type]?.fee || 0;
   const totalAnnualFees = entityFee + (entity.registered_agent_fee || 0) + (entity.independent_director_fee || 0);
-  
-  // Check for agent invitations for this entity
-  const entityInvitations = invitations.filter(inv => inv.entity_id === entity.id);
-  const pendingInvitation = entityInvitations.find(inv => inv.status === 'pending');
-  const acceptedInvitation = entityInvitations.find(inv => inv.status === 'accepted');
 
   const getEntityTypeColor = (type: string) => {
     const colors = {
@@ -135,90 +125,16 @@ const EntityCard: React.FC<{
             </div>
           </div>
 
-          {/* Agent Status & Invitation */}
+          {/* Agent Assignment Section */}
           <div className="pt-3 border-t border-border/50">
-            {acceptedInvitation ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-success" />
-                  <span className="text-sm font-medium text-success">Agent Assigned</span>
-                </div>
-                <div className="bg-success/5 rounded-lg p-3 border border-success/10">
-                  <p className="text-sm text-foreground font-medium">John Smith & Associates</p>
-                  <p className="text-xs text-muted-foreground">agent@example.com • (555) 123-4567</p>
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-success/10">
-                    <span className="text-xs text-muted-foreground">Agent Service Fee</span>
-                    <span className="text-sm font-semibold text-success">$199/year</span>
-                  </div>
-                </div>
-              </div>
-            ) : pendingInvitation ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-warning" />
-                  <span className="text-sm font-medium text-warning">Invitation Pending</span>
-                </div>
-                <div className="bg-warning/5 rounded-lg p-3 border border-warning/10">
-                  <p className="text-xs text-muted-foreground">
-                    Invitation sent to: {pendingInvitation.agent_email}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Expires: {new Date(pendingInvitation.expires_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-muted-foreground">No Agent</span>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-center gap-2"
-                    >
-                      <UserPlus className="h-4 w-4" />
-                      Manage Agent
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="w-48">
-                    <DropdownMenuItem onClick={() => setShowAddAgentModal(true)}>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Agent
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setShowInviteModal(true)}>
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Invite Agent
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
+            <EntityRegisteredAgentSection
+              entityId={entity.id}
+              entityState={entity.state}
+              entityName={entity.name}
+            />
           </div>
         </div>
       </CardContent>
-      
-      <EntityInviteAgentModal
-        isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
-        entity={entity}
-      />
-      
-      <AddAgentModal
-        isOpen={showAddAgentModal}
-        onClose={() => setShowAddAgentModal(false)}
-        entity={entity}
-      />
-      
-      <AddAgentModal
-        isOpen={showAddAgentModal}
-        onClose={() => setShowAddAgentModal(false)}
-        entity={entity}
-      />
     </Card>
   );
 };
