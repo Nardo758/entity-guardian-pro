@@ -21,6 +21,7 @@ import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
+import { useSecureProfiles } from '@/hooks/useSecureProfiles';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminDashboard = () => {
@@ -39,7 +40,8 @@ const AdminDashboard = () => {
     totalRevenue: 0,
     systemHealth: 'healthy'
   });
-  const [allUsers, setAllUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const { data: secureProfiles, isLoading: profilesLoading } = useSecureProfiles();
   const [allEntities, setAllEntities] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,18 +58,15 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         
-        // Fetch all users (profiles)
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // Use secure profiles from the hook - wait for them to load
+        if (!secureProfiles) return;
         
-        // Fetch all entities
+        // Fetch all entities with limited profile exposure
         const { data: entities } = await supabase
           .from('entities')
           .select(`
             *,
-            profiles(first_name, last_name, email:user_id)
+            profiles(user_id, company, user_type)
           `)
           .order('created_at', { ascending: false });
         
@@ -82,7 +81,7 @@ const AdminDashboard = () => {
           .from('subscribers')
           .select('*');
 
-        setAllUsers(profiles || []);
+        setAllUsers(secureProfiles || []);
         setAllEntities(entities || []);
         setAllPayments(payments || []);
         
@@ -91,7 +90,7 @@ const AdminDashboard = () => {
         const totalRevenue = payments?.reduce((sum, p) => p.status === 'paid' ? sum + p.amount : sum, 0) || 0;
         
         setSystemStats({
-          totalUsers: profiles?.length || 0,
+          totalUsers: secureProfiles?.length || 0,
           totalEntities: entities?.length || 0,
           activeSubscriptions,
           totalRevenue: totalRevenue / 100, // Convert from cents
@@ -354,7 +353,7 @@ const AdminDashboard = () => {
                           <TableRow key={user.id}>
                             <TableCell>
                               <div className="font-medium">
-                                {user.first_name} {user.last_name}
+                                {user.first_name_masked || 'N/A'} {user.last_name_masked || ''}
                               </div>
                             </TableCell>
                             <TableCell>{user.user_id}</TableCell>
@@ -448,7 +447,7 @@ const AdminDashboard = () => {
                               <Badge variant="outline">{entity.state}</Badge>
                             </TableCell>
                             <TableCell>
-                              {entity.profiles?.first_name} {entity.profiles?.last_name}
+                              {entity.profiles?.company || 'N/A'}
                             </TableCell>
                             <TableCell>{entity.formation_date}</TableCell>
                             <TableCell>

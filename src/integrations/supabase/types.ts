@@ -1851,63 +1851,7 @@ export type Database = {
       }
     }
     Views: {
-      secure_admin_profiles: {
-        Row: {
-          account_status: string | null
-          company: string | null
-          company_size: string | null
-          created_at: string | null
-          first_name_masked: string | null
-          id: string | null
-          last_name_masked: string | null
-          phone_number_masked: string | null
-          phone_verified: boolean | null
-          plan: string | null
-          suspended_at: string | null
-          suspended_by: string | null
-          suspension_reason: string | null
-          updated_at: string | null
-          user_id: string | null
-          user_type: string | null
-        }
-        Insert: {
-          account_status?: string | null
-          company?: string | null
-          company_size?: string | null
-          created_at?: string | null
-          first_name_masked?: never
-          id?: string | null
-          last_name_masked?: never
-          phone_number_masked?: never
-          phone_verified?: boolean | null
-          plan?: string | null
-          suspended_at?: string | null
-          suspended_by?: string | null
-          suspension_reason?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          user_type?: string | null
-        }
-        Update: {
-          account_status?: string | null
-          company?: string | null
-          company_size?: string | null
-          created_at?: string | null
-          first_name_masked?: never
-          id?: string | null
-          last_name_masked?: never
-          phone_number_masked?: never
-          phone_verified?: boolean | null
-          plan?: string | null
-          suspended_at?: string | null
-          suspended_by?: string | null
-          suspension_reason?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-          user_type?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       can_create_assignment_for_entity: {
@@ -2122,6 +2066,10 @@ export type Database = {
       }
       owns_invited_agent: {
         Args: { invitation_id: string; user_uuid: string }
+        Returns: boolean
+      }
+      should_mask_profile_data: {
+        Args: { target_user_id: string }
         Returns: boolean
       }
       track_invitation_event: {
