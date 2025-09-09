@@ -38,6 +38,34 @@ serve(async (req) => {
 
     const { phone, action, code }: SMSRequest = await req.json();
 
+    // Apply rate limiting for SMS verification
+    if (action === 'send') {
+      const rateLimitResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/rate-limiter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+        },
+        body: JSON.stringify({
+          endpoint: 'sms-verification',
+          userId: user.id
+        })
+      });
+
+      if (!rateLimitResponse.ok) {
+        const rateLimitData = await rateLimitResponse.json();
+        if (rateLimitResponse.status === 429) {
+          return new Response(JSON.stringify({
+            error: "Too many SMS verification attempts. Please try again later.",
+            retryAfter: rateLimitData.retryAfter
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 429,
+          });
+        }
+      }
+    }
+
     if (action === 'send') {
       // Generate 6-digit verification code
       const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -95,11 +123,12 @@ serve(async (req) => {
           status: 200,
         });
       } else {
-        // Development mode - return code for testing
+        // Development mode - log code securely, never return in response
+        console.log(`SMS verification code for ${phone}: ${verificationCode}`);
+        
         return new Response(JSON.stringify({ 
           success: true, 
-          message: "SMS service not configured - check console for code",
-          code: verificationCode // Remove this in production
+          message: "SMS service not configured. In production, this would send SMS. Check server logs for verification code."
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,

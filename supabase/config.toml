@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.notification-service]
 verify_jwt = false
+
+[functions.security-monitor]
+verify_jwt = true

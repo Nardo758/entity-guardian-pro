@@ -17,6 +17,9 @@ const RATE_LIMITS: { [key: string]: RateLimitConfig } = {
   'auth': { windowMs: 300000, maxRequests: 5, endpoint: 'auth' }, // 5 login attempts per 5 minutes
   'invitation': { windowMs: 300000, maxRequests: 10, endpoint: 'invitation' }, // 10 invitations per 5 minutes
   'payment': { windowMs: 60000, maxRequests: 5, endpoint: 'payment' }, // 5 payment attempts per minute
+  'sms-verification': { windowMs: 300000, maxRequests: 3, endpoint: 'sms-verification' }, // 3 SMS attempts per 5 minutes
+  'admin-access': { windowMs: 60000, maxRequests: 50, endpoint: 'admin-access' }, // 50 admin actions per minute
+  'profile-access': { windowMs: 60000, maxRequests: 20, endpoint: 'profile-access' }, // 20 profile views per minute
 };
 
 serve(async (req) => {
