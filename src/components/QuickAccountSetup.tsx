@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Mail, Lock, Eye, EyeOff, RotateCcw } from 'lucide-react';
 import PasswordResetForm from './PasswordResetForm';
+import QuickAccessAuth from './QuickAccessAuth';
 
 const QuickAccountSetup: React.FC = () => {
   const { signUp, signIn } = useAuth();
@@ -195,6 +197,9 @@ const QuickAccountSetup: React.FC = () => {
               </Button>
             )}
           </div>
+
+          {/* Quick Access Authentication */}
+          <QuickAccessAuth />
 
         </CardContent>
       </Card>

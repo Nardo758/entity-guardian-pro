@@ -24,6 +24,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithOAuth: (provider: 'google' | 'microsoft') => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
 }
@@ -206,6 +207,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
+  const signInWithOAuth = async (provider: 'google' | 'microsoft') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: provider === 'microsoft' ? 'azure' : provider,
+      options: {
+        redirectTo: `${window.location.origin}/`
+      }
+    });
+    
+    return { error };
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut({ scope: 'global' });
     
@@ -231,6 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     signUp,
     signIn,
+    signInWithOAuth,
     signOut,
     refreshProfile,
   };
