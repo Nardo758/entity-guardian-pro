@@ -11,6 +11,13 @@ const Login = () => {
   // Handle redirects after login based on user type
   useEffect(() => {
     if (!loading && user && profile) {
+      // Check if user has a role assigned
+      if (!profile.user_type) {
+        navigate('/role-selection');
+        return;
+      }
+
+      // Redirect based on user type
       if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard');
       } else if (profile.is_admin || profile.roles?.includes('admin')) {

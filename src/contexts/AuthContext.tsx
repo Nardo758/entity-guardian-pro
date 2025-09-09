@@ -210,9 +210,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.auth.signOut({ scope: 'global' });
     
     if (!error) {
+      // Clear all session data
       setUser(null);
       setSession(null);
       setProfile(null);
+      
+      // Redirect to landing page for complete session cleanup
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     }
     
     return { error };

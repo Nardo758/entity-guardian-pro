@@ -31,8 +31,7 @@ export const UserAccount: React.FC = () => {
           title: "Signed out successfully",
           description: "You have been signed out of your account.",
         });
-        // Force page reload for clean state
-        window.location.href = "/login";
+        // AuthContext handles redirect to landing page
       }
     } catch (error) {
       toast({

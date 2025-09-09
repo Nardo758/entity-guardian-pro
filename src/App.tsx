@@ -40,6 +40,8 @@ import EntityOwnerDashboard from "./components/EntityOwnerDashboard";
 import AgentRedirect from "./pages/AgentRedirect";
 import AgentRoleGuard from "./components/AgentRoleGuard";
 import AgentInvitationAccept from "./pages/AgentInvitationAccept";
+import AuthRedirect from "./components/AuthRedirect";
+import RoleSelection from "./pages/RoleSelection";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -63,12 +65,13 @@ const App = () => (
             <Route path="/paid-register" element={<PaidRegister />} />
             <Route path="/registration-success" element={<RegistrationSuccess />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/role-selection" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
             {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><EntityOwnerDashboard /></ProtectedRoute>} />
-            <Route path="/admin-dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><AuthRedirect><EntityOwnerDashboard /></AuthRedirect></ProtectedRoute>} />
+            <Route path="/admin-dashboard" element={<ProtectedRoute><AuthRedirect><AdminDashboard /></AuthRedirect></ProtectedRoute>} />
             <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
@@ -86,7 +89,7 @@ const App = () => (
             <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
             <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
             <Route path="/find-agents" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><AgentDirectory /></AgentRoleGuard></ProtectedRoute>} />
-            <Route path="/agent-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></ProtectedRoute>} />
+            <Route path="/agent-dashboard" element={<ProtectedRoute><AuthRedirect><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></AuthRedirect></ProtectedRoute>} />
             <Route path="/admin-setup" element={<ProtectedRoute><AdminSetupPage /></ProtectedRoute>} />
             <Route path="/agent-invitation/:token" element={<AgentInvitationAccept />} />
             <Route path="/agent-signup" element={<AgentSignup />} />
