@@ -8,15 +8,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface AuthEmailRequest {
-  to: string;
-  subject: string;
-  html?: string;
-  text?: string;
-  type?: 'signup' | 'invite' | 'recovery' | 'magic_link' | 'email_change';
-  token?: string;
-  redirect_to?: string;
-  site_url?: string;
+interface SupabaseAuthHookPayload {
+  user: {
+    id: string;
+    email: string;
+    [key: string]: any;
+  };
+  email_data: {
+    token: string;
+    token_hash: string;
+    redirect_to: string;
+    email_action_type: 'signup' | 'recovery' | 'invite' | 'magic_link' | 'email_change';
+    site_url: string;
+    [key: string]: any;
+  };
+  [key: string]: any;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -32,18 +38,25 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const emailData: AuthEmailRequest = await req.json();
-    console.log('Auth email request:', { ...emailData, html: emailData.html ? '[HTML_CONTENT]' : undefined });
+    const payload: SupabaseAuthHookPayload = await req.json();
+    console.log('Auth email request:', payload);
 
-    const { to, subject, html, text, type, token, redirect_to, site_url } = emailData;
+    const { user, email_data } = payload;
 
-    if (!to || !subject) {
-      throw new Error("Missing required fields: to, subject");
+    // Validate required fields from Supabase auth hook payload
+    if (!user?.email || !email_data?.email_action_type) {
+      throw new Error("Missing required fields: user.email or email_data.email_action_type");
     }
 
+    const to = user.email;
+    const type = email_data.email_action_type;
+    const token = email_data.token;
+    const redirect_to = email_data.redirect_to;
+    const site_url = email_data.site_url;
+
     // Generate email content based on type
-    let emailHtml = html;
-    let emailSubject = subject;
+    let emailHtml: string;
+    let emailSubject: string;
 
     if (type === 'signup' && token) {
       emailSubject = "Welcome! Please confirm your email";
@@ -103,6 +116,30 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         </div>
       `;
+    } else {
+      // Default case for other email types
+      emailSubject = `${type} - Entity Renewal Pro`;
+      emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
+            <h1 style="color: #333; margin: 0;">Entity Renewal Pro</h1>
+          </div>
+          <div style="padding: 30px 20px;">
+            <h2 style="color: #333; margin-bottom: 20px;">Account Notification</h2>
+            <p style="color: #666; line-height: 1.6; font-size: 16px;">
+              You have received this notification regarding your Entity Renewal Pro account.
+            </p>
+            ${token ? `
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${site_url}/auth/v1/verify?token=${token}&type=${type}${redirect_to ? `&redirect_to=${encodeURIComponent(redirect_to)}` : ''}" 
+                 style="background-color: #1976d2; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                Verify Email
+              </a>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
     }
 
     console.log('Sending auth email with Resend...');
@@ -110,7 +147,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: "Entity Renewal Pro <auth@resend.dev>", // Change this to your verified domain
       to: [to],
       subject: emailSubject,
-      html: emailHtml || text || "Email content not provided",
+      html: emailHtml || "Email content not provided",
     });
 
     console.log("Auth email sent successfully:", emailResponse);
