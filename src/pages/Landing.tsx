@@ -17,12 +17,51 @@ import {
   Zap,
   Globe,
   Phone,
-  Mail
+  Mail,
+  Download,
+  Monitor
 } from 'lucide-react';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
+import { usePWA } from '@/hooks/usePWA';
+import { useToast } from '@/hooks/use-toast';
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { installApp, isInstallable, isInstalled } = usePWA();
+  const { toast } = useToast();
+
+  const handleDesktopDownload = async () => {
+    if (isInstalled) {
+      toast({
+        title: "Already Installed",
+        description: "Entity Renewal Pro is already installed on your device.",
+        variant: "default"
+      });
+      return;
+    }
+
+    if (isInstallable) {
+      const success = await installApp();
+      if (success) {
+        toast({
+          title: "App Installed! 🎉",
+          description: "Entity Renewal Pro has been added to your desktop.",
+        });
+      } else {
+        toast({
+          title: "Installation Cancelled",
+          description: "You can install the app later from your browser menu.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Fallback for browsers that don't support PWA installation
+      toast({
+        title: "Desktop Access",
+        description: "Use your browser's 'Add to Desktop' or 'Create Shortcut' option to access Entity Renewal Pro from your desktop.",
+      });
+    }
+  };
 
   const features = [
     {
@@ -148,7 +187,7 @@ const Landing = () => {
               Entity Renewal Pro handles the complexity so you don't have to.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button size="lg" asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-lg px-8">
                 <Link to="/signup">
                   Start Free Trial
@@ -163,6 +202,26 @@ const Landing = () => {
               >
                 Learn More
               </Button>
+            </div>
+
+            {/* Desktop Download Section */}
+            <div className="flex justify-center mb-12">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg"
+                onClick={handleDesktopDownload}
+              >
+                <Monitor className="mr-2 h-5 w-5" />
+                {isInstalled ? 'App Installed' : 'Download Desktop App'}
+                {!isInstalled && <Download className="ml-2 h-4 w-4" />}
+              </Button>
+            </div>
+
+            <div className="text-center mb-8">
+              <p className="text-sm text-muted-foreground">
+                💡 Access Entity Renewal Pro directly from your desktop for the best experience
+              </p>
             </div>
 
             <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
