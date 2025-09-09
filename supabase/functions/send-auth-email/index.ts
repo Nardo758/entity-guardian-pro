@@ -144,7 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending auth email with Resend...');
     const emailResponse = await resend.emails.send({
-      from: "Entity Renewal Pro <auth@resend.dev>", // Change this to your verified domain
+      from: "Entity Renewal Pro <noreply@myersapartmentgroup.com>", // Use your verified domain
       to: [to],
       subject: emailSubject,
       html: emailHtml || "Email content not provided",

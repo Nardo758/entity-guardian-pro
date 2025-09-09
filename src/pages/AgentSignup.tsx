@@ -102,7 +102,8 @@ const AgentSignup = () => {
         }
       }
 
-      // Step 2: Check if email confirmation is required
+      // Step 2: For development - skip email confirmation check
+      // First try to sign in (in case email confirmation is disabled)
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: data.contact_email,
         password: data.password,
@@ -110,10 +111,15 @@ const AgentSignup = () => {
 
       if (signInError) {
         if (signInError.message?.includes('Email not confirmed')) {
-          // Email confirmation is required
-          toast.success('Account created successfully! Please check your email and click the confirmation link to complete your registration.');
+          toast.success(`Account created successfully! 
+          
+EMAIL CONFIRMATION REQUIRED: Please check your email and click the confirmation link. 
+If you don't receive an email, please contact support.
+
+Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to email service configuration.`);
           return;
         } else {
+          console.error('Sign in error:', signInError);
           toast.error(`Authentication failed: ${signInError.message}`);
           return;
         }
