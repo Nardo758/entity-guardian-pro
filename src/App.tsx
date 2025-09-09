@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminSetupPage from "./pages/AdminSetupPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 // Pages
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
@@ -99,6 +100,7 @@ const App = () => (
           </Routes>
         </AuthProvider>
       </BrowserRouter>
+      <PWAInstallPrompt />
     </TooltipProvider>
   </QueryClientProvider>
 );
