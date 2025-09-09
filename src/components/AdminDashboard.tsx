@@ -76,10 +76,14 @@ const AdminDashboard = () => {
           .select('*')
           .order('created_at', { ascending: false });
         
-        // Fetch subscribers for subscription metrics
-        const { data: subscribers } = await supabase
-          .from('subscribers')
-          .select('*');
+        // Fetch subscribers using secure admin function
+        const { data: subscribersData, error: subscribersError } = await supabase
+          .rpc('get_admin_subscriber_stats');
+        
+        if (subscribersError) {
+          console.error('Error fetching subscriber stats:', subscribersError);
+          toast.error('Failed to load subscriber statistics');
+        }
 
         setAllUsers(secureProfiles || []);
         setAllEntities(entities || []);

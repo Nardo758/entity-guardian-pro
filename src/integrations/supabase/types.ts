@@ -1973,6 +1973,20 @@ export type Database = {
           user_type: string | null
         }
       }
+      get_secure_subscriber_data: {
+        Args: { target_user_id: string }
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string
+          subscribed: boolean
+          subscription_end: string
+          subscription_tier: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_user_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
