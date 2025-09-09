@@ -12,8 +12,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAgents } from '@/hooks/useAgents';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Building, MapPin, DollarSign, FileText } from 'lucide-react';
+import { Building, MapPin, FileText, Eye, EyeOff } from 'lucide-react';
 
 const US_STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -26,26 +28,35 @@ const US_STATES = [
 const agentSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
   contact_email: z.string().email('Valid email is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
   states: z.array(z.string()).min(1, 'Select at least one state'),
-  price_per_entity: z.number().min(50, 'Minimum price is $50').max(2000, 'Maximum price is $2000'),
-  years_experience: z.number().min(0).max(50).optional(),
+  years_experience: z.number().min(0, 'Years of experience must be 0 or greater').max(50, 'Maximum 50 years').optional(),
   bio: z.string().max(500, 'Bio must be under 500 characters').optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 type AgentFormData = z.infer<typeof agentSchema>;
 
 const AgentSignup = () => {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const { createAgentProfile } = useAgents();
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<AgentFormData>({
     resolver: zodResolver(agentSchema),
     defaultValues: {
       company_name: '',
       contact_email: '',
+      password: '',
+      confirmPassword: '',
       states: [],
-      price_per_entity: 199,
       years_experience: 0,
       bio: '',
     },
@@ -61,21 +72,71 @@ const AgentSignup = () => {
   };
 
   const onSubmit = async (data: AgentFormData) => {
+    setIsSubmitting(true);
     try {
+      // Step 1: Create user account with Supabase Auth
+      const { error: signUpError } = await signUp(
+        data.contact_email, 
+        data.password,
+        {
+          first_name: data.company_name.split(' ')[0] || '',
+          last_name: data.company_name.split(' ').slice(1).join(' ') || '',
+          user_type: 'agent'
+        }
+      );
+
+      if (signUpError) {
+        if (signUpError.message?.includes('already registered')) {
+          toast.error('An account with this email already exists. Please use a different email or sign in instead.');
+        } else {
+          toast.error(`Account creation failed: ${signUpError.message}`);
+        }
+        return;
+      }
+
+      // Step 2: Sign in the user to get authenticated session
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: data.contact_email,
+        password: data.password,
+      });
+
+      if (signInError || !authData.user) {
+        toast.error('Failed to authenticate after account creation');
+        return;
+      }
+
+      // Step 3: Assign registered_agent role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: authData.user.id,
+          role: 'registered_agent'
+        });
+
+      if (roleError) {
+        console.error('Role assignment error:', roleError);
+        toast.error('Account created but failed to assign agent role. Please contact support.');
+        return;
+      }
+
+      // Step 4: Create agent profile (without pricing - to be set later in dashboard)
       await createAgentProfile({
         company_name: data.company_name,
         contact_email: data.contact_email,
         states: selectedStates,
-        price_per_entity: data.price_per_entity,
+        price_per_entity: 0, // Default to 0, will be set in dashboard settings
         years_experience: data.years_experience,
         bio: data.bio,
         is_available: true,
       });
       
-      toast.success('Agent profile created successfully!');
+      toast.success('Agent profile created successfully! Welcome to the platform.');
       navigate('/agent-dashboard');
-    } catch (error) {
-      toast.error('Failed to create agent profile');
+    } catch (error: any) {
+      console.error('Agent signup error:', error);
+      toast.error(error.message || 'Failed to create agent profile. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -109,10 +170,10 @@ const AgentSignup = () => {
               </div>
               
               <div className="flex items-start gap-3">
-                <DollarSign className="w-5 h-5 text-primary mt-0.5" />
+                <FileText className="w-5 h-5 text-primary mt-0.5" />
                 <div>
-                  <p className="font-medium text-sm">Set Your Own Rates</p>
-                  <p className="text-xs text-muted-foreground">Full control over your pricing and services</p>
+                  <p className="font-medium text-sm">Dashboard Management</p>
+                  <p className="text-xs text-muted-foreground">Set pricing and manage clients from your dashboard</p>
                 </div>
               </div>
               
@@ -168,56 +229,108 @@ const AgentSignup = () => {
                           <Input type="email" placeholder="your@email.com" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Clients will use this email to contact you directly
+                          This will be your account login email and how clients contact you
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="price_per_entity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Price Per Entity (Annual) *</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                type="number"
-                                className="pl-9"
-                                placeholder="199"
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="years_experience"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Years of Experience</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="5"
-                              {...field}
-                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Create Password *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showPassword ? "text" : "password"} 
+                              placeholder="Create a secure password" 
+                              {...field} 
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Minimum 8 characters required
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showConfirmPassword ? "text" : "password"} 
+                              placeholder="Confirm your password" 
+                              {...field} 
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="years_experience"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Years of Experience</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="5"
+                            min="0"
+                            max="50"
+                            {...field}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                              field.onChange(isNaN(value) ? 0 : Math.max(0, Math.min(50, value)));
+                            }}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How many years have you been providing registered agent services?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}
@@ -278,15 +391,15 @@ const AgentSignup = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          Optional: Describe your expertise and services (max 500 characters)
+                          Optional: Describe your expertise and services (max 500 characters). You can set your pricing later in the dashboard.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Creating Profile...' : 'Create Agent Profile'}
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating Account & Profile...' : 'Create Agent Profile'}
                   </Button>
                 </form>
               </Form>
