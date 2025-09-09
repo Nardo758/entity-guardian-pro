@@ -88,10 +88,18 @@ const AgentSignup = () => {
       if (signUpError) {
         if (signUpError.message?.includes('already registered')) {
           toast.error('An account with this email already exists. Please use a different email or sign in instead.');
+        } else if (signUpError.message?.includes('confirmation email') || signUpError.message?.includes('email')) {
+          // Handle email sending issues gracefully
+          toast.error('Account created but email confirmation failed. You can still proceed to sign in.');
+          // Continue with the flow anyway
         } else {
           toast.error(`Account creation failed: ${signUpError.message}`);
         }
-        return;
+        
+        // Only return early if it's not an email-related error
+        if (!signUpError.message?.includes('confirmation email') && !signUpError.message?.includes('Error sending confirmation email')) {
+          return;
+        }
       }
 
       // Step 2: Sign in the user to get authenticated session
