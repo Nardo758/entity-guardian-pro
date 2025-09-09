@@ -35,7 +35,21 @@ export const useRateLimiter = () => {
       if (error) {
         console.error('Rate limiter error:', error);
         
-        // If rate limiter fails, allow the request but log the issue
+        // Security fix: Fail-secure behavior for critical operations
+        // For critical operations, deny access if rate limiter fails
+        const isCriticalEndpoint = ['payment', 'admin', 'auth', 'user-creation'].some(
+          critical => endpoint.toLowerCase().includes(critical)
+        );
+        
+        if (isCriticalEndpoint) {
+          return { 
+            allowed: false, 
+            error: 'Security service temporarily unavailable. Please try again later.',
+            retryAfter: 300 // 5 minutes
+          };
+        }
+        
+        // For non-critical operations, allow with logging
         return { 
           allowed: true, 
           error: 'Rate limiter service unavailable' 
