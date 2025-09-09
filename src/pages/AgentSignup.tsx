@@ -110,7 +110,7 @@ const AgentSignup = () => {
         .from('user_roles')
         .insert({
           user_id: authData.user.id,
-          role: 'registered_agent'
+          role: 'registered_agent' as any // Type assertion until database types refresh
         });
 
       if (roleError) {
