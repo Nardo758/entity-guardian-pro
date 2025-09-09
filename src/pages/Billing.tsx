@@ -226,11 +226,16 @@ const Billing = () => {
                         </CardHeader>
                         <CardContent className="pt-0">
                           <div className="space-y-3">
-                            <div className="text-center">
-                              <div className="text-lg font-semibold">
-                                {typeof tier.entities === 'number' ? `${tier.entities} entities` : tier.entities}
-                              </div>
-                            </div>
+                             <div className="text-center">
+                               <div className="text-lg font-semibold">
+                                 {typeof tier.entities === 'number' ? `${tier.entities} entities` : tier.entities}
+                               </div>
+                               {tier.perEntityCost && (
+                                 <div className="text-sm text-muted-foreground">
+                                   {tier.perEntityCost}
+                                 </div>
+                               )}
+                             </div>
                             <ul className="space-y-2 text-sm">
                               {tier.features.map((feature, index) => (
                                 <li key={index} className="flex items-center">

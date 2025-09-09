@@ -403,6 +403,11 @@ const Landing = () => {
                     <div className="text-sm font-medium">
                       {typeof tier.entities === 'number' ? `${tier.entities} entities` : tier.entities}
                     </div>
+                    {tier.perEntityCost && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {tier.perEntityCost}
+                      </div>
+                    )}
                   </div>
                   
                   <ul className="space-y-2 text-sm mb-6">

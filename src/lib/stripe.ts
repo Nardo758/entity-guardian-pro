@@ -38,71 +38,76 @@ export const STRIPE_PRICING_TIERS = {
     id: 'starter',
     name: 'Starter',
     description: 'Perfect for small businesses',
-    monthlyPrice: 25,
-    yearlyPrice: 249,
-    entities: 5,
+    monthlyPrice: 19,
+    yearlyPrice: 191,
+    entities: 4,
     features: [
-      'Up to 5 entities',
+      'Up to 4 entities',
       'Basic notifications',
       'Email support',
       'Standard templates'
     ],
-    popular: false
+    popular: false,
+    perEntityCost: '$4.75 per entity'
   },
-  professional: {
-    id: 'professional',  
-    name: 'Professional',
+  growth: {
+    id: 'growth',  
+    name: 'Growth',
     description: 'Most popular for growing businesses',
-    monthlyPrice: 99,
-    yearlyPrice: 986,
-    entities: 25,
+    monthlyPrice: 49,
+    yearlyPrice: 492,
+    entities: 20,
     features: [
-      'Up to 25 entities',
+      'Up to 20 entities',
       'Advanced notifications',
-      'Priority support',
       'API access',
       'Custom reports',
+      'Chat support',
       'Team collaboration'
     ],
-    popular: true
+    popular: true,
+    perEntityCost: '$2.45 per entity'
+  },
+  professional: {
+    id: 'professional',
+    name: 'Professional', 
+    description: 'For established businesses',
+    monthlyPrice: 99,
+    yearlyPrice: 994,
+    entities: 50,
+    features: [
+      'Up to 50 entities',
+      'Advanced notifications',
+      'Phone support',
+      'Advanced analytics',
+      'API access',
+      'Custom reports',
+      'International coverage',
+      'Team collaboration'
+    ],
+    popular: false,
+    perEntityCost: '$1.98 per entity'
   },
   enterprise: {
     id: 'enterprise',
-    name: 'Enterprise', 
+    name: 'Enterprise',
     description: 'For large organizations',
-    monthlyPrice: 200,
-    yearlyPrice: 1992,
-    entities: 100,
+    monthlyPrice: 249,
+    yearlyPrice: 2500,
+    entities: 150,
     features: [
-      'Up to 100 entities',
-      'Advanced notifications',
-      'Dedicated support',
-      'Full API access',
-      'Custom reports',
-      'Team collaboration',
-      'Priority processing',
-      'Custom integrations'
-    ],
-    popular: false
-  },
-  unlimited: {
-    id: 'unlimited',
-    name: 'Unlimited',
-    description: 'Enterprise with unlimited entities',
-    monthlyPrice: 350,
-    yearlyPrice: 3486,
-    entities: 'Unlimited',
-    features: [
-      'Unlimited entities',
+      'Up to 150 entities',
       'Advanced notifications',
       'Dedicated account manager',
       'Full API access',
+      'Advanced analytics',
       'Custom reports',
-      'Team collaboration',
+      'White label options',
+      'Unlimited users',
       'Priority processing',
-      'Custom integrations',
-      'White label options'
+      'Custom integrations'
     ],
-    popular: false
+    popular: false,
+    perEntityCost: '$1.66 per entity'
   }
-} as const;
+};

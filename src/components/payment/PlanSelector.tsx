@@ -103,9 +103,14 @@ export const PlanSelector: React.FC<PlanSelectorProps> = ({
                 
                 <CardContent className="pt-0">
                   <div className="space-y-3">
-                    <div className="text-sm font-medium">
-                      {typeof tier.entities === 'number' ? `${tier.entities} entities included` : tier.entities}
-                    </div>
+                     <div className="text-sm font-medium">
+                       {typeof tier.entities === 'number' ? `${tier.entities} entities included` : tier.entities}
+                     </div>
+                     {tier.perEntityCost && (
+                       <div className="text-xs text-muted-foreground">
+                         {tier.perEntityCost}
+                       </div>
+                     )}
                     <div className="space-y-2">
                       {tier.features.slice(0, 4).map((feature, index) => (
                         <div key={index} className="flex items-center text-sm">
