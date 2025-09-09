@@ -11,6 +11,7 @@
   "categories": ["business", "finance", "productivity"],
   "lang": "en-US",
   "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-64.png",
@@ -20,14 +21,14 @@
     },
     {
       "src": "/icon-192.png",
-      "sizes": "192x192",
+      "sizes": "192x192", 
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/png", 
       "purpose": "any maskable"
     }
   ],
@@ -41,18 +42,28 @@
     },
     {
       "name": "Entities",
-      "short_name": "Entities",
+      "short_name": "Entities", 
       "description": "Manage your business entities",
       "url": "/entities",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "description": "View renewal calendar",
+      "url": "/calendar", 
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [
     {
       "src": "/icon-512.png",
-      "type": "image/png",
+      "type": "image/png", 
       "sizes": "512x512",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Entity Renewal Pro Dashboard"
     }
-  ]
+  ],
+  "related_applications": [],
+  "protocol_handlers": []
 }

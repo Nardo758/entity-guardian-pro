@@ -27,38 +27,55 @@ import { useToast } from '@/hooks/use-toast';
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { installApp, isInstallable, isInstalled } = usePWA();
+  const { installApp, isInstallable, isInstalled, isSupported, canInstall, getBrowserInstructions } = usePWA();
   const { toast } = useToast();
 
   const handleDesktopDownload = async () => {
     if (isInstalled) {
       toast({
-        title: "Already Installed",
-        description: "Entity Renewal Pro is already installed on your device.",
+        title: "App Already Installed ✅",
+        description: "Entity Renewal Pro is already installed on your device. Look for it in your apps or desktop.",
         variant: "default"
       });
       return;
     }
 
-    if (isInstallable) {
+    if (!isSupported) {
+      const { browser, instruction } = getBrowserInstructions();
+      toast({
+        title: `Install on ${browser}`,
+        description: instruction,
+        duration: 6000
+      });
+      return;
+    }
+
+    if (canInstall) {
+      toast({
+        title: "Installing App...",
+        description: "Please wait while we install Entity Renewal Pro to your device.",
+      });
+
       const success = await installApp();
       if (success) {
         toast({
-          title: "App Installed! 🎉",
-          description: "Entity Renewal Pro has been added to your desktop.",
+          title: "App Installed Successfully! 🎉",
+          description: "Entity Renewal Pro has been added to your desktop. You can now access it directly from your device.",
+          duration: 6000
         });
       } else {
         toast({
           title: "Installation Cancelled",
-          description: "You can install the app later from your browser menu.",
+          description: "No worries! You can install the app anytime using your browser's menu options.",
           variant: "destructive"
         });
       }
     } else {
-      // Fallback for browsers that don't support PWA installation
+      const { browser, instruction } = getBrowserInstructions();
       toast({
-        title: "Desktop Access",
-        description: "Use your browser's 'Add to Desktop' or 'Create Shortcut' option to access Entity Renewal Pro from your desktop.",
+        title: `Manual Installation - ${browser}`,
+        description: instruction,
+        duration: 8000
       });
     }
   };
@@ -209,18 +226,31 @@ const Landing = () => {
               <Button 
                 size="lg" 
                 variant="secondary"
-                className="text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg"
+                className={`text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg transition-all duration-200 ${
+                  isInstalled ? 'bg-success/10 border-success/20 text-success-foreground' : 
+                  canInstall ? 'bg-primary/10 border-primary/20 hover:bg-primary/20' : 
+                  'bg-muted/50'
+                }`}
                 onClick={handleDesktopDownload}
               >
                 <Monitor className="mr-2 h-5 w-5" />
-                {isInstalled ? 'App Installed' : 'Download Desktop App'}
+                {isInstalled ? 'App Installed ✅' : 
+                 canInstall ? 'Install Desktop App' : 
+                 'Get Desktop Access'}
                 {!isInstalled && <Download className="ml-2 h-4 w-4" />}
               </Button>
             </div>
 
             <div className="text-center mb-8">
               <p className="text-sm text-muted-foreground">
-                💡 Access Entity Renewal Pro directly from your desktop for the best experience
+                {isInstalled ? 
+                  '✅ Enjoy the full desktop experience with Entity Renewal Pro' :
+                  canInstall ?
+                  '💡 Install for offline access, faster loading, and native desktop experience' :
+                  isSupported ?
+                  '📱 Add Entity Renewal Pro to your desktop for quick access' :
+                  '🔗 Access Entity Renewal Pro directly from your desktop'
+                }
               </p>
             </div>
 
