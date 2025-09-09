@@ -1,21 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useTierPermissions } from '@/hooks/useTierPermissions';
 import { BulkOperationsGate } from '@/components/BulkOperationsGate';
 import { EntityLimitWarning } from '@/components/EntityLimitWarning';
 import { TierBadge } from '@/components/TierBadge';
-import { ArrowLeft, Plus, Search, Filter, Building, Edit, Trash2, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { useEntities } from '@/hooks/useEntities';
 import { EntityForm } from '@/components/EntityForm';
 import EntityInviteAgentModal from '@/components/EntityInviteAgentModal';
 import AddAgentModal from '@/components/AddAgentModal';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ArrowLeft, Plus, Search, Filter, Building, Edit, Trash2, Users } from 'lucide-react';
 
 const Entities: React.FC = () => {
   const navigate = useNavigate();

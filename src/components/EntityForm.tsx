@@ -345,6 +345,5 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
         </form>
         </CardContent>
       </Card>
-    </div>
-  );
-};
+    );
+  };
