@@ -1873,8 +1873,11 @@ export type Database = {
       get_admin_subscriber_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          active_subscriptions: number
+          active_subscribers: number
+          mrr: number
+          subscriber_growth_30d: number
           subscription_tiers: Json
+          total_revenue: number
           total_subscribers: number
         }[]
       }
