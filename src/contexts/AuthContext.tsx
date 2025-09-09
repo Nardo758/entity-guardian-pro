@@ -215,9 +215,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(null);
       setProfile(null);
       
-      // Redirect to landing page for complete session cleanup
+      // Redirect to sign-out confirmation page
       setTimeout(() => {
-        window.location.href = '/';
+        window.location.href = '/sign-out-confirmation';
       }, 100);
     }
     

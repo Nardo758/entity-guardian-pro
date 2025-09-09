@@ -42,6 +42,7 @@ import AgentRoleGuard from "./components/AgentRoleGuard";
 import AgentInvitationAccept from "./pages/AgentInvitationAccept";
 import AuthRedirect from "./components/AuthRedirect";
 import RoleSelection from "./pages/RoleSelection";
+import SignOutConfirmation from "./pages/SignOutConfirmation";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/registration-success" element={<RegistrationSuccess />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/role-selection" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
+            <Route path="/sign-out-confirmation" element={<SignOutConfirmation />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             
