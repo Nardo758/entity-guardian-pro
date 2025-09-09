@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FeatureGate } from '@/components/FeatureGate';
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -183,8 +184,9 @@ data = response.json()`
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
+    <FeatureGate feature="hasAPIAccess" requiredTier="growth">
+      <div className="min-h-screen bg-background">
+        {/* Header */}
       <div className="border-b bg-muted/30">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center gap-3 mb-4">
@@ -491,6 +493,7 @@ data = response.json()`
         </div>
       </div>
     </div>
+    </FeatureGate>
   );
 };
 

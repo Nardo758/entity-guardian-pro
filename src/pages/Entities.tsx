@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useTierPermissions } from '@/hooks/useTierPermissions';
+import { BulkOperationsGate } from '@/components/BulkOperationsGate';
+import { EntityLimitWarning } from '@/components/EntityLimitWarning';
+import { TierBadge } from '@/components/TierBadge';
 import { ArrowLeft, Plus, Search, Filter, Building, Edit, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,11 +19,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 const Entities: React.FC = () => {
   const navigate = useNavigate();
+  const permissions = useTierPermissions();
   const { entities, loading, deleteEntity } = useEntities();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddAgentModal, setShowAddAgentModal] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
+  const [selectedEntities, setSelectedEntities] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -51,6 +58,34 @@ const Entities: React.FC = () => {
     }
   };
 
+  const handleSelectAll = () => {
+    setSelectedEntities(filteredEntities.map(e => e.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedEntities([]);
+  };
+
+  const handleBulkAction = async (action: string) => {
+    switch (action) {
+      case 'edit':
+        console.log('Bulk edit entities:', selectedEntities);
+        break;
+      case 'export':
+        console.log('Export entities:', selectedEntities);
+        break;
+      case 'import':
+        console.log('Import entities');
+        break;
+      case 'delete':
+        if (window.confirm(`Are you sure you want to delete ${selectedEntities.length} entities?`)) {
+          console.log('Bulk delete entities:', selectedEntities);
+          setSelectedEntities([]);
+        }
+        break;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       <div className="container mx-auto p-6 space-y-6">
@@ -67,7 +102,10 @@ const Entities: React.FC = () => {
               Back to Dashboard
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Entity Management</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-3xl font-bold">Entity Management</h1>
+                <TierBadge />
+              </div>
               <p className="text-muted-foreground">Manage your business entities and agent assignments</p>
             </div>
           </div>
@@ -76,6 +114,18 @@ const Entities: React.FC = () => {
             Add Entity
           </Button>
         </div>
+
+        {/* Entity Limits Warning */}
+        <EntityLimitWarning />
+
+        {/* Bulk Operations */}
+        <BulkOperationsGate
+          selectedEntities={selectedEntities}
+          onSelectAll={handleSelectAll}
+          onDeselectAll={handleDeselectAll}
+          onBulkAction={handleBulkAction}
+          totalEntities={filteredEntities.length}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

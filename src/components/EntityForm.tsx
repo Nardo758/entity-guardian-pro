@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import DOMPurify from 'dompurify';
+import { useEntityLimits } from '@/hooks/useEntityLimits';
+import { EntityLimitWarning } from '@/components/EntityLimitWarning';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +15,7 @@ interface EntityFormProps {
 }
 
 export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => {
+  const { checkCanAddEntity } = useEntityLimits();
   const [formData, setFormData] = useState({
     name: '',
     type: 'llc' as Entity['type'],
@@ -41,6 +44,12 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check entity limits first
+    if (!checkCanAddEntity()) {
+      return;
+    }
+    
     if (formData.name && formData.formation_date && formData.registered_agent_name) {
       // Sanitize all text inputs before submitting
       const sanitizedData = {
@@ -334,7 +343,8 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

@@ -12,6 +12,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { HelpCircle, MessageSquare, Phone, Mail, Book, Video, FileText, Search, Send, Clock, ArrowLeft, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { useTierPermissions } from '@/hooks/useTierPermissions';
+import { useUpgradePrompt } from '@/components/UpgradePrompt';
+import { FeatureBadge } from '@/components/FeatureGate';
 
 interface SupportTicket {
   id: string;
@@ -32,6 +35,8 @@ interface FAQ {
 
 const Support = () => {
   const { toast } = useToast();
+  const permissions = useTierPermissions();
+  const { showUpgradePrompt, UpgradePromptComponent } = useUpgradePrompt();
   const [searchTerm, setSearchTerm] = useState('');
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [ticketData, setTicketData] = useState({
@@ -134,6 +139,10 @@ const Support = () => {
     });
     setIsTicketOpen(false);
     setTicketData({ subject: '', category: '', priority: 'Medium', description: '' });
+  };
+  
+  const handleRestrictedFeature = (featureName: string, requiredTier: string) => {
+    showUpgradePrompt(featureName, requiredTier, `Access ${featureName.toLowerCase()} support with the ${requiredTier} plan.`);
   };
 
   return (
@@ -239,25 +248,54 @@ const Support = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <Card 
+            className={`cursor-pointer hover:shadow-md transition-shadow ${
+              !permissions.canLiveChat ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+            onClick={() => {
+              if (!permissions.canLiveChat) {
+                handleRestrictedFeature('Live Chat', 'growth');
+              } else {
+                // Handle live chat
+                toast({ title: 'Live Chat', description: 'Starting live chat session...' });
+              }
+            }}
+          >
             <CardContent className="flex items-center space-x-4 p-6">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <MessageSquare className="w-6 h-6 text-primary" />
               </div>
-              <div>
-                <h3 className="font-semibold">Live Chat</h3>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold">Live Chat</h3>
+                  <FeatureBadge feature="Live Chat" requiredTier="growth" />
+                </div>
                 <p className="text-sm text-muted-foreground">Get instant help</p>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="cursor-pointer hover:shadow-md transition-shadow">
+          <Card 
+            className={`cursor-pointer hover:shadow-md transition-shadow ${
+              !permissions.canPhoneSupport ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
+            onClick={() => {
+              if (!permissions.canPhoneSupport) {
+                handleRestrictedFeature('Phone Support', 'professional');
+              } else {
+                toast({ title: 'Phone Support', description: 'Call us at 1-800-SUPPORT' });
+              }
+            }}
+          >
             <CardContent className="flex items-center space-x-4 p-6">
               <div className="p-2 bg-primary/10 rounded-lg">
                 <Phone className="w-6 h-6 text-primary" />
               </div>
-              <div>
-                <h3 className="font-semibold">Call Support</h3>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold">Call Support</h3>
+                  <FeatureBadge feature="Phone Support" requiredTier="professional" />
+                </div>
                 <p className="text-sm text-muted-foreground">1-800-SUPPORT</p>
               </div>
             </CardContent>
@@ -484,6 +522,7 @@ const Support = () => {
             </div>
           </TabsContent>
         </Tabs>
+        <UpgradePromptComponent />
       </div>
     </div>
   );

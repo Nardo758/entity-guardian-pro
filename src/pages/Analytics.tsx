@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FeatureGate } from '@/components/FeatureGate';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,8 @@ const Analytics: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <FeatureGate feature="canAdvancedAnalytics" requiredTier="professional">
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
@@ -329,6 +331,7 @@ const Analytics: React.FC = () => {
         </TabsContent>
       </Tabs>
     </div>
+    </FeatureGate>
   );
 };
 

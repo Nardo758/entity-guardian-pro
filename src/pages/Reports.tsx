@@ -23,6 +23,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { useEntities } from "@/hooks/useEntities";
+import { FeatureGate } from '@/components/FeatureGate';
+import { useTierPermissions } from '@/hooks/useTierPermissions';
+import { useUpgradePrompt } from '@/components/UpgradePrompt';
 import { usePayments } from "@/hooks/usePayments";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { MetricsChart } from "@/components/charts/MetricsChart";
@@ -69,6 +72,8 @@ const getMonthlyExpenses = (payments: any[]) => {
 
 const Reports = () => {
   const navigate = useNavigate();
+  const permissions = useTierPermissions();
+  const { showUpgradePrompt, UpgradePromptComponent } = useUpgradePrompt();
   const [selectedPeriod, setSelectedPeriod] = useState("6months");
   const [selectedEntityFilter, setSelectedEntityFilter] = useState("all");
   
@@ -178,12 +183,18 @@ const Reports = () => {
           <div className="flex items-center gap-3">
             <Button 
               variant="outline" 
-              onClick={() => navigate("/analytics")}
+              onClick={() => {
+                if (!permissions.canAdvancedAnalytics) {
+                  showUpgradePrompt('Advanced Analytics', 'professional', 'Access detailed analytics and business intelligence dashboards.');
+                } else {
+                  navigate("/analytics");
+                }
+              }}
               className="gap-2"
             >
               <BarChart3 className="h-4 w-4" />
               Advanced Analytics
-              <ExternalLink className="h-3 w-3" />
+              {!permissions.canAdvancedAnalytics && <ExternalLink className="h-3 w-3" />}
             </Button>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
               <SelectTrigger className="w-40">
@@ -619,6 +630,7 @@ const Reports = () => {
             </div>
           </TabsContent>
         </Tabs>
+        <UpgradePromptComponent />
       </div>
     </div>
   );

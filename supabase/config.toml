@@ -18,8 +18,8 @@ verify_jwt = false
 [functions.stripe-whoami]
 verify_jwt = false
 
-[functions.sync-pricing]
-verify_jwt = false
+[functions.tier-validation]
+verify_jwt = true
 
 [functions.stripe-webhook-info]
 verify_jwt = false
