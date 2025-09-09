@@ -1851,7 +1851,63 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      secure_admin_profiles: {
+        Row: {
+          account_status: string | null
+          company: string | null
+          company_size: string | null
+          created_at: string | null
+          first_name_masked: string | null
+          id: string | null
+          last_name_masked: string | null
+          phone_number_masked: string | null
+          phone_verified: boolean | null
+          plan: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
+          updated_at: string | null
+          user_id: string | null
+          user_type: string | null
+        }
+        Insert: {
+          account_status?: string | null
+          company?: string | null
+          company_size?: string | null
+          created_at?: string | null
+          first_name_masked?: never
+          id?: string | null
+          last_name_masked?: never
+          phone_number_masked?: never
+          phone_verified?: boolean | null
+          plan?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          user_type?: string | null
+        }
+        Update: {
+          account_status?: string | null
+          company?: string | null
+          company_size?: string | null
+          created_at?: string | null
+          first_name_masked?: never
+          id?: string | null
+          last_name_masked?: never
+          phone_number_masked?: never
+          phone_verified?: boolean | null
+          plan?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          user_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       can_create_assignment_for_entity: {
@@ -1951,6 +2007,28 @@ export type Database = {
           system_uptime_percentage: number
         }[]
       }
+      get_secure_profile: {
+        Args: { profile_user_id: string }
+        Returns: {
+          account_status: string | null
+          company: string | null
+          company_size: string | null
+          created_at: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          plan: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
+          unified_role: Database["public"]["Enums"]["unified_user_role"] | null
+          updated_at: string | null
+          user_id: string
+          user_type: string | null
+        }
+      }
       get_user_analytics: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2008,6 +2086,31 @@ export type Database = {
           violation_type: string
         }
         Returns: undefined
+      }
+      mask_profile_pii: {
+        Args: {
+          profile_row: Database["public"]["Tables"]["profiles"]["Row"]
+          requesting_user_id?: string
+        }
+        Returns: {
+          account_status: string | null
+          company: string | null
+          company_size: string | null
+          created_at: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          plan: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
+          unified_role: Database["public"]["Enums"]["unified_user_role"] | null
+          updated_at: string | null
+          user_id: string
+          user_type: string | null
+        }
       }
       owns_assignment_agent: {
         Args: { assignment_id: string; user_uuid: string }
