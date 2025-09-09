@@ -102,13 +102,24 @@ const AgentSignup = () => {
         }
       }
 
-      // Step 2: Sign in the user to get authenticated session
+      // Step 2: Check if email confirmation is required
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: data.contact_email,
         password: data.password,
       });
 
-      if (signInError || !authData.user) {
+      if (signInError) {
+        if (signInError.message?.includes('Email not confirmed')) {
+          // Email confirmation is required
+          toast.success('Account created successfully! Please check your email and click the confirmation link to complete your registration.');
+          return;
+        } else {
+          toast.error(`Authentication failed: ${signInError.message}`);
+          return;
+        }
+      }
+
+      if (!authData.user) {
         toast.error('Failed to authenticate after account creation');
         return;
       }
