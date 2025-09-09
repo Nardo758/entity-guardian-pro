@@ -2,15 +2,11 @@ import { loadStripe } from '@stripe/stripe-js';
 
 // Get Stripe publishable key securely via edge function
 const getStripePublishableKey = async (): Promise<string> => {
-  // Use test key for development environments
-  const testKey = 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789';
-  
-  if (window.location.hostname === 'localhost' || window.location.hostname.includes('preview')) {
-    return testKey;
-  }
+  // Always use edge function for security - no hardcoded keys
+  const fallbackKey = 'pk_test_placeholder_removed_for_security';
   
   try {
-    // In production, get the key securely from Supabase edge function
+    // Always get the key securely from Supabase edge function
     const response = await fetch('https://wcuxqopfcgivypbiynjp.supabase.co/functions/v1/get-stripe-config', {
       method: 'GET',
       headers: {
@@ -19,10 +15,13 @@ const getStripePublishableKey = async (): Promise<string> => {
     });
     
     const data = await response.json();
-    return data.publishableKey || testKey;
+    if (!data.publishableKey) {
+      throw new Error('No publishable key returned from secure endpoint');
+    }
+    return data.publishableKey;
   } catch (error) {
-    console.warn('Failed to get secure Stripe key, using test key:', error);
-    return testKey;
+    console.error('Failed to get secure Stripe key:', error);
+    throw new Error('Unable to initialize Stripe - please check configuration');
   }
 };
 

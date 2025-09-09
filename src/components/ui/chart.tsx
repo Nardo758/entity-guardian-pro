@@ -74,26 +74,27 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
+  // Security: Generate CSS safely without dangerouslySetInnerHTML
+  const cssVariables = React.useMemo(() => {
+    const styles: Record<string, string> = {}
+    
+    Object.entries(THEMES).forEach(([theme, prefix]) => {
+      colorConfig.forEach(([key, itemConfig]) => {
+        const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color
+        if (color && /^#[0-9A-F]{6}$/i.test(color)) { // Validate hex color format
+          const cssVar = `--color-${key.replace(/[^a-zA-Z0-9-_]/g, '')}`; // Sanitize key
+          styles[cssVar] = color;
+        }
+      })
+    })
+    
+    return styles
+  }, [colorConfig])
+
   return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
-      }}
+    <style 
+      style={cssVariables}
+      data-chart-style={id}
     />
   )
 }
