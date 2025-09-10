@@ -190,10 +190,10 @@ const QuickAccountSetup: React.FC = () => {
               <Button
                 variant="ghost"
                 onClick={() => setMode('reset')}
-                className="text-sm text-orange-600 hover:text-orange-700"
+                className="text-sm text-orange-600 hover:text-white"
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                Forgot Password?
+                Forgot Password
               </Button>
             )}
           </div>
