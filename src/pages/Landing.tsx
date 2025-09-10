@@ -3,23 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Building, 
-  Shield, 
-  Bell, 
-  Users, 
-  TrendingUp, 
-  CheckCircle, 
-  Star,
-  ArrowRight,
-  Clock,
-  FileText,
-  Zap,
-  Globe,
-  Phone,
-  Mail,
-  Download,
-  Monitor
+import {
+  Building, Shield, Bell, Users, TrendingUp, CheckCircle, Star, ArrowRight, Clock,
+  FileText, Zap, Globe, Phone, Mail, Download, Monitor
 } from 'lucide-react';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 import { usePWA } from '@/hooks/usePWA';
@@ -115,7 +101,7 @@ const Landing = () => {
 
   const benefits = [
     "Automated renewal tracking",
-    "Multi-state compliance support", 
+    "Multi-state compliance support",
     "Secure document management",
     "Real-time notifications",
     "Team collaboration tools",
@@ -155,15 +141,15 @@ const Landing = () => {
               </div>
               <span className="text-xl font-bold">Entity Renewal Pro</span>
             </div>
-            
+
             <div className="hidden md:flex items-center space-x-8">
-              <button 
+              <button
                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Features
               </button>
-              <button 
+              <button
                 onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -194,13 +180,13 @@ const Landing = () => {
               <Zap className="w-3 h-3 mr-1" />
               Trusted by 500+ Businesses
             </Badge>
-            
+
             <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
               Never Miss Another Business Entity Renewal
             </h1>
-            
+
             <p className="text-xl lg:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Automate your entity management, stay compliant, and focus on growing your business. 
+              Automate your entity management, stay compliant, and focus on growing your business.
               Entity Renewal Pro handles the complexity so you don't have to.
             </p>
 
@@ -211,9 +197,9 @@ const Landing = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
+              <Button
+                size="lg"
+                variant="outline"
                 className="text-lg px-8"
                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
               >
@@ -223,33 +209,32 @@ const Landing = () => {
 
             {/* Desktop Download Section */}
             <div className="flex justify-center mb-12">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 variant="secondary"
-                className={`text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg transition-all duration-200 ${
-                  isInstalled ? 'bg-success/10 border-success/20 text-success-foreground' : 
-                  canInstall ? 'bg-primary/10 border-primary/20 hover:bg-primary/20' : 
-                  'bg-muted/50'
-                }`}
+                className={`text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg transition-all duration-200 ${isInstalled ? 'bg-success/10 border-success/20 text-success-foreground' :
+                    canInstall ? 'bg-primary/10 border-primary/20 hover:bg-primary/20' :
+                      'bg-muted/50'
+                  }`}
                 onClick={handleDesktopDownload}
               >
                 <Monitor className="mr-2 h-5 w-5" />
-                {isInstalled ? 'App Installed ✅' : 
-                 canInstall ? 'Install Desktop App' : 
-                 'Get Desktop Access'}
+                {isInstalled ? 'App Installed ✅' :
+                  canInstall ? 'Install Desktop App' :
+                    'Get Desktop Access'}
                 {!isInstalled && <Download className="ml-2 h-4 w-4" />}
               </Button>
             </div>
 
             <div className="text-center mb-8">
               <p className="text-sm text-muted-foreground">
-                {isInstalled ? 
+                {isInstalled ?
                   '✅ Enjoy the full desktop experience with Entity Renewal Pro' :
                   canInstall ?
-                  '💡 Install for offline access, faster loading, and native desktop experience' :
-                  isSupported ?
-                  '📱 Add Entity Renewal Pro to your desktop for quick access' :
-                  '🔗 Access Entity Renewal Pro directly from your desktop'
+                    '💡 Install for offline access, faster loading, and native desktop experience' :
+                    isSupported ?
+                      '📱 Add Entity Renewal Pro to your desktop for quick access' :
+                      '🔗 Access Entity Renewal Pro directly from your desktop'
                 }
               </p>
             </div>
@@ -315,7 +300,7 @@ const Landing = () => {
               <p className="text-xl text-muted-foreground mb-8">
                 Save time, reduce risk, and stay compliant with our comprehensive entity management platform.
               </p>
-              
+
               <div className="space-y-4">
                 {benefits.map((benefit, index) => (
                   <div key={index} className="flex items-center gap-3">
@@ -388,7 +373,7 @@ const Landing = () => {
                     </Badge>
                   </div>
                 )}
-                
+
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="text-xl">{tier.name}</CardTitle>
                   <CardDescription>{tier.description}</CardDescription>
@@ -397,7 +382,7 @@ const Landing = () => {
                     <div className="text-sm text-muted-foreground">per month</div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="pt-0">
                   <div className="text-center mb-4">
                     <div className="text-sm font-medium">
@@ -409,7 +394,7 @@ const Landing = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <ul className="space-y-2 text-sm mb-6">
                     {tier.features.slice(0, 4).map((feature, index) => (
                       <li key={index} className="flex items-center">
@@ -418,8 +403,8 @@ const Landing = () => {
                       </li>
                     ))}
                   </ul>
-                  
-                  <Button 
+
+                  <Button
                     className={`w-full ${tier.popular ? 'bg-gradient-to-r from-primary to-primary-dark' : ''}`}
                     variant={tier.popular ? 'default' : 'outline'}
                     asChild
@@ -491,7 +476,7 @@ const Landing = () => {
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
             Join hundreds of businesses that trust Entity Renewal Pro to keep them compliant and organized.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" asChild className="text-lg px-8">
               <Link to="/paid-register">
@@ -499,7 +484,7 @@ const Landing = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg px-8 border-white text-white hover:bg-white hover:text-primary">
+            <Button size="lg" variant="outline" asChild className="text-lg px-8 border-white text-primary">
               <Link to="/support">
                 Talk to Sales
                 <Phone className="ml-2 h-5 w-5" />
