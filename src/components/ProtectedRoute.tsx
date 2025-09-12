@@ -11,8 +11,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
+    if (!loading) {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      // If email confirmation is required and user is unverified, gate access for email/password users only
+      const provider = (user as any)?.app_metadata?.provider;
+      if (provider === 'email' && !user.email_confirmed_at) {
+        navigate('/verify-email');
+        return;
+      }
     }
   }, [user, loading, navigate]);
 
@@ -28,6 +37,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
+    return null;
+  }
+
+  const provider = (user as any)?.app_metadata?.provider;
+  if (provider === 'email' && !user.email_confirmed_at) {
     return null;
   }
 

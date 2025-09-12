@@ -24,9 +24,9 @@ const QuickAccountSetup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsLoading(true);                                                                                                                                 
 
-    try {
+    try { 
       if (mode === 'signup') {
         if (formData.password !== formData.confirmPassword) {
           toast({

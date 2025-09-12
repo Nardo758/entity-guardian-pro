@@ -11,6 +11,12 @@ const Login = () => {
   // Handle redirects after login based on user type
   useEffect(() => {
     if (!loading && user && profile) {
+      // If email/password user not verified yet, send to verification page
+      const provider = (user as any)?.app_metadata?.provider;
+      if (provider === 'email' && !user.email_confirmed_at) {
+        navigate('/verify-email');
+        return;
+      }
       // Check if user has a role assigned
       if (!profile.user_type) {
         navigate('/role-selection');
@@ -26,7 +32,7 @@ const Login = () => {
         navigate('/dashboard');
       }
     }
-  }, [user, profile, loading, navigate]);
+  }, [user, profile, loading, navigate]);    
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-4">
@@ -47,4 +53,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Login;                                
