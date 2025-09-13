@@ -96,7 +96,7 @@ const App = () => (
             <Route path="/find-agents" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><AgentDirectory /></AgentRoleGuard></ProtectedRoute>} />
             <Route path="/agent-dashboard" element={<ProtectedRoute><AuthRedirect><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></AuthRedirect></ProtectedRoute>} />
             <Route path="/admin-setup" element={<ProtectedRoute><AdminSetupPage /></ProtectedRoute>} />
-            <Route path="/agent-invitation/:token" element={<AgentInvitationAccept />} />
+            <Route path="/agent-invitation/:token" element={<ProtectedRoute><AgentInvitationAccept /></ProtectedRoute>} />
             <Route path="/agent-signup" element={<AgentSignup />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
