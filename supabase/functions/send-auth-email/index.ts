@@ -1,7 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Declare Deno global for TypeScript
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
+
+const resend = new Resend(Deno.env.get("ENTITY_RENEWAL_PRO_AUTH_EMAIL"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -144,8 +151,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Sending auth email with Resend...');
     const emailResponse = await resend.emails.send({
-      from: "Entity Renewal Pro <noreply@myersapartmentgroup.com>", // Use your verified domain
-      to: [to],
+      from: "Entity Renewal Pro <team@entityrenewalpro.com>", 
       subject: emailSubject,
       html: emailHtml || "Email content not provided",
     });

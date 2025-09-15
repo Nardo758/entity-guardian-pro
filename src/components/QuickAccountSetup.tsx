@@ -37,7 +37,7 @@ const QuickAccountSetup: React.FC = () => {
           return;
         }
 
-        const { error } = await signUp(formData.email, formData.password, {
+        const { error, data } = await signUp(formData.email, formData.password, {
           first_name: 'Admin',
           last_name: 'User',
           company: 'My Company'
@@ -50,6 +50,7 @@ const QuickAccountSetup: React.FC = () => {
             variant: "destructive"
           });
         } else {
+          console.log(data);
           toast({
             title: "Account Created! 🎉",
             description: "Check your email to confirm your account, then you can sign in.",
