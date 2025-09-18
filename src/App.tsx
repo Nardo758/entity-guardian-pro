@@ -1,3 +1,4 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -51,60 +52,70 @@ import VerifyEmail from "./pages/VerifyEmail";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/signup" element={<UserTypeSelection />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/paid-register" element={<PaidRegister />} />
-            <Route path="/registration-success" element={<RegistrationSuccess />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/role-selection" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
-            <Route path="/sign-out-confirmation" element={<SignOutConfirmation />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            
-            {/* Protected routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><AuthRedirect><EntityOwnerDashboard /></AuthRedirect></ProtectedRoute>} />
-            <Route path="/admin-dashboard" element={<ProtectedRoute><AuthRedirect><AdminDashboard /></AuthRedirect></ProtectedRoute>} />
-            <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-            <Route path="/admin-analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/team" element={<ProtectedRoute><TeamManagement /></ProtectedRoute>} />
-            <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-            <Route path="/payments" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
-            <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
-            <Route path="/entities" element={<ProtectedRoute><Entities /></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-            <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
-            <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
-            <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
-            <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
-            <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
-            <Route path="/find-agents" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><AgentDirectory /></AgentRoleGuard></ProtectedRoute>} />
-            <Route path="/agent-dashboard" element={<ProtectedRoute><AuthRedirect><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></AuthRedirect></ProtectedRoute>} />
-            <Route path="/admin-setup" element={<ProtectedRoute><AdminSetupPage /></ProtectedRoute>} />
-            <Route path="/agent-invitation/:token" element={<ProtectedRoute><AgentInvitationAccept /></ProtectedRoute>} />
-            <Route path="/agent-signup" element={<AgentSignup />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-      <PWAInstallPrompt />
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showPWAInstallPrompt, setShowPWAInstallPrompt] = React.useState(true);
+
+  const handleDismissPWAInstall = () => {
+    setShowPWAInstallPrompt(false);
+  };
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/signup" element={<UserTypeSelection />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/paid-register" element={<PaidRegister />} />
+              <Route path="/registration-success" element={<RegistrationSuccess />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/role-selection" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
+              <Route path="/sign-out-confirmation" element={<SignOutConfirmation />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              
+              {/* Protected routes */}
+              <Route path="/dashboard" element={<ProtectedRoute><AuthRedirect><EntityOwnerDashboard /></AuthRedirect></ProtectedRoute>} />
+              <Route path="/admin-dashboard" element={<ProtectedRoute><AuthRedirect><AdminDashboard /></AuthRedirect></ProtectedRoute>} />
+              <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/admin-analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/team" element={<ProtectedRoute><TeamManagement /></ProtectedRoute>} />
+              <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+              <Route path="/payments" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
+              <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
+              <Route path="/entities" element={<ProtectedRoute><Entities /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+              <Route path="/agents" element={<ProtectedRoute><Agents /></ProtectedRoute>} />
+              <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+              <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
+              <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
+              <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
+              <Route path="/find-agents" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><AgentDirectory /></AgentRoleGuard></ProtectedRoute>} />
+              <Route path="/agent-dashboard" element={<ProtectedRoute><AuthRedirect><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></AuthRedirect></ProtectedRoute>} />
+              <Route path="/admin-setup" element={<ProtectedRoute><AdminSetupPage /></ProtectedRoute>} />
+              <Route path="/agent-invitation/:token" element={<ProtectedRoute><AgentInvitationAccept /></ProtectedRoute>} />
+              <Route path="/agent-signup" element={<AgentSignup />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+        {showPWAInstallPrompt && (
+          <PWAInstallPrompt onDismiss={handleDismissPWAInstall} />
+        )}
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
