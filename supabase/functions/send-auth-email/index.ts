@@ -8,7 +8,7 @@ declare const Deno: {
   };
 };
 
-const resend = new Resend(Deno.env.get("ENTITY_RENEWAL_PRO_AUTH_EMAIL"));
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,6 +47,9 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const payload: SupabaseAuthHookPayload = await req.json();
     console.log('Auth email request:', payload);
+    console.log('Token received:', token);
+    console.log('Email action type:', type);
+    console.log('Site URL:', site_url);
 
     const { user, email_data } = payload;
 
@@ -59,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
     const type = email_data.email_action_type;
     const token = email_data.token;
     const redirect_to = email_data.redirect_to;
-    const site_url = email_data.site_url;
+    const site_url = 'https://wcuxqopfcgivypbiynjp.supabase.co'; // Base URL without /auth/v1
 
     // Generate email content based on type
     let emailHtml: string;
@@ -67,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (type === 'signup' && token) {
       emailSubject = "Welcome! Please confirm your email";
-      const confirmUrl = `${site_url}/auth/v1/verify?token=${token}&type=signup${redirect_to ? `&redirect_to=${encodeURIComponent(redirect_to)}` : ''}`;
+      const confirmUrl = `${site_url}/auth/v1/verify?token=${token}&type=signup&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}`;
       emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
@@ -96,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     } else if (type === 'recovery' && token) {
       emailSubject = "Reset your password";
-      const resetUrl = `${site_url}/auth/v1/verify?token=${token}&type=recovery${redirect_to ? `&redirect_to=${encodeURIComponent(redirect_to)}` : ''}`;
+      const resetUrl = `${site_url}/auth/v1/verify?token=${token}&type=recovery&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}`;
       emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
@@ -138,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
             </p>
             ${token ? `
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${site_url}/auth/v1/verify?token=${token}&type=${type}${redirect_to ? `&redirect_to=${encodeURIComponent(redirect_to)}` : ''}" 
+              <a href="${site_url}/auth/v1/verify?token=${token}&type=${type}&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}" 
                  style="background-color: #1976d2; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
                 Verify Email
               </a>
@@ -152,6 +155,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Sending auth email with Resend...');
     const emailResponse = await resend.emails.send({
       from: "Entity Renewal Pro <team@entityrenewalpro.com>", 
+      to: [to],
       subject: emailSubject,
       html: emailHtml || "Email content not provided",
     });

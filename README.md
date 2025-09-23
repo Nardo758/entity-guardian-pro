@@ -91,3 +91,4 @@ Test mode:
 Production:
 - Swap to `pk_live_...` and `sk_live_...`
 - Update webhook endpoint in Stripe to your deployed function URL and set the signing secret in Supabase (`STRIPE_WEBHOOK_SECRET`)
+

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Mail, Lock, Eye, EyeOff, RotateCcw } from 'lucide-react';
 import PasswordResetForm from './PasswordResetForm';
 import QuickAccessAuth from './QuickAccessAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const QuickAccountSetup: React.FC = () => {
   const { signUp, signIn } = useAuth();
@@ -22,11 +23,54 @@ const QuickAccountSetup: React.FC = () => {
     confirmPassword: ''
   });
 
+  const handleResendVerification = async () => {
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+        options: {
+          emailRedirectTo: 'https://entityrenewalpro.com'
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Failed to resend email",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Email Sent! 📧",
+          description: "Verification email has been sent. Please check your inbox.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to resend verification email",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);                                                                                                                                 
+    setIsLoading(true);
 
-    try { 
+    try {
       if (mode === 'signup') {
         if (formData.password !== formData.confirmPassword) {
           toast({
@@ -37,10 +81,22 @@ const QuickAccountSetup: React.FC = () => {
           return;
         }
 
-        const { error, data } = await signUp(formData.email, formData.password, {
-          first_name: 'Admin',
-          last_name: 'User',
-          company: 'My Company'
+        // const { error, data } = await signUp(formData.email, formData.password, {
+        //   first_name: 'Admin',
+        //   last_name: 'User',
+        //   company: 'My Company'
+        // });
+
+        const { error, data } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              first_name: 'Admin',
+              last_name: 'User',
+              company: 'My Company'
+            }
+          }
         });
 
         if (error) {
@@ -50,11 +106,18 @@ const QuickAccountSetup: React.FC = () => {
             variant: "destructive"
           });
         } else {
-          console.log(data);
-          toast({
-            title: "Account Created! 🎉",
-            description: "Check your email to confirm your account, then you can sign in.",
-          });
+          console.log('Signup data:', data);
+          if (data.user && !data.user.email_confirmed_at) {
+            toast({
+              title: "Account Created! 🎉",
+              description: "Check your email to confirm your account, then you can sign in.",
+            });
+          } else {
+            toast({
+              title: "Account Created! 🎉",
+              description: "Your account has been created successfully. You can now sign in.",
+            });
+          }
           setMode('signin');
         }
       } else {
@@ -169,7 +232,7 @@ const QuickAccountSetup: React.FC = () => {
               </div>
             )}
 
-            <Button 
+            <Button
               type="submit"
               disabled={isLoading}
               className="w-full"
@@ -186,16 +249,27 @@ const QuickAccountSetup: React.FC = () => {
             >
               {mode === 'signin' ? "Don't have an account? Create one" : "Already have an account? Sign in"}
             </Button>
-            
+
             {mode === 'signin' && (
-              <Button
-                variant="ghost"
-                onClick={() => setMode('reset')}
-                className="text-sm text-orange-600 hover:text-white"
-              >
-                <RotateCcw className="h-4 w-4 mr-1" />
-                Forgot Password
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setMode('reset')}
+                  className="text-sm text-orange-600 hover:text-white"
+                >
+                  <RotateCcw className="h-4 w-4 mr-1" />
+                  Forgot Password
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleResendVerification}
+                  disabled={isLoading}
+                  className="text-sm text-blue-600 hover:text-white"
+                >
+                  <Mail className="h-4 w-4 mr-1" />
+                  Resend Verification Email
+                </Button>
+              </div>
             )}
           </div>
 
