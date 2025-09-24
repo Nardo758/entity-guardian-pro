@@ -22,7 +22,7 @@ const VerifyEmail = () => {
     const tokenHash = params.get('token_hash');
     const email = params.get('email');
 
-    if (!typeParam || !tokenHash || !email) {
+    if (!typeParam || !tokenHash) {
       setVerifying(false);
       return;
     }
@@ -34,7 +34,6 @@ const VerifyEmail = () => {
         const { data, error } = await supabase.auth.verifyOtp({
           type: typeParam,
           token_hash: tokenHash,
-          email,
         } as any);
         if (error) {
           setError(error.message || 'Verification failed');
@@ -43,9 +42,9 @@ const VerifyEmail = () => {
           return;
         }
         setVerifyMessage('Email verified! Redirecting...');
-        // Give auth listener a moment to populate session, then redirect
+        // Redirect to dashboard; guards will route appropriately
         setTimeout(() => {
-          navigate('/login', { replace: true });
+          navigate('/dashboard', { replace: true });
         }, 500);
       } catch (e: any) {
         setError(e?.message || 'Verification failed');
