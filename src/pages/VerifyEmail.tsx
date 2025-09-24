@@ -2,13 +2,58 @@ import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const VerifyEmail = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState<boolean>(true);
+  const [verifyMessage, setVerifyMessage] = useState<string>('Verifying your email...');
+
+  // Auto-verify when arriving from email link: /verify-email?type=signup&token_hash=...&email=...
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const typeParam = params.get('type') as 'signup' | 'recovery' | 'invite' | 'magic_link' | 'email_change' | null;
+    const tokenHash = params.get('token_hash');
+    const email = params.get('email');
+
+    if (!typeParam || !tokenHash || !email) {
+      setVerifying(false);
+      return;
+    }
+
+    (async () => {
+      try {
+        setVerifying(true);
+        setError(null);
+        const { data, error } = await supabase.auth.verifyOtp({
+          type: typeParam,
+          token_hash: tokenHash,
+          email,
+        } as any);
+        if (error) {
+          setError(error.message || 'Verification failed');
+          setVerifyMessage('Verification failed');
+          setVerifying(false);
+          return;
+        }
+        setVerifyMessage('Email verified! Redirecting...');
+        // Give auth listener a moment to populate session, then redirect
+        setTimeout(() => {
+          navigate('/login', { replace: true });
+        }, 500);
+      } catch (e: any) {
+        setError(e?.message || 'Verification failed');
+        setVerifyMessage('Verification failed');
+        setVerifying(false);
+      }
+    })();
+  }, [location.search, navigate]);
 
   const resendVerification = async () => {
     if (!user?.email) return;
@@ -38,11 +83,15 @@ const VerifyEmail = () => {
           <Mail className="h-8 w-8 text-primary-foreground" />
         </div>
         <h1 className="text-2xl font-bold">Verify your email</h1>
-        <p className="text-muted-foreground">
-          We sent a confirmation link to {user?.email}. Click the link in your email to finish setting up your account.
-        </p>
+        {verifying ? (
+          <p className="text-muted-foreground">{verifyMessage}</p>
+        ) : (
+          <p className="text-muted-foreground">
+            We sent a confirmation link to {user?.email}. Click the link in your email to finish setting up your account.
+          </p>
+        )}
         <div className="space-y-2">
-          <Button onClick={resendVerification} disabled={isSending} className="w-full">
+          <Button onClick={resendVerification} disabled={isSending || verifying} className="w-full">
             {isSending ? 'Sending...' : 'Resend verification email'}
           </Button>
           {sent && <p className="text-sm text-green-600">Verification email sent. Please check your inbox.</p>}
