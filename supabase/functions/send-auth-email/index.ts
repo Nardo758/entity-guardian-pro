@@ -8,7 +8,7 @@ declare const Deno: {
   };
 };
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Resend client will be initialized lazily inside the handler after validating API key
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,7 +26,7 @@ interface SupabaseAuthHookPayload {
     token_hash: string;
     redirect_to: string;
     email_action_type: 'signup' | 'recovery' | 'invite' | 'magic_link' | 'email_change';
-    site_url: string;
+    site_url?: string;
     [key: string]: any;
   };
   [key: string]: any;
@@ -47,10 +47,6 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const payload: SupabaseAuthHookPayload = await req.json();
     console.log('Auth email request:', payload);
-    console.log('Token received:', token);
-    console.log('Email action type:', type);
-    console.log('Site URL:', site_url);
-
     const { user, email_data } = payload;
 
     // Validate required fields from Supabase auth hook payload
@@ -60,17 +56,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     const to = user.email;
     const type = email_data.email_action_type;
-    const token = email_data.token;
-    const redirect_to = email_data.redirect_to;
-    const site_url = 'https://wcuxqopfcgivypbiynjp.supabase.co'; // Base URL without /auth/v1
+    const token = email_data.token; // 6-digit OTP, not for verify link
+    const tokenHash = email_data.token_hash; // use this in verify link
+    const raw_site_url = (email_data.site_url?.replace(/\/+$/, '') || 'https://wcuxqopfcgivypbiynjp.supabase.co');
+    // Normalize so we always append /auth/v1 ourselves (avoid double /auth/v1)
+    const site_url = raw_site_url.replace(/\/auth\/v1\/?$/, ''); // Base URL without /auth/v1
+
+    console.log('Token received:', token);
+    console.log('Token hash received:', tokenHash);
+    console.log('Email action type:', type);
+    console.log('Site URL:', site_url);
+
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      throw new Error("Missing RESEND_API_KEY environment variable");
+    }
+    const resend = new Resend(resendApiKey);
+
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supabaseAnonKey) {
+      throw new Error("Missing SUPABASE_ANON_KEY environment variable");
+    }
 
     // Generate email content based on type
     let emailHtml: string;
     let emailSubject: string;
 
-    if (type === 'signup' && token) {
+    if (type === 'signup' && tokenHash) {
       emailSubject = "Welcome! Please confirm your email";
-      const confirmUrl = `${site_url}/auth/v1/verify?token=${token}&type=signup&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}`;
+      const confirmUrl = `${site_url}/auth/v1/verify?token_hash=${encodeURIComponent(tokenHash)}&type=signup&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}&apikey=${encodeURIComponent(supabaseAnonKey)}`;
       emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
@@ -97,9 +111,9 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         </div>
       `;
-    } else if (type === 'recovery' && token) {
+    } else if (type === 'recovery' && tokenHash) {
       emailSubject = "Reset your password";
-      const resetUrl = `${site_url}/auth/v1/verify?token=${token}&type=recovery&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}`;
+      const resetUrl = `${site_url}/auth/v1/verify?token_hash=${encodeURIComponent(tokenHash)}&type=recovery&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}&apikey=${encodeURIComponent(supabaseAnonKey)}`;
       emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
@@ -139,9 +153,9 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: #666; line-height: 1.6; font-size: 16px;">
               You have received this notification regarding your Entity Renewal Pro account.
             </p>
-            ${token ? `
+            ${tokenHash ? `
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${site_url}/auth/v1/verify?token=${token}&type=${type}&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}" 
+              <a href="${site_url}/auth/v1/verify?token_hash=${encodeURIComponent(tokenHash)}&type=${encodeURIComponent(type)}&redirect_to=${encodeURIComponent('https://entityrenewalpro.com')}&apikey=${encodeURIComponent(supabaseAnonKey)}" 
                  style="background-color: #1976d2; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
                 Verify Email
               </a>
