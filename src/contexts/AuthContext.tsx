@@ -45,9 +45,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Handle Supabase token hash fragments (e.g. #access_token=...&refresh_token=...)
+  // Handle Supabase token hash fragments and OAuth errors
   useEffect(() => {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    // Check for OAuth errors in URL parameters
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+    
+    if (error) {
+      console.error('OAuth Error:', { error, errorDescription });
+      // Clear error parameters from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete('error');
+      url.searchParams.delete('error_code');
+      url.searchParams.delete('error_description');
+      url.hash = '';
+      window.history.replaceState({}, '', url.toString());
+      
+      // Show error toast if available
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('oauth-error', { 
+          detail: { error, errorDescription } 
+        }));
+      }
+      return;
+    }
+    
     if (hash && hash.includes('access_token')) {
       (async () => {
         try {
@@ -59,6 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!error) {
               setSession(data.session);
               setUser(data.session?.user ?? null);
+            } else {
+              console.error('Session setup error:', error);
             }
           }
         } catch (err) {

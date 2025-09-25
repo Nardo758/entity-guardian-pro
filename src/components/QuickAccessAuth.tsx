@@ -34,6 +34,23 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
   const [showSMSVerification, setShowSMSVerification] = useState(false);
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
+  // Listen for OAuth errors
+  React.useEffect(() => {
+    const handleOAuthError = (event: CustomEvent) => {
+      const { error, errorDescription } = event.detail;
+      toast({
+        title: "Google Sign-in Failed",
+        description: errorDescription || "Unable to complete Google authentication. Please try again.",
+        variant: "destructive"
+      });
+    };
+
+    window.addEventListener('oauth-error', handleOAuthError as EventListener);
+    return () => {
+      window.removeEventListener('oauth-error', handleOAuthError as EventListener);
+    };
+  }, [toast]);
+
   const handleOAuthSignIn = async (provider: 'google' | 'microsoft') => {
     setIsLoading(provider);
     try {
