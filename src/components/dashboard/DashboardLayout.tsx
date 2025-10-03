@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Building, 
-  Plus, 
-  LayoutDashboard, 
-  FileText, 
-  CreditCard, 
-  Calendar, 
-  Users, 
-  Settings, 
-  Crown,
-  Menu,
-  ChevronLeft,
-  ChevronRight
+import {
+  Building, LayoutDashboard, Plus, FileText, CreditCard, Calendar, Users,
+  Settings, Crown, Menu, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -98,16 +88,14 @@ const DashboardSidebar = () => {
             <button
               key={item.name}
               onClick={() => navigate(item.path)}
-              className={`flex items-center gap-3 w-full px-3 py-2.5 text-left rounded-lg transition-all duration-200 group ${
-                isActive(item.path)
+              className={`flex items-center gap-3 w-full px-3 py-2.5 text-left rounded-lg transition-all duration-200 group ${isActive(item.path)
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm'
                   : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-              } ${collapsed ? 'justify-center' : ''}`}
+                } ${collapsed ? 'justify-center' : ''}`}
               title={collapsed ? item.name : undefined}
             >
-              <item.icon className={`h-4 w-4 flex-shrink-0 ${
-                isActive(item.path) ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 group-hover:text-sidebar-foreground'
-              }`} />
+              <item.icon className={`h-4 w-4 flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 group-hover:text-sidebar-foreground'
+                }`} />
               {!collapsed && <span className="text-sm">{item.name}</span>}
             </button>
           ))}
@@ -124,9 +112,9 @@ const DashboardSidebar = () => {
                     {subscription.subscription_tier} Plan
                   </span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full text-xs"
                   onClick={() => navigate('/billing')}
                 >
@@ -140,8 +128,8 @@ const DashboardSidebar = () => {
                   <span className="text-sm font-medium text-warning">Free Plan</span>
                 </div>
                 <p className="text-xs text-sidebar-foreground/60 mb-2">Limited to 3 entities</p>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="w-full text-xs"
                   onClick={() => navigate('/billing')}
                 >

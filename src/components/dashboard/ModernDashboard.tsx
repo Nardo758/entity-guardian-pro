@@ -23,14 +23,14 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const ModernDashboard = () => {
   const { isAdmin } = useAdminAccess();
-  
+
   const { entities, addEntity, deleteEntity, loading: entitiesLoading } = useEntities();
   const { payments } = usePayments();
   const { paymentMethods } = usePaymentMethods();
   const { notifications, markAsRead } = useAgentNotifications();
   const { currentTeam } = useTeams();
   const { invitations } = useAgentInvitations();
-  
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [showScheduleView, setShowScheduleView] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -69,7 +69,7 @@ const ModernDashboard = () => {
   // Calculate metrics
   const pendingInvitations = invitations.filter(inv => inv.status === 'pending').length;
   const activeAgents = invitations.filter(inv => inv.status === 'accepted').length;
-  
+
   const metrics = {
     totalEntities: entities.length,
     delawareEntities: entities.filter(e => e.state === 'DE').length,
@@ -136,7 +136,7 @@ const ModernDashboard = () => {
                 Key metrics and performance indicators for your portfolio
               </p>
             </div>
-            
+
             <MetricsGrid metrics={metrics} />
           </div>
 
@@ -176,3 +176,4 @@ const ModernDashboard = () => {
 };
 
 export default ModernDashboard;
+
