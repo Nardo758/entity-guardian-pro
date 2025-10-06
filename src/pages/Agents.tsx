@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAgents } from '@/hooks/useAgents';
 import { useAgentInvitations } from '@/hooks/useAgentInvitations';
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+
 
 const Agents: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +22,7 @@ const Agents: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showAddForm, setShowAddForm] = useState(false);
 
   // Mock agent data for working agents
   const workingAgents = [
@@ -52,10 +56,10 @@ const Agents: React.FC = () => {
 
   const filteredAgents = workingAgents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         agent.email.toLowerCase().includes(searchTerm.toLowerCase());
+      agent.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesState = stateFilter === "all" || agent.state === stateFilter;
     const matchesStatus = statusFilter === "all" || agent.status === statusFilter;
-    
+
     return matchesSearch && matchesState && matchesStatus;
   });
 
@@ -76,376 +80,362 @@ const Agents: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      <div className="container mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/dashboard')}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Dashboard
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Agent Network</h1>
-              <p className="text-muted-foreground">Manage your registered agents and invitations</p>
-            </div>
-          </div>
-          <Button onClick={() => navigate('/find-agents')} className="gap-2">
-            <Search className="h-4 w-4" />
-            Find New Agents
-          </Button>
-        </div>
+    <DashboardLayout>
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+ 
+          {/* Header */}
+          <DashboardHeader
+            title="Agent Network"
+            subtitle="Manage your registered agents and invitations"
+            onAddEntity={() => setShowAddForm(true)} />
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.acceptedCount}</div>
-              <p className="text-xs text-muted-foreground">Currently working with you</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
-              <Mail className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.pendingCount}</div>
-              <p className="text-xs text-muted-foreground">Awaiting response</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Entities Covered</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.entitiesWithAgents}</div>
-              <p className="text-xs text-muted-foreground">Total entities served</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Invitations</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.totalSent}</div>
-              <p className="text-xs text-muted-foreground">All-time sent</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">Active Agents ({metrics.acceptedCount})</TabsTrigger>
-            <TabsTrigger value="pending">Pending Invites ({metrics.pendingCount})</TabsTrigger>
-            <TabsTrigger value="invitations">All Invitations ({allInvitations.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="active" className="space-y-6">
-            {/* Filters */}
+       <div className="mx-auto p-6 space-y-6">
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters
-                </CardTitle>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search agents..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Select value={stateFilter} onValueChange={setStateFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All States" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All States</SelectItem>
-                      <SelectItem value="DE">Delaware</SelectItem>
-                      <SelectItem value="CA">California</SelectItem>
-                      <SelectItem value="NY">New York</SelectItem>
-                      <SelectItem value="FL">Florida</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setSearchTerm("");
-                      setStateFilter("all");
-                      setStatusFilter("all");
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
+                <div className="text-2xl font-bold">{metrics.acceptedCount}</div>
+                <p className="text-xs text-muted-foreground">Currently working with you</p>
               </CardContent>
             </Card>
 
-            {/* Agent Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredAgents.map((agent) => (
-                <Card key={agent.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${agent.name}`} />
-                        <AvatarFallback>{agent.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">{agent.name}</CardTitle>
-                          <Badge variant="default">Active</Badge>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium">{agent.rating}</span>
-                            <span className="text-sm text-muted-foreground">({agent.totalReviews})</span>
-                          </div>
-                          <Badge variant="secondary">{agent.state}</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{agent.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{agent.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                        <span>{agent.entitiesServed} entities • {agent.yearsExperience} years exp.</span>
-                      </div>
-                    </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
+                <Mail className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{metrics.pendingCount}</div>
+                <p className="text-xs text-muted-foreground">Awaiting response</p>
+              </CardContent>
+            </Card>
 
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium">Specialties:</div>
-                      <div className="flex flex-wrap gap-1">
-                        {agent.specialties.map(specialty => (
-                          <Badge key={specialty} variant="outline" className="text-xs">
-                            {specialty}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Entities Covered</CardTitle>
+                <Building className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{metrics.entitiesWithAgents}</div>
+                <p className="text-xs text-muted-foreground">Total entities served</p>
+              </CardContent>
+            </Card>
 
-                    <div className="flex gap-2 pt-4 border-t">
-                      <Button variant="default" size="sm" className="flex-1 gap-2">
-                        <MessageCircle className="h-4 w-4" />
-                        Contact
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        View Details
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Invitations</CardTitle>
+                <Star className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{metrics.totalSent}</div>
+                <p className="text-xs text-muted-foreground">All-time sent</p>
+              </CardContent>
+            </Card>
+          </div>
 
-            {filteredAgents.length === 0 && (
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="active">Active Agents ({metrics.acceptedCount})</TabsTrigger>
+              <TabsTrigger value="pending">Pending Invites ({metrics.pendingCount})</TabsTrigger>
+              <TabsTrigger value="invitations">All Invitations ({allInvitations.length})</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="active" className="space-y-6">
+              {/* Filters */}
               <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No agents found</h3>
-                  <p className="text-muted-foreground text-center mb-4">
-                    {searchTerm || stateFilter !== "all" 
-                      ? "Try adjusting your filters to see more results."
-                      : "You don't have any active agents yet."}
-                  </p>
-                  <Button onClick={() => navigate('/find-agents')} className="gap-2">
-                    <Search className="h-4 w-4" />
-                    Find Agents
-                  </Button>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Filter className="h-5 w-5" />
+                    Filters
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search agents..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Select value={stateFilter} onValueChange={setStateFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All States" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All States</SelectItem>
+                        <SelectItem value="DE">Delaware</SelectItem>
+                        <SelectItem value="CA">California</SelectItem>
+                        <SelectItem value="NY">New York</SelectItem>
+                        <SelectItem value="FL">Florida</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchTerm("");
+                        setStateFilter("all");
+                        setStatusFilter("all");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            )}
-          </TabsContent>
 
-          <TabsContent value="pending" className="space-y-6">
-            <div className="space-y-4">
-              {pendingInvitations.map((invitation) => (
-                <Card key={invitation.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Invitation to {invitation.agent_email}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Entity: {invitation.entity?.name || 'Unknown Entity'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Sent on {new Date(invitation.created_at).toLocaleDateString()}
-                        </p>
-                        {invitation.viewed_at && (
-                          <p className="text-xs text-muted-foreground">
-                            Viewed on {new Date(invitation.viewed_at).toLocaleDateString()}
-                          </p>
-                        )}
-                        {invitation.message && (
-                          <p className="text-sm text-muted-foreground italic">
-                            "{invitation.message.substring(0, 100)}..."
-                          </p>
-                        )}
+              {/* Agent Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredAgents.map((agent) => (
+                  <Card key={agent.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${agent.name}`} />
+                          <AvatarFallback>{agent.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg">{agent.name}</CardTitle>
+                            <Badge variant="default">Active</Badge>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-1">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <span className="text-sm font-medium">{agent.rating}</span>
+                              <span className="text-sm text-muted-foreground">({agent.totalReviews})</span>
+                            </div>
+                            <Badge variant="secondary">{agent.state}</Badge>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">
-                            {invitation.viewed_at ? 'Viewed' : 'Sent'}
-                          </Badge>
-                          {invitation.expires_at && new Date(invitation.expires_at) < new Date() && (
-                            <Badge variant="destructive">Expired</Badge>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span>{agent.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{agent.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Building className="h-4 w-4 text-muted-foreground" />
+                          <span>{agent.entitiesServed} entities • {agent.yearsExperience} years exp.</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium">Specialties:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {agent.specialties.map(specialty => (
+                            <Badge key={specialty} variant="outline" className="text-xs">
+                              {specialty}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-4 border-t">
+                        <Button variant="default" size="sm" className="flex-1 gap-2">
+                          <MessageCircle className="h-4 w-4" />
+                          Contact
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {filteredAgents.length === 0 && (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No agents found</h3>
+                    <p className="text-muted-foreground text-center mb-4">
+                      {searchTerm || stateFilter !== "all"
+                        ? "Try adjusting your filters to see more results."
+                        : "You don't have any active agents yet."}
+                    </p>
+                    <Button onClick={() => navigate('/find-agents')} className="gap-2">
+                      <Search className="h-4 w-4" />
+                      Find Agents
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="pending" className="space-y-6">
+              <div className="space-y-4">
+                {pendingInvitations.map((invitation) => (
+                  <Card key={invitation.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <h3 className="font-medium">Invitation to {invitation.agent_email}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Entity: {invitation.entity?.name || 'Unknown Entity'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Sent on {new Date(invitation.created_at).toLocaleDateString()}
+                          </p>
+                          {invitation.viewed_at && (
+                            <p className="text-xs text-muted-foreground">
+                              Viewed on {new Date(invitation.viewed_at).toLocaleDateString()}
+                            </p>
+                          )}
+                          {invitation.message && (
+                            <p className="text-sm text-muted-foreground italic">
+                              "{invitation.message.substring(0, 100)}..."
+                            </p>
                           )}
                         </div>
-                        <div className="flex gap-2">
-                          {canUnsendInvitation(invitation) && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                                  <X className="h-3 w-3 mr-1" />
-                                  Unsend
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Unsend Invitation</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to cancel this invitation to {invitation.agent_email}? 
-                                    This action cannot be undone and the agent will not be notified.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Keep Invitation</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleUnsendInvitation(invitation.id)}
-                                    className="bg-destructive hover:bg-destructive/90"
-                                  >
-                                    Unsend Invitation
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                        <div className="text-right space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              {invitation.viewed_at ? 'Viewed' : 'Sent'}
+                            </Badge>
+                            {invitation.expires_at && new Date(invitation.expires_at) < new Date() && (
+                              <Badge variant="destructive">Expired</Badge>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            {canUnsendInvitation(invitation) && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                    <X className="h-3 w-3 mr-1" />
+                                    Unsend
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Unsend Invitation</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to cancel this invitation to {invitation.agent_email}?
+                                      This action cannot be undone and the agent will not be notified.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Keep Invitation</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleUnsendInvitation(invitation.id)}
+                                      className="bg-destructive hover:bg-destructive/90"
+                                    >
+                                      Unsend Invitation
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                            {invitation.expires_at && (
+                              <div className="text-xs text-muted-foreground">
+                                Expires {new Date(invitation.expires_at).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {pendingInvitations.length === 0 && (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <Mail className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No pending invitations</h3>
+                      <p className="text-muted-foreground text-center">
+                        All your agent invitations have been responded to or cancelled.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="invitations" className="space-y-6">
+              <div className="space-y-4">
+                {allInvitations.map((invitation) => (
+                  <Card key={invitation.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <h3 className="font-medium">Invitation to {invitation.agent_email}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Entity: {invitation.entity?.name || 'Unknown Entity'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Sent on {new Date(invitation.created_at).toLocaleDateString()}
+                          </p>
+                          {invitation.status !== 'pending' && invitation.responded_at && (
+                            <p className="text-sm text-muted-foreground">
+                              {invitation.status === 'accepted' ? 'Accepted' : 'Declined'} on {new Date(invitation.responded_at).toLocaleDateString()}
+                            </p>
                           )}
-                          {invitation.expires_at && (
+                          {invitation.unsent_at && (
+                            <p className="text-sm text-muted-foreground">
+                              Cancelled on {new Date(invitation.unsent_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right space-y-2">
+                          <Badge variant={
+                            invitation.status === 'accepted' ? 'default' :
+                              invitation.status === 'declined' ? 'destructive' :
+                                invitation.unsent_at ? 'outline' : 'secondary'
+                          }>
+                            {invitation.unsent_at ? 'Cancelled' : invitation.status}
+                          </Badge>
+                          {invitation.expires_at && !['accepted', 'declined'].includes(invitation.status) && !invitation.unsent_at && (
                             <div className="text-xs text-muted-foreground">
-                              Expires {new Date(invitation.expires_at).toLocaleDateString()}
+                              {new Date(invitation.expires_at) < new Date() ? 'Expired' : `Expires ${new Date(invitation.expires_at).toLocaleDateString()}`}
                             </div>
                           )}
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {pendingInvitations.length === 0 && (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <Mail className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No pending invitations</h3>
-                    <p className="text-muted-foreground text-center">
-                      All your agent invitations have been responded to or cancelled.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
+                    </CardContent>
+                  </Card>
+                ))}
 
-          <TabsContent value="invitations" className="space-y-6">
-            <div className="space-y-4">
-              {allInvitations.map((invitation) => (
-                <Card key={invitation.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Invitation to {invitation.agent_email}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Entity: {invitation.entity?.name || 'Unknown Entity'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Sent on {new Date(invitation.created_at).toLocaleDateString()}
-                        </p>
-                        {invitation.status !== 'pending' && invitation.responded_at && (
-                          <p className="text-sm text-muted-foreground">
-                            {invitation.status === 'accepted' ? 'Accepted' : 'Declined'} on {new Date(invitation.responded_at).toLocaleDateString()}
-                          </p>
-                        )}
-                        {invitation.unsent_at && (
-                          <p className="text-sm text-muted-foreground">
-                            Cancelled on {new Date(invitation.unsent_at).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right space-y-2">
-                        <Badge variant={
-                          invitation.status === 'accepted' ? 'default' :
-                          invitation.status === 'declined' ? 'destructive' : 
-                          invitation.unsent_at ? 'outline' : 'secondary'
-                        }>
-                          {invitation.unsent_at ? 'Cancelled' : invitation.status}
-                        </Badge>
-                        {invitation.expires_at && !['accepted', 'declined'].includes(invitation.status) && !invitation.unsent_at && (
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(invitation.expires_at) < new Date() ? 'Expired' : `Expires ${new Date(invitation.expires_at).toLocaleDateString()}`}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {allInvitations.length === 0 && (
-                <Card>
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <Mail className="h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No invitations sent</h3>
-                    <p className="text-muted-foreground text-center">
-                      Start building your agent network by inviting registered agents.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+                {allInvitations.length === 0 && (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <Mail className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">No invitations sent</h3>
+                      <p className="text-muted-foreground text-center">
+                        Start building your agent network by inviting registered agents.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
