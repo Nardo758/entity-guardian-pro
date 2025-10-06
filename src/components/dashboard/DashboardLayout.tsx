@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Building, LayoutDashboard, Plus, FileText, CreditCard, Calendar, Users,
   Settings, Crown, Menu, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarInset, SidebarProvider, SidebarTrigger, SidebarRail, useSidebar } from '@/components/ui/sidebar';
 import { TeamSwitcher } from '@/components/TeamSwitcher';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -19,7 +19,8 @@ const DashboardSidebar = () => {
   const location = useLocation();
   const { isAdmin } = useAdminAccess();
   const { subscription } = useSubscription();
-  const [collapsed, setCollapsed] = useState(false);
+  const { state, toggleSidebar } = useSidebar();
+  const collapsed = state === 'collapsed';
 
   const navigationItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -37,7 +38,8 @@ const DashboardSidebar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className={`${collapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
+    <Sidebar collapsible="icon" className="transition-all duration-300">
+      <SidebarRail />
       <SidebarContent className="flex flex-col h-full bg-sidebar-background border-r border-sidebar-border">
         {/* Logo Section */}
         <div className={`flex items-center gap-3 p-4 border-b border-sidebar-border ${collapsed ? 'justify-center' : ''}`}>
@@ -50,19 +52,17 @@ const DashboardSidebar = () => {
               <p className="text-xs text-sidebar-foreground/60 truncate">Business Management</p>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setCollapsed(!collapsed)}
-            className="h-8 w-8 p-0 hover:bg-sidebar-accent"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4 text-sidebar-foreground/70" />
-            ) : (
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="h-8 w-8 p-0 hover:bg-sidebar-accent"
+              title="Collapse sidebar"
+            >
               <ChevronLeft className="h-4 w-4 text-sidebar-foreground/70" />
-            )}
-          </Button>
+            </Button>
+          )}
         </div>
 
         {/* Team Switcher */}
@@ -147,12 +147,10 @@ const DashboardSidebar = () => {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen w-full flex bg-background">
-        <DashboardSidebar />
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {children}
-        </main>
-      </div>
+      <DashboardSidebar />
+      <SidebarInset className="overflow-hidden">
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 };
