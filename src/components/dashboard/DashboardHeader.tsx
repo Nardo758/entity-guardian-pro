@@ -17,8 +17,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onAddEntity
 }) => {
   return (
-    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-40">
-      <div className="flex items-center justify-between px-6 py-4">
+    <header className="bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-40 px-3">
+      <div className="flex items-center justify-between px-8 py-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="lg:hidden" />
           <div>

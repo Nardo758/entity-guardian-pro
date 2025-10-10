@@ -38,29 +38,52 @@ const DashboardSidebar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar collapsible="icon" className="transition-all duration-300">
-      <SidebarRail />
-      <SidebarContent className="flex flex-col h-full bg-sidebar-background border-r border-sidebar-border">
+    <Sidebar
+      collapsible="icon"
+      className="transition-all duration-300 z-50"
+      style={{
+        '--sidebar-width-icon': '4.5rem',
+      } as React.CSSProperties}
+    >
+      <SidebarRail className="z-50" />
+      <SidebarContent className="flex flex-col h-full bg-sidebar-background border-r border-sidebar-border z-50">
         {/* Logo Section */}
-        <div className={`flex items-center gap-3 p-4 border-b border-sidebar-border ${collapsed ? 'justify-center' : ''}`}>
+        <div className={`relative w-full flex items-center border-b border-sidebar-border ${collapsed
+            ? 'flex-col gap-2 px-2 py-3 justify-center'
+            : 'gap-3 p-4'
+          }`}>
           <div className="bg-primary rounded-xl p-2 flex-shrink-0">
             <Building className="h-5 w-5 text-primary-foreground" />
           </div>
+
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <h1 className="font-bold text-lg text-sidebar-foreground truncate">Entity Renewal Pro</h1>
               <p className="text-xs text-sidebar-foreground/60 truncate">Business Management</p>
             </div>
           )}
+
           {!collapsed && (
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleSidebar}
-              className="h-8 w-8 p-0 hover:bg-sidebar-accent"
+              className="h-8 w-8 p-0 hover:bg-sidebar-accent flex-shrink-0"
               title="Collapse sidebar"
             >
               <ChevronLeft className="h-4 w-4 text-sidebar-foreground/70" />
+            </Button>
+          )}
+
+          {collapsed && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSidebar}
+              className="h-8 w-8 p-0 hover:bg-sidebar-accent"
+              title="Expand sidebar"
+            >
+              <ChevronRight className="h-4 w-4 text-sidebar-foreground/70" />
             </Button>
           )}
         </div>
@@ -94,7 +117,9 @@ const DashboardSidebar = () => {
                 } ${collapsed ? 'justify-center' : ''}`}
               title={collapsed ? item.name : undefined}
             >
-              <item.icon className={`h-4 w-4 flex-shrink-0 ${isActive(item.path) ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 group-hover:text-sidebar-foreground'
+              <item.icon className={`h-4 w-4 flex-shrink-0 ${isActive(item.path)
+                  ? 'text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground/70 group-hover:text-sidebar-foreground'
                 }`} />
               {!collapsed && <span className="text-sm">{item.name}</span>}
             </button>
@@ -141,6 +166,8 @@ const DashboardSidebar = () => {
         )}
       </SidebarContent>
     </Sidebar>
+
+
   );
 };
 
