@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,19 +17,40 @@ import AdminRoleManager from "@/components/AdminRoleManager";
 import SecurityAuditLog from "@/components/SecurityAuditLog";
 import MFASetup from "@/components/MFASetup";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { hasAdminAccess } = useAdminAccess();
+  const { user, profile: authProfile } = useAuth();
   const [showMFASetup, setShowMFASetup] = useState(false);
-  const [profile, setProfile] = useState({
-    name: "Sarah Johnson",
-    email: "sarah.johnson@company.com",
-    company: "TechCorp Solutions",
+  const [settingsProfile, setSettingsProfile] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    company: "",
     role: "Legal Director",
     avatar: "",
-    phone: "+1 (555) 123-4567"
+    phone: ""
   });
+
+  // Sync email and profile from authenticated user/profile into local state
+  useEffect(() => {
+    const authEmail = user?.email || "";
+    const firstName = (authProfile as any)?.first_name || "";
+    const lastName = (authProfile as any)?.last_name || "";
+    const company = (authProfile as any)?.company || "";
+    const phone = (authProfile as any)?.phone_number || "";
+    setSettingsProfile(prev => ({
+      ...prev,
+      email: authEmail,
+      first_name: firstName,
+      last_name: lastName,
+      company,
+      phone
+    }));
+  }, [user, authProfile]);
 
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
@@ -43,11 +64,41 @@ const Settings = () => {
     lastPasswordChange: "2024-01-15"
   });
 
-  const handleSaveProfile = () => {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile information has been saved successfully.",
-    });
+  const handleSaveProfile = async () => {
+    try {
+      if (!user) return;
+      const updates: any = {
+        user_id: user.id,
+        first_name: settingsProfile.first_name || null,
+        last_name: settingsProfile.last_name || null,
+        company: settingsProfile.company || null,
+        phone_number: settingsProfile.phone || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(updates, { onConflict: 'user_id' });
+
+      if (profileError) throw profileError;
+
+      // Update auth email if changed
+      if (settingsProfile.email && settingsProfile.email !== user.email) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: settingsProfile.email });
+        if (emailError) throw emailError;
+      }
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile information has been saved successfully.",
+      });
+    } catch (e: any) {
+      toast({
+        title: "Update Failed",
+        description: e?.message || 'Could not update profile',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleNotificationChange = (key: string, value: boolean) => {
@@ -87,14 +138,14 @@ const Settings = () => {
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={profile.avatar} />
+                      <AvatarImage src={settingsProfile.avatar} />
                       <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                        {profile.name.split(' ').map(n => n[0]).join('')}
+                        {(settingsProfile.first_name + ' ' + settingsProfile.last_name).trim().split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold text-sm">{profile.name}</p>
-                      <p className="text-xs text-muted-foreground">{profile.role}</p>
+                      <p className="font-semibold text-sm">{(settingsProfile.first_name + ' ' + settingsProfile.last_name).trim()}</p>
+                      <p className="text-xs text-muted-foreground">{settingsProfile.role}</p>
                       <Badge variant="secondary" className="text-xs mt-1">Pro Plan</Badge>
                     </div>
                   </div>
@@ -146,11 +197,19 @@ const Settings = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="first_name">First Name</Label>
                         <Input
-                          id="name"
-                          value={profile.name}
-                          onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                          id="first_name"
+                          value={settingsProfile.first_name}
+                          onChange={(e) => setSettingsProfile(prev => ({ ...prev, first_name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="last_name">Last Name</Label>
+                        <Input
+                          id="last_name"
+                          value={settingsProfile.last_name}
+                          onChange={(e) => setSettingsProfile(prev => ({ ...prev, last_name: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
@@ -158,24 +217,24 @@ const Settings = () => {
                         <Input
                           id="email"
                           type="email"
-                          value={profile.email}
-                          onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                          value={settingsProfile.email}
+                          onChange={(e) => setSettingsProfile(prev => ({ ...prev, email: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="company">Company</Label>
                         <Input
                           id="company"
-                          value={profile.company}
-                          onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
+                          value={settingsProfile.company}
+                          onChange={(e) => setSettingsProfile(prev => ({ ...prev, company: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number</Label>
                         <Input
                           id="phone"
-                          value={profile.phone}
-                          onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                          value={settingsProfile.phone}
+                          onChange={(e) => setSettingsProfile(prev => ({ ...prev, phone: e.target.value }))}
                         />
                       </div>
                     </div>

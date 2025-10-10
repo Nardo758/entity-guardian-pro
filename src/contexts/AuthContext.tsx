@@ -136,6 +136,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Email is sourced from auth.user; profiles table doesn't store email
+
   const refreshProfile = async () => {
     if (user) {
       await fetchProfile(user.id);

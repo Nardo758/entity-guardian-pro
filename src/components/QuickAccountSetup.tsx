@@ -106,6 +106,22 @@ const QuickAccountSetup: React.FC = () => {
             variant: "destructive"
           });
         } else {
+          // Attempt to create or update profile immediately after signup
+          // This may fail if the user isn't authenticated yet due to email confirmation; ignore non-critical errors
+          try {
+            const userId = data.user?.id;
+            if (userId) {
+              await supabase
+                .from('profiles')
+                .upsert({
+                  user_id: userId,
+                  updated_at: new Date().toISOString()
+                } as any, { onConflict: 'user_id' });
+            }
+          } catch (e) {
+            // Non-blocking: profile insertion will be retried post sign-in elsewhere if needed
+            console.warn('Profile upsert after signup failed:', e);
+          }
           console.log('Signup data:', data);
           if (data.user && !data.user.email_confirmed_at) {
             toast({
