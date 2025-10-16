@@ -409,11 +409,99 @@ const PaidRegister = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-md w-full text-center space-y-6 p-8 bg-card shadow-2xl rounded-lg">
-        <h1 className="text-2xl font-bold mb-2">Paid Registration Disabled</h1>
-        <p className="text-muted-foreground">New account creation is not available at this time. Existing users can <Link to="/login" className="text-primary hover:underline font-medium">sign in here</Link>. For help, contact support.</p>
-        <p className="text-xs text-muted-foreground mt-4">Contact <Link to="/support" className="text-primary hover:underline">Support</Link> if you have any questions.</p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+            <Building className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+            Join Entity Renewal Pro
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Get started with professional entity management
+          </p>
+        </div>
+
+        {/* Progress */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Step {currentStep} of {totalSteps}</span>
+            <span>{Math.round((currentStep / totalSteps) * 100)}% Complete</span>
+          </div>
+          <Progress value={(currentStep / totalSteps) * 100} className="h-2" />
+        </div>
+
+        {/* Form */}
+        <Card className="border-0 shadow-2xl bg-card/95 backdrop-blur-sm">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              {currentStep === 1 && <User className="w-5 h-5" />}
+              {currentStep === 2 && <Building className="w-5 h-5" />}
+              {currentStep === 3 && <CreditCard className="w-5 h-5" />}
+              {currentStep === 1 && "Account Information"}
+              {currentStep === 2 && "Plan & Security"}
+              {currentStep === 3 && "Payment"}
+            </CardTitle>
+            <CardDescription>
+              {currentStep === 1 && "Tell us about yourself and your business"}
+              {currentStep === 2 && "Choose your plan and secure your account"}
+              {currentStep === 3 && "Complete payment to activate your account"}
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
+
+            {/* Navigation */}
+            <div className="flex justify-between mt-8">
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                disabled={currentStep === 1 || isLoading}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+
+              {currentStep < 3 && (
+                <Button
+                  onClick={handleNext}
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-primary to-primary-dark"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      {currentStep === 2 ? 'Preparing Payment...' : 'Processing...'}
+                    </div>
+                  ) : (
+                    <>
+                      {currentStep === 2 ? 'Proceed to Payment' : 'Continue'}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link 
+              to="/login" 
+              className="font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              Sign in here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

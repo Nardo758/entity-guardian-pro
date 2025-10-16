@@ -69,8 +69,15 @@ const App = () => {
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
+              <Route path="/signup" element={<UserTypeSelection />} />
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/paid-register" element={<PaidRegister />} />
+              <Route path="/registration-success" element={<RegistrationSuccess />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/role-selection" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
+              <Route path="/sign-out-confirmation" element={<SignOutConfirmation />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/verify-email" element={<VerifyEmail />} />

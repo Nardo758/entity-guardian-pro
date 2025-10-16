@@ -166,11 +166,271 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-md w-full text-center space-y-6 p-8 bg-card shadow-2xl rounded-lg">
-        <h1 className="text-2xl font-bold mb-2">Agent Signup Disabled</h1>
-        <p className="text-muted-foreground">New agent registration is not enabled in this project. If you are an existing agent, <Link to="/login" className="text-primary hover:underline font-medium">sign in here</Link>. For other questions, contact support.</p>
-        <p className="text-xs text-muted-foreground mt-4">Need help? <Link to="/support" className="text-primary hover:underline">Contact Support</Link></p>
+    <div className="container mx-auto px-6 py-8 max-w-4xl">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold mb-2">Become a Registered Agent</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Join our network of professional registered agents and connect with businesses 
+          that need your services. Set your rates, choose your states, and grow your practice.
+        </p>
+        <p className="text-sm text-muted-foreground mt-3">
+          Are you a Business Owner looking to manage entities? <Link to="/register" className="text-primary hover:underline font-medium">Sign up as Entity Owner instead</Link>
+        </p>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Benefits Sidebar */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Why Join Our Network?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Building className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">Direct Client Connections</p>
+                  <p className="text-xs text-muted-foreground">Get matched with businesses in your service areas</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <FileText className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">Dashboard Management</p>
+                  <p className="text-xs text-muted-foreground">Set pricing and manage clients from your dashboard</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">Multi-State Coverage</p>
+                  <p className="text-xs text-muted-foreground">Serve clients across all your licensed states</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <FileText className="w-5 h-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">Professional Profile</p>
+                  <p className="text-xs text-muted-foreground">Showcase your experience and expertise</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Form */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Agent Profile Setup</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="company_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your Company or Professional Name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="contact_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contact Email *</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="your@email.com" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          This will be your account login email and how clients contact you
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Create Password *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showPassword ? "text" : "password"} 
+                              placeholder="Create a secure password" 
+                              {...field} 
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Minimum 8 characters required
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="confirmPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type={showConfirmPassword ? "text" : "password"} 
+                              placeholder="Confirm your password" 
+                              {...field} 
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="years_experience"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Years of Experience</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="5"
+                            min="0"
+                            max="50"
+                            {...field}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                              field.onChange(isNaN(value) ? 0 : Math.max(0, Math.min(50, value)));
+                            }}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How many years have you been providing registered agent services?
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="states"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Licensed States *</FormLabel>
+                        <FormDescription>
+                          Select all states where you're licensed to serve as a registered agent
+                        </FormDescription>
+                        <div className="grid grid-cols-5 gap-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                          {US_STATES.map(state => (
+                            <div key={state} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={state}
+                                checked={selectedStates.includes(state)}
+                                onCheckedChange={() => handleStateToggle(state)}
+                              />
+                              <Label
+                                htmlFor={state}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {state}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                        {selectedStates.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {selectedStates.map(state => (
+                              <Badge
+                                key={state}
+                                variant="secondary"
+                                className="cursor-pointer"
+                                onClick={() => handleStateToggle(state)}
+                              >
+                                {state} ×
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="bio"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Professional Bio</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Tell potential clients about your experience, specializations, and what sets you apart..."
+                            className="min-h-24"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Optional: Describe your expertise and services (max 500 characters). You can set your pricing later in the dashboard.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating Account & Profile...' : 'Create Agent Profile'}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
