@@ -228,7 +228,7 @@ const QuickAccountSetup: React.FC = () => {
                 </button>
               </div>
             </div>
-
+{/* 
             {mode === 'signup' && (
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -246,7 +246,7 @@ const QuickAccountSetup: React.FC = () => {
                   />
                 </div>
               </div>
-            )}
+            )} */}
 
             <Button
               type="submit"
@@ -258,13 +258,13 @@ const QuickAccountSetup: React.FC = () => {
           </form>
 
           <div className="text-center pt-4 space-y-2">
-            <Button
+            {/* <Button
               variant="ghost"
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
               className="text-sm"
             >
               {mode === 'signin' ? "Don't have an account? Create one" : "Already have an account? Sign in"}
-            </Button>
+            </Button> */}
 
             {mode === 'signin' && (
               <div className="flex flex-col gap-2">
