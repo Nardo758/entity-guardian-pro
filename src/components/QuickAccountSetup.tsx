@@ -258,13 +258,13 @@ const QuickAccountSetup: React.FC = () => {
           </form>
 
           <div className="text-center pt-4 space-y-2">
-            <Button
+            {/* <Button
               variant="ghost"
               onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
               className="text-sm"
             >
               {mode === 'signin' ? "Don't have an account? Create one" : "Already have an account? Sign in"}
-            </Button>
+            </Button> */}
 
             {mode === 'signin' && (
               <div className="flex flex-col gap-2">
@@ -276,7 +276,7 @@ const QuickAccountSetup: React.FC = () => {
                   <RotateCcw className="h-4 w-4 mr-1" />
                   Forgot Password
                 </Button>
-                <Button
+                {/* <Button
                   variant="ghost"
                   onClick={handleResendVerification}
                   disabled={isLoading}
@@ -284,7 +284,7 @@ const QuickAccountSetup: React.FC = () => {
                 >
                   <Mail className="h-4 w-4 mr-1" />
                   Resend Verification Email
-                </Button>
+                </Button> */}
               </div>
             )}
           </div>

@@ -328,14 +328,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               ) : user ? (
                 <UserMenu />
               ) : (
-                <>
-                  <Button variant="ghost" asChild>
-                    <Link to="/login">Sign In</Link>
-                  </Button>
-                  <Button asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary">
-                    <Link to="/signup">Get Started</Link>
-                  </Button>
-                </>
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Sign In</Link>
+                </Button>
               )}
             </div>
           </div>
