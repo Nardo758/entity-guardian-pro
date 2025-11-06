@@ -1,348 +1,346 @@
 # Loading States Implementation Guide
 
 ## Overview
+This guide explains the comprehensive loading state system implemented across Entity Guardian Pro for better user experience during data fetching operations.
 
-This document describes the standardized loading and error state implementation across all data-fetching hooks in Entity Guardian Pro.
+## Components
 
-## What Was Implemented
+### 1. LoadingState Component
+Displays a spinner with an optional message.
 
-### 1. **Hook State Types** (`src/types/hooks.ts`)
-Standardized TypeScript types for consistent state management:
-- `AsyncState` - Basic loading/error state
-- `QueryResult<T>` - Complete data fetch result with refetch
-- `MutationState` - Mutation operation state
-
-### 2. **Updated Hooks**
-
-All major data-fetching hooks now return consistent state:
-
-```typescript
-const { data, loading, error, refetch } = useHook();
-```
-
-#### Updated Hooks List:
-- ✅ `useEntities` - Entity management
-- ✅ `useAgents` - Agent management  
-- ✅ `useDocuments` - Document management
-- ✅ `useNotifications` - Notification system
-- ✅ `useTeams` - Team collaboration
-- ✅ `useSubscription` - Subscription management
-- ✅ `usePayments` - Payment tracking
-- ✅ `useAnalytics` - Analytics data
-- ✅ `useAgentInvitations` - Agent invitation workflow
-
-### 3. **Reusable UI Components**
-
-#### `<LoadingState />` - Loading indicator
 ```tsx
-<LoadingState 
-  message="Loading your data..." 
-  size="md"
-  fullScreen={false}
-/>
+import { LoadingState, InlineLoadingState } from '@/components/LoadingState';
+
+// Full-screen loading
+<LoadingState fullScreen message="Loading your data..." />
+
+// Standard loading
+<LoadingState size="md" message="Fetching entities..." />
+
+// Inline loading (for smaller areas)
+<InlineLoadingState message="Updating..." />
 ```
 
 **Props:**
-- `message?: string` - Custom loading message
-- `size?: 'sm' | 'md' | 'lg'` - Spinner size
-- `fullScreen?: boolean` - Cover entire viewport
+- `message?: string` - Loading message (default: "Loading...")
+- `size?: 'sm' | 'md' | 'lg'` - Spinner size (default: 'md')
+- `fullScreen?: boolean` - Full-screen display (default: false)
 
-#### `<ErrorState />` - Error display with retry
+---
+
+### 2. ErrorState Component
+Displays error messages with optional retry functionality.
+
 ```tsx
+import { ErrorState, InlineErrorState } from '@/components/ErrorState';
+
+// Full error display with retry
 <ErrorState 
-  error={error}
+  error={error} 
+  onRetry={refetch} 
   title="Failed to load data"
-  onRetry={refetch}
-  retryLabel="Try again"
-  fullScreen={false}
 />
+
+// Inline error (for smaller areas)
+<InlineErrorState error={error} onRetry={refetch} />
 ```
 
 **Props:**
 - `error: Error | null` - Error object to display
-- `title?: string` - Error title
-- `onRetry?: () => void` - Retry callback function
-- `retryLabel?: string` - Retry button text
-- `fullScreen?: boolean` - Cover entire viewport
+- `onRetry?: () => void` - Callback for retry button
+- `fullScreen?: boolean` - Full-screen display (default: false)
+- `title?: string` - Error title (default: "Something went wrong")
 
-#### `<DataFetchWrapper />` - All-in-one wrapper
-Combines loading, error, and empty states in one component.
+---
+
+### 3. EmptyState Component
+Displays a friendly message when no data is available.
 
 ```tsx
-<DataFetchWrapper 
-  loading={loading} 
-  error={error} 
-  data={entities}
-  onRetry={refetch}
-  loadingMessage="Loading entities..."
-  errorTitle="Failed to load entities"
-  emptyMessage="No entities found"
->
-  <YourComponent data={entities} />
-</DataFetchWrapper>
+import EmptyState from '@/components/EmptyState';
+
+<EmptyState
+  icon={<Inbox className="w-12 h-12" />}
+  title="No entities found"
+  description="Get started by creating your first entity"
+  actionLabel="Add Entity"
+  onAction={handleAddEntity}
+/>
 ```
 
 **Props:**
-- `loading: boolean` - Loading state
-- `error: Error | null` - Error state
-- `data?: unknown` - Data to check for empty state
-- `children: ReactNode` - Content to render when loaded
-- `loadingMessage?: string` - Custom loading message
-- `errorTitle?: string` - Custom error title
-- `onRetry?: () => void` - Retry function
-- `emptyMessage?: string` - Message for empty data
-- `fullScreen?: boolean` - Cover entire viewport
+- `icon?: ReactNode` - Custom icon (default: Inbox)
+- `title: string` - Main heading (required)
+- `description?: string` - Supporting text
+- `actionLabel?: string` - Button text
+- `onAction?: () => void` - Button click handler
+- `fullScreen?: boolean` - Full-screen display (default: false)
 
-## Usage Examples
+---
 
-### Example 1: Simple Data Fetching with Wrapper
+### 4. Skeleton Loaders
+Animated placeholder components for better perceived performance.
 
 ```tsx
-import { useEntities } from '@/hooks/useEntities';
-import { DataFetchWrapper } from '@/components/DataFetchWrapper';
-import { EntityList } from '@/components/EntityList';
+import { 
+  CardSkeleton, 
+  TableSkeleton, 
+  ListSkeleton,
+  FormSkeleton,
+  DashboardSkeleton 
+} from '@/components/SkeletonLoaders';
 
-const EntitiesPage = () => {
-  const { entities, loading, error, refetch, deleteEntity } = useEntities();
+// Card loading
+if (loading) return <CardSkeleton />;
 
-  return (
-    <DataFetchWrapper 
-      loading={loading} 
-      error={error} 
-      data={entities}
-      onRetry={refetch}
-      emptyMessage="No entities found. Add your first entity to get started."
-    >
-      <EntityList entities={entities} onDelete={deleteEntity} />
-    </DataFetchWrapper>
-  );
+// List loading
+if (loading) return <ListSkeleton items={5} />;
+
+// Table loading
+if (loading) return <TableSkeleton rows={10} />;
+
+// Form loading
+if (loading) return <FormSkeleton />;
+
+// Dashboard loading
+if (loading) return <DashboardSkeleton />;
+```
+
+---
+
+## Hooks
+
+### useAsyncData Hook
+Enhanced data fetching with built-in loading states, error handling, and retry logic.
+
+```tsx
+import { useAsyncData } from '@/hooks/useAsyncData';
+
+const MyComponent = () => {
+  const { data, loading, error, refetch, retry, isRetrying } = useAsyncData({
+    fetchFunction: async () => {
+      const response = await fetch('/api/data');
+      return response.json();
+    },
+    dependencies: [userId],
+    retryAttempts: 3,
+    retryDelay: 1000,
+    onError: (error) => console.error('Failed:', error),
+  });
+
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorState error={error} onRetry={retry} />;
+  if (!data) return <EmptyState title="No data" />;
+
+  return <div>{/* Render data */}</div>;
 };
 ```
 
-### Example 2: Manual Loading/Error Handling
+**Options:**
+- `fetchFunction: () => Promise<T>` - Async function to fetch data (required)
+- `dependencies?: any[]` - Re-fetch when dependencies change
+- `initialData?: T` - Initial data value
+- `onError?: (error: Error) => void` - Error callback
+- `retryAttempts?: number` - Max retry attempts (default: 3)
+- `retryDelay?: number` - Initial retry delay in ms (default: 1000)
+- `enabled?: boolean` - Enable/disable fetching (default: true)
 
+**Returns:**
+- `data: T | undefined` - Fetched data
+- `loading: boolean` - Initial loading state
+- `error: Error | null` - Error object if failed
+- `refetch: () => Promise<void>` - Manually refetch data
+- `retry: () => Promise<void>` - Retry failed request
+- `isRetrying: boolean` - Retry in progress
+
+---
+
+## Usage Patterns
+
+### Pattern 1: Basic Data Fetching
 ```tsx
-import { useNotifications } from '@/hooks/useNotifications';
-import { LoadingState } from '@/components/LoadingState';
-import { ErrorState } from '@/components/ErrorState';
+const MyComponent = () => {
+  const { entities, loading, error } = useEntities();
 
-const NotificationsPanel = () => {
-  const { notifications, loading, error, refetch } = useNotifications();
-
-  if (loading) {
-    return <LoadingState message="Loading notifications..." />;
-  }
-
-  if (error) {
-    return (
-      <ErrorState 
-        error={error} 
-        title="Failed to load notifications"
-        onRetry={refetch}
-      />
-    );
-  }
+  if (loading) return <CardSkeleton />;
+  if (error) return <ErrorState error={error} />;
+  if (entities.length === 0) return <EmptyState title="No entities" />;
 
   return (
     <div>
-      {notifications.map(notif => (
-        <NotificationCard key={notif.id} notification={notif} />
+      {entities.map(entity => (
+        <EntityCard key={entity.id} entity={entity} />
       ))}
     </div>
   );
 };
 ```
 
-### Example 3: Conditional Rendering
-
+### Pattern 2: With Retry Logic
 ```tsx
-import { useTeams } from '@/hooks/useTeams';
+const MyComponent = () => {
+  const { documents, loading, error, refetch } = useDocuments();
 
-const TeamSelector = () => {
-  const { teams, loading, error, refetch } = useTeams();
-
-  if (loading) return <div>Loading teams...</div>;
+  if (loading) return <ListSkeleton items={3} />;
   
   if (error) {
-    return (
-      <div className="text-red-500">
-        {error.message}
-        <button onClick={refetch}>Retry</button>
-      </div>
-    );
+    return <ErrorState error={error} onRetry={refetch} />;
   }
 
-  if (teams.length === 0) {
-    return <div>No teams available</div>;
+  if (documents.length === 0) {
+    return <EmptyState title="No documents" />;
   }
+
+  return <DocumentList documents={documents} />;
+};
+```
+
+### Pattern 3: Inline Loading States
+```tsx
+const MyComponent = () => {
+  const { data, loading, error } = useData();
+  const [updating, setUpdating] = useState(false);
+
+  const handleUpdate = async () => {
+    setUpdating(true);
+    await updateData();
+    setUpdating(false);
+  };
 
   return (
-    <select>
-      {teams.map(team => (
-        <option key={team.id} value={team.id}>
-          {team.name}
-        </option>
-      ))}
-    </select>
+    <div>
+      {loading ? <InlineLoadingState /> : <DataView data={data} />}
+      
+      {error && <InlineErrorState error={error} />}
+      
+      <Button onClick={handleUpdate} disabled={updating}>
+        {updating && <InlineLoadingState message="Saving..." />}
+        {!updating && 'Save Changes'}
+      </Button>
+    </div>
   );
 };
 ```
 
-### Example 4: Multiple Data Sources
-
+### Pattern 4: Multiple Loading States
 ```tsx
-import { useEntities } from '@/hooks/useEntities';
-import { useDocuments } from '@/hooks/useDocuments';
-import { LoadingState } from '@/components/LoadingState';
-import { ErrorState } from '@/components/ErrorState';
+const DashboardComponent = () => {
+  const { entities, loading: entitiesLoading } = useEntities();
+  const { documents, loading: docsLoading } = useDocuments();
+  const { notifications, loading: notifLoading } = useNotifications();
 
-const Dashboard = () => {
-  const { 
-    entities, 
-    loading: entitiesLoading, 
-    error: entitiesError,
-    refetch: refetchEntities 
-  } = useEntities();
-  
-  const { 
-    documents, 
-    loading: docsLoading, 
-    error: docsError,
-    refetch: refetchDocs 
-  } = useDocuments();
+  const isLoading = entitiesLoading || docsLoading || notifLoading;
 
-  const isLoading = entitiesLoading || docsLoading;
-  const error = entitiesError || docsError;
-  
   if (isLoading) {
-    return <LoadingState message="Loading dashboard..." fullScreen />;
-  }
-
-  if (error) {
-    return (
-      <ErrorState 
-        error={error}
-        onRetry={() => {
-          refetchEntities();
-          refetchDocs();
-        }}
-      />
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
-    <div>
-      <EntitySummary entities={entities} />
-      <DocumentSummary documents={documents} />
+    <div className="grid grid-cols-3 gap-4">
+      <EntitiesPanel entities={entities} />
+      <DocumentsPanel documents={documents} />
+      <NotificationsPanel notifications={notifications} />
     </div>
   );
 };
 ```
+
+### Pattern 5: Conditional Data Fetching
+```tsx
+const ConditionalFetch = () => {
+  const [entityId, setEntityId] = useState<string | null>(null);
+
+  const { data, loading, error } = useAsyncData({
+    fetchFunction: async () => {
+      if (!entityId) return null;
+      return fetchEntityDetails(entityId);
+    },
+    dependencies: [entityId],
+    enabled: !!entityId, // Only fetch when entityId exists
+  });
+
+  return (
+    <div>
+      <EntitySelector onChange={setEntityId} />
+      
+      {loading && <LoadingState message="Loading details..." />}
+      {error && <ErrorState error={error} />}
+      {data && <EntityDetails data={data} />}
+    </div>
+  );
+};
+```
+
+---
 
 ## Best Practices
 
-### 1. **Always Handle All States**
-```tsx
-// ✅ Good
-const { data, loading, error, refetch } = useHook();
+### 1. Choose the Right Loading Component
+- **Skeleton Loaders**: Best for initial page loads (better perceived performance)
+- **LoadingState**: Good for full-page or section loading
+- **InlineLoadingState**: Use for small UI updates or button states
 
-// ❌ Avoid
-const { data } = useHook(); // Missing loading/error handling
+### 2. Always Handle All States
+```tsx
+// ✅ Good - handles all states
+if (loading) return <LoadingState />;
+if (error) return <ErrorState error={error} onRetry={refetch} />;
+if (data.length === 0) return <EmptyState />;
+return <DataView data={data} />;
+
+// ❌ Bad - missing error handling
+if (loading) return <LoadingState />;
+return <DataView data={data} />;
 ```
 
-### 2. **Provide Helpful Error Messages**
+### 3. Provide Clear Feedback
 ```tsx
-// ✅ Good
-<DataFetchWrapper 
-  error={error}
-  errorTitle="Failed to load your entities"
-  onRetry={refetch}
-/>
+// ✅ Good - specific messages
+<LoadingState message="Loading your entities..." />
+<ErrorState error={error} title="Failed to load entities" />
 
-// ❌ Avoid
-{error && <div>Error!</div>}
+// ❌ Bad - generic messages
+<LoadingState message="Loading..." />
+<ErrorState error={error} />
 ```
 
-### 3. **Use Loading Indicators for Better UX**
+### 4. Implement Retry Logic
 ```tsx
-// ✅ Good - Shows immediate feedback
-{loading && <LoadingState message="Loading..." />}
-
-// ❌ Avoid - User sees blank screen
-{!loading && <Content />}
-```
-
-### 4. **Implement Retry Functionality**
-Always provide a way for users to retry failed operations:
-```tsx
+// ✅ Good - allows user to retry
 <ErrorState error={error} onRetry={refetch} />
+
+// ❌ Bad - no way to recover
+<ErrorState error={error} />
 ```
 
-### 5. **Handle Empty States**
+### 5. Use Skeleton Loaders for Better UX
 ```tsx
-<DataFetchWrapper 
-  data={items}
-  emptyMessage="No items yet. Add your first item to get started."
->
-  {/* content */}
-</DataFetchWrapper>
+// ✅ Good - shows page structure while loading
+if (loading) return <CardSkeleton />;
+
+// ⚠️ Acceptable but less optimal
+if (loading) return <LoadingState message="Loading..." />;
 ```
 
-## Error Handling Pattern
+---
 
-All hooks follow this standardized error handling pattern:
+## Existing Hooks with Loading States
 
-```typescript
-const fetchData = async () => {
-  try {
-    setLoading(true);
-    setError(null);
-    
-    const { data, error: fetchError } = await supabase
-      .from('table')
-      .select('*');
+All data-fetching hooks in the application already implement loading and error states:
 
-    if (fetchError) throw fetchError;
-    setData(data);
-  } catch (err) {
-    const error = err instanceof Error 
-      ? err 
-      : new Error('Failed to load data');
-    setError(error);
-    console.error('Error:', err);
-    toast.error(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
-```
+- ✅ `useEntities` - Entity management
+- ✅ `useDocuments` - Document handling
+- ✅ `useAgents` - Agent data
+- ✅ `useNotifications` - Notifications
+- ✅ `useAnalytics` - Analytics data
+- ✅ `useSubscription` - Subscription info
+- ✅ `useTeams` - Team management
+- ✅ `usePayments` - Payment operations
+- ✅ And more...
 
-## Testing Loading States
+All these hooks return `{ data, loading, error, refetch }` for consistent usage patterns.
 
-### Manual Testing Checklist
-- [ ] Initial page load shows loading indicator
-- [ ] Error state displays properly with error message
-- [ ] Retry button successfully refetches data
-- [ ] Empty state shows when no data available
-- [ ] Loading indicator disappears when data loads
-- [ ] Multiple rapid refetches don't cause issues
-- [ ] Network errors display user-friendly messages
-
-### Simulating States in Development
-
-```tsx
-// Simulate loading
-const [loading, setLoading] = useState(true);
-useEffect(() => {
-  setTimeout(() => setLoading(false), 2000);
-}, []);
-
-// Simulate error
-const [error] = useState(new Error('Test error message'));
-
-// Simulate empty state
-const [data] = useState([]);
-```
+---
 
 ## Migration Guide
 
@@ -351,11 +349,13 @@ const [data] = useState([]);
 **Before:**
 ```tsx
 const MyComponent = () => {
-  const { entities, loading } = useEntities();
+  const { entities } = useEntities();
   
-  if (loading) return <div>Loading...</div>;
-  
-  return <EntityList entities={entities} />;
+  return (
+    <div>
+      {entities.map(e => <EntityCard key={e.id} entity={e} />)}
+    </div>
+  );
 };
 ```
 
@@ -364,47 +364,58 @@ const MyComponent = () => {
 const MyComponent = () => {
   const { entities, loading, error, refetch } = useEntities();
   
+  if (loading) return <ListSkeleton items={3} />;
+  if (error) return <ErrorState error={error} onRetry={refetch} />;
+  if (entities.length === 0) {
+    return <EmptyState title="No entities" actionLabel="Add Entity" />;
+  }
+  
   return (
-    <DataFetchWrapper 
-      loading={loading} 
-      error={error} 
-      data={entities}
-      onRetry={refetch}
-      emptyMessage="No entities found"
-    >
-      <EntityList entities={entities} />
-    </DataFetchWrapper>
+    <div>
+      {entities.map(e => <EntityCard key={e.id} entity={e} />)}
+    </div>
   );
 };
 ```
 
-## Impact
+---
 
-### Benefits
-✅ **Consistent UX** - All data loading behaves the same way  
-✅ **Better Error Handling** - Users see helpful error messages  
-✅ **Retry Functionality** - Users can recover from errors  
-✅ **Type Safety** - TypeScript ensures correct usage  
-✅ **Reduced Boilerplate** - Reusable components save code  
-✅ **Improved Accessibility** - Loading states announced to screen readers  
+## Testing Loading States
 
-### Metrics
-- **9 hooks updated** with consistent error states
-- **3 reusable components** created
-- **1 comprehensive wrapper** component
-- **Type definitions** for standardized patterns
+```tsx
+// Simulate loading
+const TestComponent = () => {
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 2000);
+  }, []);
+  
+  if (loading) return <CardSkeleton />;
+  return <div>Content loaded!</div>;
+};
 
-## Next Steps
+// Simulate error
+const ErrorTestComponent = () => {
+  const [error] = useState(new Error('Test error'));
+  return <ErrorState error={error} onRetry={() => console.log('Retry')} />;
+};
+```
 
-1. ✅ Create loading state components
-2. ✅ Update all data-fetching hooks
-3. ⏳ Update all components using hooks (in progress)
-4. ⏳ Add loading state tests
-5. ⏳ Document performance improvements
+---
 
-## Support
+## Performance Considerations
 
-For questions or issues with loading states:
-1. Check this guide first
-2. Review component examples in `src/components/`
-3. Check hook implementations in `src/hooks/`
+1. **Use React.memo** for skeleton components to prevent unnecessary re-renders
+2. **Implement suspense boundaries** for code-split components
+3. **Avoid nested loading states** - show one consolidated loading state
+4. **Use optimistic updates** where appropriate to reduce perceived loading time
+
+---
+
+## Resources
+
+- Components: `/src/components/LoadingState.tsx`, `/src/components/ErrorState.tsx`, `/src/components/EmptyState.tsx`
+- Skeletons: `/src/components/SkeletonLoaders.tsx`
+- Hooks: `/src/hooks/useAsyncData.ts`
+- Example: `/src/components/DataFetchExample.tsx`
