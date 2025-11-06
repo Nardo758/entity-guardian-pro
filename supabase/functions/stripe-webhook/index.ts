@@ -93,7 +93,7 @@ serve(async (req) => {
         log('checkout.session.completed', { id: session.id, customer: session.customer });
 
         let customerEmail = session.customer_details?.email || undefined;
-        let customerId = typeof session.customer === 'string' ? session.customer : undefined;
+        const customerId = typeof session.customer === 'string' ? session.customer : undefined;
         const subscriptionId = typeof session.subscription === 'string' ? session.subscription : undefined;
 
         if (!customerEmail && customerId) {

@@ -70,10 +70,6 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     ([_, config]) => config.theme || config.color
   )
 
-  if (!colorConfig.length) {
-    return null
-  }
-
   // Security: Generate CSS safely without dangerouslySetInnerHTML
   const cssVariables = React.useMemo(() => {
     const styles: Record<string, string> = {}
@@ -90,6 +86,10 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     
     return styles
   }, [colorConfig])
+
+  if (!colorConfig.length) {
+    return null
+  }
 
   return (
     <style 

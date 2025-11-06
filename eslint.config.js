@@ -26,7 +26,7 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
       // Gradually enable strict type checking
       "@typescript-eslint/no-explicit-any": "warn", // Start with warnings
-      "@typescript-eslint/prefer-const": "error",
+      "prefer-const": "error", // Use native ESLint rule
       "@typescript-eslint/no-require-imports": "error",
       "react-hooks/exhaustive-deps": "warn",
     },

@@ -75,7 +75,7 @@ export const useInputValidation = () => {
     ],
     phone: [
       {
-        test: (value: string) => !value || /^\+?[\d\s\-\(\)]+$/.test(value),
+        test: (value: string) => !value || /^\+?[\d\s\-()]+$/.test(value),
         message: 'Phone number contains invalid characters'
       },
       {

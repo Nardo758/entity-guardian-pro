@@ -57,8 +57,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending email notification ${notification_id} to ${user_email}`);
 
     // Generate email content based on notification type
-    let emailSubject = title;
-    let emailHtml = `
+    const emailSubject = title;
+    const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #f8f9fa; padding: 20px; text-align: center;">
           <h1 style="color: #333; margin: 0;">Entity Renewal Pro</h1>

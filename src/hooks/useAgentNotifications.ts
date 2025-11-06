@@ -116,9 +116,10 @@ export const useAgentNotifications = () => {
         return `${invitation.agent_email} has accepted the registered agent invitation for ${entityName}`;
       case 'declined':
         return `${invitation.agent_email} has declined the registered agent invitation for ${entityName}`;
-      case 'pending':
+      case 'pending': {
         const daysLeft = Math.ceil((new Date(invitation.expires_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
         return `Invitation to ${invitation.agent_email} for ${entityName} is pending (expires in ${daysLeft} days)`;
+      }
       case 'expired':
         return `Invitation to ${invitation.agent_email} for ${entityName} has expired`;
       default:
