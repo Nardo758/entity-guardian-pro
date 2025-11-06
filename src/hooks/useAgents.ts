@@ -7,10 +7,13 @@ import { toast } from 'sonner';
 export const useAgents = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchAgents = async (filters?: AgentSearchFilters) => {
     try {
+      setLoading(true);
+      setError(null);
       let query = supabase
         .from('agents')
         .select('*')
@@ -32,13 +35,15 @@ export const useAgents = () => {
         query = query.eq('is_available', true);
       }
 
-      const { data, error } = await query;
+      const { data, error: fetchError } = await query;
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setAgents((data || []) as Agent[]);
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      toast.error('Failed to load registered agents');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load registered agents');
+      setError(error);
+      console.error('Error fetching agents:', err);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -47,6 +52,8 @@ export const useAgents = () => {
   // Fetch agents for directory browsing - returns only non-sensitive data
   const fetchAgentsDirectory = async (filters?: AgentSearchFilters) => {
     try {
+      setLoading(true);
+      setError(null);
       // Query the agents table but only select non-sensitive fields
       // RLS will ensure users only see agents they have relationships with
       let query = supabase
@@ -73,9 +80,9 @@ export const useAgents = () => {
         query = query.gte('years_experience', filters.minExperience);
       }
 
-      const { data, error } = await query;
+      const { data, error: fetchError } = await query;
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       
       // Transform the data to match Agent interface, excluding sensitive fields
       const agentData = (data || []).map(agent => ({
@@ -85,9 +92,11 @@ export const useAgents = () => {
       })) as Agent[];
       
       setAgents(agentData);
-    } catch (error) {
-      console.error('Error fetching agents directory:', error);
-      toast.error('Failed to load registered agents directory. You may need to create business relationships first.');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load registered agents directory. You may need to create business relationships first.');
+      setError(error);
+      console.error('Error fetching agents directory:', err);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -177,6 +186,7 @@ export const useAgents = () => {
   return {
     agents,
     loading,
+    error,
     fetchAgents,
     fetchAgentsDirectory,
     createAgentProfile,

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminSetupPage from "./pages/AdminSetupPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -65,8 +66,9 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AuthProvider>
-            <Routes>
+          <ErrorBoundary>
+            <AuthProvider>
+              <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
               <Route path="/signup" element={<UserTypeSelection />} />
@@ -107,8 +109,9 @@ const App = () => {
               <Route path="/agent-invitation/:token" element={<ProtectedRoute><AgentInvitationAccept /></ProtectedRoute>} />
               <Route path="/agent-signup" element={<AgentSignup />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
+              </Routes>
+            </AuthProvider>
+          </ErrorBoundary>
         </BrowserRouter>
         {showPWAInstallPrompt && (
           <PWAInstallPrompt onDismiss={handleDismissPWAInstall} />

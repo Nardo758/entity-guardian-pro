@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Building2, Calendar, DollarSign, Users, MapPin } from 'lucide-react';
@@ -11,7 +11,7 @@ interface SimpleEntityCardProps {
   onDelete?: (id: string) => void;
 }
 
-export const SimpleEntityCard: React.FC<SimpleEntityCardProps> = ({ entity, onDelete }) => {
+export const SimpleEntityCard = memo<SimpleEntityCardProps>(({ entity, onDelete }) => {
   const entityFee = stateRequirements[entity.state]?.[entity.type]?.fee || 0;
   const stateName = stateRequirements[entity.state]?.name || entity.state;
 
@@ -116,4 +116,6 @@ export const SimpleEntityCard: React.FC<SimpleEntityCardProps> = ({ entity, onDe
       </CardContent>
     </Card>
   );
-};
+});
+
+SimpleEntityCard.displayName = 'SimpleEntityCard';

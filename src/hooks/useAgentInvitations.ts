@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 export const useAgentInvitations = () => {
   const [invitations, setInvitations] = useState<AgentInvitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [metrics, setMetrics] = useState({
     totalSent: 0,
     pendingCount: 0,
@@ -21,12 +22,15 @@ export const useAgentInvitations = () => {
     if (!user) {
       setInvitations([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
+      setLoading(true);
+      setError(null);
       // Fetch invitations
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('agent_invitations')
         .select(`
           *,
@@ -36,7 +40,7 @@ export const useAgentInvitations = () => {
         .eq('entity_owner_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setInvitations((data || []) as any[]);
 
       // Fetch metrics
@@ -56,11 +60,13 @@ export const useAgentInvitations = () => {
           entitiesWithAgents: m.entities_with_agents
         });
       }
-    } catch (error) {
-      console.error('Error fetching invitations:', error);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load invitations');
+      setError(error);
+      console.error('Error fetching invitations:', err);
       toast({
         title: "Error",
-        description: "Failed to load invitations",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -280,6 +286,7 @@ export const useAgentInvitations = () => {
   return {
     invitations,
     loading,
+    error,
     metrics,
     sendInvitation,
     respondToInvitation,

@@ -14,6 +14,7 @@ import { useEntities } from '@/hooks/useEntities';
 import { EntityForm } from '@/components/EntityForm';
 import EntityInviteAgentModal from '@/components/EntityInviteAgentModal';
 import AddAgentModal from '@/components/AddAgentModal';
+import { DataFetchWrapper } from '@/components/DataFetchWrapper';
 import { ArrowLeft, Plus, Search, Filter, Building, Edit, Trash2, Users } from 'lucide-react';
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -21,7 +22,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 const Entities: React.FC = () => {
   const navigate = useNavigate();
   const permissions = useTierPermissions();
-  const { entities, loading, deleteEntity } = useEntities();
+  const { entities, loading, error, deleteEntity, refetch } = useEntities();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddAgentModal, setShowAddAgentModal] = useState(false);
@@ -95,7 +96,15 @@ const Entities: React.FC = () => {
           subtitle="Manage your business entities and agent assignments"
           onAddEntity={() => setShowAddForm(true)} />
           
-        <div className="container-full p-5 space-y-6">
+        <DataFetchWrapper
+          loading={loading}
+          error={error}
+          data={entities}
+          onRetry={refetch}
+          loadingMessage="Loading your entities..."
+          errorTitle="Failed to load entities"
+        >
+          <div className="container-full p-5 space-y-6">
           {/* Header */}
           {/* <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -329,6 +338,7 @@ const Entities: React.FC = () => {
             </Card>
           )}
         </div>
+        </DataFetchWrapper>
 
         {/* Modals */}
         {showAddForm && (
