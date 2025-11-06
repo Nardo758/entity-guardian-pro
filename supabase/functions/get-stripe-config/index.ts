@@ -52,3 +52,5 @@ serve(async (req) => {
     );
   }
 });
+
+export const verifyJWT = false;
