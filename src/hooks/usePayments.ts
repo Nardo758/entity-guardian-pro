@@ -7,27 +7,33 @@ import { toast } from 'sonner';
 export const usePayments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchPayments = async () => {
     if (!user) {
       setPayments([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await supabase
         .from('payments')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setPayments((data || []) as Payment[]);
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      toast.error('Failed to load payments');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load payments');
+      setError(error);
+      console.error('Error fetching payments:', err);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -97,6 +103,7 @@ export const usePayments = () => {
   return {
     payments,
     loading,
+    error,
     updatePaymentStatus,
     refetch: fetchPayments,
   };

@@ -9,6 +9,7 @@ export const useAnalytics = (entityId?: string) => {
   const [complianceChecks, setComplianceChecks] = useState<ComplianceCheck[]>([]);
   const [costProjections, setCostProjections] = useState<CostProjection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchAnalyticsData = async () => {
@@ -27,13 +28,15 @@ export const useAnalytics = (entityId?: string) => {
         query = query.eq('entity_id', entityId);
       }
 
-      const { data, error } = await query.order('metric_date', { ascending: false });
+      const { data, error: fetchError } = await query.order('metric_date', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setAnalyticsData((data || []) as AnalyticsData[]);
-    } catch (error) {
-      console.error('Error fetching analytics data:', error);
-      toast.error('Failed to load analytics data');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load analytics data');
+      setError(error);
+      console.error('Error fetching analytics data:', err);
+      toast.error(error.message);
     }
   };
 
@@ -53,13 +56,15 @@ export const useAnalytics = (entityId?: string) => {
         query = query.eq('entity_id', entityId);
       }
 
-      const { data, error } = await query.order('due_date', { ascending: true });
+      const { data, error: fetchError } = await query.order('due_date', { ascending: true });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setComplianceChecks((data || []) as ComplianceCheck[]);
-    } catch (error) {
-      console.error('Error fetching compliance checks:', error);
-      toast.error('Failed to load compliance checks');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load compliance checks');
+      setError(error);
+      console.error('Error fetching compliance checks:', err);
+      toast.error(error.message);
     }
   };
 
@@ -79,18 +84,21 @@ export const useAnalytics = (entityId?: string) => {
         query = query.eq('entity_id', entityId);
       }
 
-      const { data, error } = await query.order('projection_date', { ascending: false });
+      const { data, error: fetchError } = await query.order('projection_date', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setCostProjections((data || []) as CostProjection[]);
-    } catch (error) {
-      console.error('Error fetching cost projections:', error);
-      toast.error('Failed to load cost projections');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load cost projections');
+      setError(error);
+      console.error('Error fetching cost projections:', err);
+      toast.error(error.message);
     }
   };
 
   const fetchAllData = async () => {
     setLoading(true);
+    setError(null);
     await Promise.all([
       fetchAnalyticsData(),
       fetchComplianceChecks(),
@@ -242,6 +250,7 @@ export const useAnalytics = (entityId?: string) => {
     complianceChecks,
     costProjections,
     loading,
+    error,
     addAnalyticsData,
     updateComplianceCheck,
     addCostProjection,

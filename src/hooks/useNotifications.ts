@@ -8,29 +8,35 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchNotifications = async () => {
     if (!user) {
       setNotifications([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await supabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       const notificationData = (data || []) as Notification[];
       setNotifications(notificationData);
       setUnreadCount(notificationData.filter(n => !n.read).length);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast.error('Failed to load notifications');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load notifications');
+      setError(error);
+      console.error('Error fetching notifications:', err);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -155,6 +161,7 @@ export const useNotifications = () => {
     notifications,
     unreadCount,
     loading,
+    error,
     markAsRead,
     markAllAsRead,
     createNotification,

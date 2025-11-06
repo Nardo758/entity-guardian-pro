@@ -10,6 +10,7 @@ export const useTeams = () => {
   const [memberships, setMemberships] = useState<TeamMembership[]>([]);
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchTeams = async () => {
@@ -17,10 +18,13 @@ export const useTeams = () => {
       setTeams([]);
       setMemberships([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
+      setLoading(true);
+      setError(null);
       // Get teams user belongs to
       const { data: teamMemberships, error: membershipsError } = await supabase
         .from('team_memberships')
@@ -46,9 +50,11 @@ export const useTeams = () => {
         setCurrentTeam(teamsData[0]);
       }
 
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-      toast.error('Failed to load teams');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load teams');
+      setError(error);
+      console.error('Error fetching teams:', err);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -298,6 +304,7 @@ export const useTeams = () => {
     memberships,
     invitations,
     loading,
+    error,
     createTeam,
     inviteTeamMember,
     acceptInvitation,

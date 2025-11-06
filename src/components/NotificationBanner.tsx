@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Bell, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Notification } from '@/types/entity';
@@ -8,7 +8,7 @@ interface NotificationBannerProps {
   onDismiss: (id: string) => void;
 }
 
-export const NotificationBanner: React.FC<NotificationBannerProps> = ({ 
+export const NotificationBanner = memo<NotificationBannerProps>(({ 
   notifications, 
   onDismiss 
 }) => {
@@ -50,4 +50,6 @@ export const NotificationBanner: React.FC<NotificationBannerProps> = ({
       </div>
     </div>
   );
-};
+});
+
+NotificationBanner.displayName = 'NotificationBanner';

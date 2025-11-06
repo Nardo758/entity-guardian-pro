@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { Mail, Phone, Trash2, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ interface EntityListProps {
   onDelete: (id: string) => void;
 }
 
-export const EntityList: React.FC<EntityListProps> = ({ entities, onDelete }) => {
+export const EntityList = memo<EntityListProps>(({ entities, onDelete }) => {
   const navigate = useNavigate();
   
   if (entities.length === 0) {
@@ -132,4 +132,6 @@ export const EntityList: React.FC<EntityListProps> = ({ entities, onDelete }) =>
       ))}
     </div>
   );
-};
+});
+
+EntityList.displayName = 'EntityList';

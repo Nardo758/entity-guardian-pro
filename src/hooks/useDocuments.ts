@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 export const useDocuments = (entityId?: string) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
@@ -14,10 +15,13 @@ export const useDocuments = (entityId?: string) => {
     if (!user) {
       setDocuments([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
+      setLoading(true);
+      setError(null);
       let query = supabase
         .from('documents')
         .select('*')
@@ -27,13 +31,15 @@ export const useDocuments = (entityId?: string) => {
         query = query.eq('entity_id', entityId);
       }
 
-      const { data, error } = await query.order('uploaded_at', { ascending: false });
+      const { data, error: fetchError } = await query.order('uploaded_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       setDocuments((data || []) as Document[]);
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      toast.error('Failed to load documents');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to load documents');
+      setError(error);
+      console.error('Error fetching documents:', err);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -175,6 +181,7 @@ export const useDocuments = (entityId?: string) => {
   return {
     documents,
     loading,
+    error,
     uploading,
     uploadDocument,
     deleteDocument,

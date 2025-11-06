@@ -14,24 +14,30 @@ interface SubscriptionInfo {
 export const useSubscription = () => {
   const [subscription, setSubscription] = useState<SubscriptionInfo>({ subscribed: false });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const checkSubscription = async () => {
     if (!user) {
       setSubscription({ subscribed: false });
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      setLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await supabase.functions.invoke('check-subscription');
       
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       
       setSubscription(data);
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      toast.error('Failed to check subscription status');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to check subscription status');
+      setError(error);
+      console.error('Error checking subscription:', err);
+      toast.error(error.message);
       setSubscription({ subscribed: false });
     } finally {
       setLoading(false);
@@ -130,6 +136,7 @@ export const useSubscription = () => {
   return {
     subscription,
     loading,
+    error,
     checkSubscription,
     createCheckout,
     openCustomerPortal,
