@@ -34,7 +34,7 @@ serve(async (req) => {
     await supabase.from('subscribers').upsert({
       email,
       subscribed: true,
-      subscription_tier: tier === 'starter' ? 'Starter' : tier === 'enterprise' ? 'Enterprise' : tier === 'unlimited' ? 'Unlimited' : 'Professional',
+      subscription_tier: tier === 'starter' ? 'Starter' : tier === 'growth' ? 'Growth' : tier === 'enterprise' ? 'Enterprise' : 'Professional',
       subscription_end: endIso,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });

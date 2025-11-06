@@ -111,9 +111,9 @@ serve(async (req) => {
           if (lookupKey) {
             const [, tierId] = (lookupKey as string).split(":");
             subscriptionTier = tierId === 'starter' ? 'Starter'
+              : tierId === 'growth' ? 'Growth'
               : tierId === 'professional' ? 'Professional'
               : tierId === 'enterprise' ? 'Enterprise'
-              : tierId === 'unlimited' ? 'Unlimited'
               : null;
           }
         }

@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,11 +19,10 @@ serve(async (req) => {
       console.error('STRIPE_PUBLISHABLE_KEY not configured in Supabase secrets');
       return new Response(
         JSON.stringify({ 
-          error: 'Stripe configuration not available',
-          publishableKey: 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789' // fallback test key
+          error: 'Stripe publishable key not configured. Please add STRIPE_PUBLISHABLE_KEY to Supabase project secrets.'
         }),
         { 
-          status: 200,
+          status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -41,10 +40,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error getting Stripe config:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to get Stripe configuration',
-        publishableKey: 'pk_test_51S0ulgCnuIeihlVEvBKo0123456789' // fallback test key
+        error: `Failed to get Stripe configuration: ${errorMessage}`
       }),
       { 
         status: 500,

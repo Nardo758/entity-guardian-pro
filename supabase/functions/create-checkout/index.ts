@@ -12,7 +12,7 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-const VALID_TIERS = ["starter", "professional", "enterprise", "unlimited"] as const;
+const VALID_TIERS = ["starter", "growth", "professional", "enterprise"] as const;
 type TierKey = typeof VALID_TIERS[number];
 
 function priceLookupKey(tier: TierKey, billing: 'monthly' | 'yearly') {

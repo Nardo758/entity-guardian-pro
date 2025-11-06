@@ -88,9 +88,9 @@ serve(async (req) => {
         const [, tierId] = (lookupKey as string).split(":"); // erp:{tier}:{billing}
         switch (tierId) {
           case 'starter': subscriptionTier = 'Starter'; break;
+          case 'growth': subscriptionTier = 'Growth'; break;
           case 'professional': subscriptionTier = 'Professional'; break;
           case 'enterprise': subscriptionTier = 'Enterprise'; break;
-          case 'unlimited': subscriptionTier = 'Unlimited'; break;
           default: subscriptionTier = null;
         }
       } else {
