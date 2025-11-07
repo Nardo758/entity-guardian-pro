@@ -14,6 +14,10 @@ const getStripePublishableKey = async (): Promise<string> => {
       },
     });
     
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const data = await response.json();
     if (!data.publishableKey) {
       throw new Error('No publishable key returned from secure endpoint');
@@ -21,6 +25,10 @@ const getStripePublishableKey = async (): Promise<string> => {
     return data.publishableKey;
   } catch (error) {
     console.error('Failed to get secure Stripe key:', error);
+    if (import.meta.env.DEV) {
+      console.warn('Using development fallback for Stripe key');
+      return 'pk_test_51S0ulgCnuIeihlVEQ5uqJLXPxaJWIHZqGaRj0pRgk9F8ZbzKYrJLp2yNR7YqKwJYO5xZl1Z1Z1Z1Z1Z1Z1Z1Z1Z1'; // Your test publishable key
+    }
     throw new Error('Unable to initialize Stripe - please check configuration');
   }
 };

@@ -186,13 +186,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to create payment intent');
+      }
+
+      if (!data?.clientSecret) {
+        throw new Error('No client secret returned from payment service');
+      }
 
       setClientSecret(data.clientSecret);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to initialize payment. Please try again.';
       console.error('Error creating payment intent:', error);
-      setError('Failed to initialize payment. Please try again.');
-      toast.error('Failed to initialize payment');
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
