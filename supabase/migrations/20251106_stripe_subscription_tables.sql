@@ -336,7 +336,93 @@ COMMENT ON COLUMN public.subscribers.subscription_status IS 'Current subscriptio
 COMMENT ON COLUMN public.subscribers.entities_limit IS 'Maximum number of entities allowed for this subscription tier';
 
 -- ============================================
--- 9. Seed data for testing (optional)
+-- 9. Security: Function execution permissions
+-- ============================================
+
+-- Revoke public execution on sensitive functions
+REVOKE ALL ON FUNCTION public.update_subscriber_from_webhook FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.log_subscription_change FROM PUBLIC;
+
+-- Grant execution only to service role (used by edge functions)
+-- Note: In Supabase, service_role bypasses RLS and can execute these functions
+-- Authenticated users should not be able to call these directly
+GRANT EXECUTE ON FUNCTION public.update_subscriber_from_webhook TO service_role;
+GRANT EXECUTE ON FUNCTION public.log_subscription_change TO service_role;
+
+-- The trigger function needs to be executable by the database
+-- This is automatically handled by PostgreSQL for trigger functions
+
+-- ============================================
+-- 10. Enable required extensions
+-- ============================================
+
+-- Enable pgcrypto for UUID generation and encryption functions
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Enable uuid-ossp as backup for UUID generation (if not already enabled)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================
+-- 11. Additional composite indexes for query optimization
+-- ============================================
+
+-- Composite index for finding active subscriptions by user
+-- Optimizes: WHERE user_id = ? AND subscription_status = 'active'
+CREATE INDEX IF NOT EXISTS idx_subscribers_user_status 
+  ON public.subscribers(user_id, subscription_status) 
+  WHERE subscription_status IN ('active', 'trialing');
+
+-- Composite index for subscription expiration queries
+-- Optimizes: WHERE subscription_status = 'active' AND current_period_end < now()
+CREATE INDEX IF NOT EXISTS idx_subscribers_status_period_end 
+  ON public.subscribers(subscription_status, current_period_end) 
+  WHERE subscription_status IN ('active', 'trialing');
+
+-- Composite index for tier analytics
+-- Optimizes: GROUP BY subscription_tier, billing_cycle WHERE subscription_status = 'active'
+CREATE INDEX IF NOT EXISTS idx_subscribers_tier_cycle_status 
+  ON public.subscribers(subscription_tier, billing_cycle, subscription_status) 
+  WHERE subscription_status IN ('active', 'trialing');
+
+-- Composite index for customer lookup with status
+-- Optimizes: WHERE stripe_customer_id = ? AND subscription_status = ?
+CREATE INDEX IF NOT EXISTS idx_subscribers_customer_status 
+  ON public.subscribers(stripe_customer_id, subscription_status);
+
+-- Composite index for invoice queries by user and status
+-- Optimizes: WHERE user_id = ? AND status = 'paid' ORDER BY created_at DESC
+CREATE INDEX IF NOT EXISTS idx_stripe_invoices_user_status_created 
+  ON public.stripe_invoices(user_id, status, created_at DESC);
+
+-- Composite index for unpaid invoices lookup
+-- Optimizes: WHERE stripe_customer_id = ? AND status IN ('open', 'draft')
+CREATE INDEX IF NOT EXISTS idx_stripe_invoices_customer_unpaid 
+  ON public.stripe_invoices(stripe_customer_id, status) 
+  WHERE status IN ('open', 'draft');
+
+-- Composite index for webhook event processing
+-- Optimizes: WHERE processed = false ORDER BY created_at
+CREATE INDEX IF NOT EXISTS idx_stripe_events_unprocessed 
+  ON public.stripe_events(processed, created_at) 
+  WHERE processed = false;
+
+-- Composite index for subscription history queries
+-- Optimizes: WHERE user_id = ? ORDER BY started_at DESC
+CREATE INDEX IF NOT EXISTS idx_subscription_history_user_started 
+  ON public.subscription_history(user_id, started_at DESC);
+
+-- ============================================
+-- 12. Add helpful database comments
+-- ============================================
+
+COMMENT ON INDEX idx_subscribers_user_status IS 'Optimizes queries for active user subscriptions';
+COMMENT ON INDEX idx_subscribers_status_period_end IS 'Optimizes queries for expiring subscriptions';
+COMMENT ON INDEX idx_subscribers_tier_cycle_status IS 'Optimizes analytics queries by tier and billing cycle';
+COMMENT ON INDEX idx_stripe_invoices_user_status_created IS 'Optimizes invoice history queries';
+COMMENT ON INDEX idx_stripe_events_unprocessed IS 'Optimizes webhook event processing queue';
+
+-- ============================================
+-- 13. Seed data for testing (optional)
 -- ============================================
 
 -- Update any existing subscribers with default values
@@ -353,5 +439,98 @@ SET
 WHERE entities_limit IS NULL;
 
 -- ============================================
--- Migration complete
+-- 14. Create helper function for webhook edge functions
+-- ============================================
+
+-- Function to safely log webhook events
+CREATE OR REPLACE FUNCTION public.log_stripe_event(
+  p_stripe_event_id TEXT,
+  p_event_type TEXT,
+  p_event_data JSONB
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_event_id UUID;
+BEGIN
+  -- Insert or update the event (prevents duplicate processing)
+  INSERT INTO public.stripe_events (
+    stripe_event_id,
+    event_type,
+    event_data,
+    processed,
+    created_at
+  ) VALUES (
+    p_stripe_event_id,
+    p_event_type,
+    p_event_data,
+    false,
+    now()
+  )
+  ON CONFLICT (stripe_event_id) DO NOTHING
+  RETURNING id INTO v_event_id;
+
+  RETURN v_event_id;
+END;
+$$;
+
+-- Restrict execution to service role only
+REVOKE ALL ON FUNCTION public.log_stripe_event FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.log_stripe_event TO service_role;
+
+COMMENT ON FUNCTION public.log_stripe_event IS 'Safely logs Stripe webhook events, preventing duplicates';
+
+-- Function to mark event as processed
+CREATE OR REPLACE FUNCTION public.mark_event_processed(
+  p_stripe_event_id TEXT,
+  p_error_message TEXT DEFAULT NULL
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  UPDATE public.stripe_events
+  SET 
+    processed = true,
+    processed_at = now(),
+    error_message = p_error_message
+  WHERE stripe_event_id = p_stripe_event_id;
+END;
+$$;
+
+-- Restrict execution to service role only
+REVOKE ALL ON FUNCTION public.mark_event_processed FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.mark_event_processed TO service_role;
+
+COMMENT ON FUNCTION public.mark_event_processed IS 'Marks a webhook event as processed';
+
+-- ============================================
+-- 15. Add constraint for data integrity
+-- ============================================
+
+-- Ensure subscription_end matches current_period_end for active subscriptions
+-- This is a soft constraint via trigger, not a hard CHECK constraint
+CREATE OR REPLACE FUNCTION public.sync_subscription_end()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Auto-sync subscription_end with current_period_end
+  IF NEW.current_period_end IS NOT NULL THEN
+    NEW.subscription_end := NEW.current_period_end;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sync_subscription_end_trigger
+  BEFORE INSERT OR UPDATE ON public.subscribers
+  FOR EACH ROW
+  EXECUTE FUNCTION public.sync_subscription_end();
+
+COMMENT ON FUNCTION public.sync_subscription_end IS 'Automatically syncs subscription_end with current_period_end';
+
+-- ============================================
+-- Migration complete with enhanced security and performance
 -- ============================================
