@@ -77,8 +77,15 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      payment_method_collection: "always",
+      payment_method_types: ["card"],
       success_url: `${origin}/billing?success=true`,
       cancel_url: `${origin}/billing?canceled=true`,
+      metadata: {
+        user_id: user.id,
+        tier,
+        billing,
+      },
     });
 
     logStep("Checkout session created", { sessionId: session.id, tier, billing, priceId });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PaymentMethod } from '@/types/entity';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,7 +9,7 @@ export const usePaymentMethods = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
-  const fetchPaymentMethods = async () => {
+  const fetchPaymentMethods = useCallback(async () => {
     if (!user) {
       setPaymentMethods([]);
       setLoading(false);
@@ -31,7 +31,7 @@ export const usePaymentMethods = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchPaymentMethods();
@@ -48,6 +48,7 @@ export const usePaymentMethods = () => {
           filter: `user_id=eq.${user?.id}`,
         },
         () => {
+          console.log('Payment method changed, refreshing...');
           fetchPaymentMethods();
         }
       )
@@ -56,7 +57,7 @@ export const usePaymentMethods = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, fetchPaymentMethods]);
 
   return {
     paymentMethods,

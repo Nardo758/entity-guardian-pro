@@ -102,6 +102,7 @@ serve(async (req) => {
 
         const customerId = typeof session.customer === 'string' ? session.customer : undefined;
         const subscriptionId = typeof session.subscription === 'string' ? session.subscription : undefined;
+        const paymentMethodId = typeof session.payment_method === 'string' ? session.payment_method : undefined;
 
         if (subscriptionId && customerId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -129,6 +130,38 @@ serve(async (req) => {
               current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
               updated_at: new Date().toISOString(),
             }, { onConflict: 'stripe_customer_id' });
+          }
+
+          // Save payment method if available
+          if (paymentMethodId) {
+            try {
+              const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+              
+              // Find user_id from subscriber
+              const { data: subscriber } = await supabase
+                .from('subscribers')
+                .select('user_id')
+                .eq('stripe_customer_id', customerId)
+                .single();
+
+              if (subscriber?.user_id && paymentMethod.card) {
+                await supabase.from('payment_methods').upsert({
+                  user_id: subscriber.user_id,
+                  stripe_payment_method_id: paymentMethod.id,
+                  type: paymentMethod.type,
+                  card_brand: paymentMethod.card.brand,
+                  card_last4: paymentMethod.card.last4,
+                  card_exp_month: paymentMethod.card.exp_month,
+                  card_exp_year: paymentMethod.card.exp_year,
+                  is_default: true,
+                  updated_at: new Date().toISOString(),
+                }, { onConflict: 'stripe_payment_method_id' });
+                
+                log('Payment method saved', { paymentMethodId });
+              }
+            } catch (err) {
+              log("Failed to save payment method", { error: (err as Error).message });
+            }
           }
         }
         break;

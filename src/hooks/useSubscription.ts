@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -17,7 +17,7 @@ export const useSubscription = () => {
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     if (!user) {
       setSubscription({ subscribed: false });
       setLoading(false);
@@ -42,7 +42,7 @@ export const useSubscription = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const createCheckout = async (tier: string, billing: 'monthly' | 'yearly') => {
     if (!user) {
@@ -121,6 +121,7 @@ export const useSubscription = () => {
           filter: `user_id=eq.${user?.id}`,
         },
         () => {
+          console.log('Subscription changed, refreshing...');
           checkSubscription();
         }
       )
@@ -129,7 +130,7 @@ export const useSubscription = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, checkSubscription]);
 
   return {
     subscription,
