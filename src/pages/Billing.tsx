@@ -26,6 +26,10 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useCheckout } from '@/contexts/CheckoutContext';
+import { ProgressSteps } from '@/components/ui/ProgressSteps';
+import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
 import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
@@ -50,7 +54,8 @@ const Billing = () => {
   const [activeTab, setActiveTab] = useState('plans');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<string>('');
-  const { subscription, loading, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
+  const { subscription, loading, error, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
+  const { currentStep, isProcessing, selectPlan } = useCheckout();
 
   const pricingTiers = Object.values(STRIPE_PRICING_TIERS);
 
@@ -103,6 +108,7 @@ const Billing = () => {
   };
 
   const handleUpgradeClick = (tier: string) => {
+    selectPlan(tier, selectedBilling);
     setSelectedTierForCheckout(tier);
     setShowCheckoutModal(true);
   };
@@ -156,10 +162,29 @@ const Billing = () => {
               )}
             </div>
           </div>
+
+          {/* Progress Indicator */}
+          {(isProcessing || currentStep !== 'select') && (
+            <div className="mt-6">
+              <ProgressSteps 
+                currentStep={currentStep === 'select' ? 1 : currentStep === 'payment' ? 2 : 3}
+                isProcessing={isProcessing}
+              />
+            </div>
+          )}
         </div>
       </div>
 
       <div className="container mx-auto px-6 py-8">
+        {/* Error Display */}
+        {error && (
+          <ErrorDisplay 
+            error={error}
+            onRetry={() => checkSubscription()}
+            showSupport={true}
+          />
+        )}
+
         <div className="space-y-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5">
@@ -196,6 +221,13 @@ const Billing = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
+                  {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {[1, 2, 3, 4].map((i) => (
+                        <LoadingSkeleton key={i} variant="plan" />
+                      ))}
+                    </div>
+                  ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {pricingTiers.map((tier) => (
                       <Card key={tier.id} className={`relative ${tier.popular ? 'border-primary shadow-lg' : ''}`}>
@@ -260,6 +292,7 @@ const Billing = () => {
                       </Card>
                     ))}
                   </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -457,6 +490,14 @@ const Billing = () => {
         selectedBilling={selectedBilling}
         onSuccess={handleCheckoutSuccess}
       />
+
+      {/* Processing Overlay */}
+      {isProcessing && (
+        <LoadingSkeleton 
+          variant="overlay" 
+          message="Creating your checkout session..." 
+        />
+      )}
     </div>
   );
 };

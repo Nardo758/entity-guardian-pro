@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CheckoutProvider } from "@/contexts/CheckoutContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminSetupPage from "./pages/AdminSetupPage";
@@ -68,11 +69,12 @@ const App = () => {
         <BrowserRouter>
           <ErrorBoundary>
             <AuthProvider>
-              <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Landing />} />
-              <Route path="/signup" element={<UserTypeSelection />} />
-              <Route path="/login" element={<Login />} />
+              <CheckoutProvider>
+                <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/signup" element={<UserTypeSelection />} />
+                <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/register" element={<Register />} />
               <Route path="/paid-register" element={<PaidRegister />} />
@@ -110,6 +112,7 @@ const App = () => {
               <Route path="/agent-signup" element={<AgentSignup />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
+              </CheckoutProvider>
             </AuthProvider>
           </ErrorBoundary>
         </BrowserRouter>
