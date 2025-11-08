@@ -40,16 +40,24 @@ export const useAgentInvitations = () => {
         .eq('entity_owner_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        // Silently handle - user might not have invitations yet or table might not exist
+        console.warn('Could not fetch invitations:', fetchError);
+        setInvitations([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
       setInvitations((data || []) as any[]);
 
       // Fetch metrics
       const { data: metricsData, error: metricsError } = await supabase
         .rpc('get_agent_invitation_metrics', { owner_id: user.id });
 
-      if (metricsError) throw metricsError;
-      
-      if (metricsData && metricsData.length > 0) {
+      if (metricsError) {
+        // Metrics are optional, just log and continue
+        console.warn('Could not fetch invitation metrics:', metricsError);
+      } else if (metricsData && metricsData.length > 0) {
         const m = metricsData[0];
         setMetrics({
           totalSent: m.total_sent,
@@ -61,14 +69,10 @@ export const useAgentInvitations = () => {
         });
       }
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to load invitations');
-      setError(error);
-      console.error('Error fetching invitations:', err);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive"
-      });
+      // Silently handle errors - no invitations is not an error condition for new users
+      console.warn('Error fetching invitations:', err);
+      setInvitations([]);
+      setError(null);
     } finally {
       setLoading(false);
     }

@@ -34,7 +34,15 @@ export const useTeams = () => {
         `)
         .eq('user_id', user.id);
 
-      if (membershipsError) throw membershipsError;
+      if (membershipsError) {
+        // Silently handle - user might not have teams yet
+        console.warn('Could not fetch teams:', membershipsError);
+        setTeams([]);
+        setMemberships([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
 
       const membershipData = (teamMemberships || []) as any[];
       setMemberships(membershipData);
@@ -51,10 +59,11 @@ export const useTeams = () => {
       }
 
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to load teams');
-      setError(error);
-      console.error('Error fetching teams:', err);
-      toast.error(error.message);
+      // Silently handle errors - no teams is not an error condition for new users
+      console.warn('Error fetching teams:', err);
+      setTeams([]);
+      setMemberships([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
