@@ -21,63 +21,19 @@ serve(async (req) => {
   const webhookSecretTest = Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST");
   const cliWebhookSecret = Deno.env.get("STRIPE_CLI_WEBHOOK_SECRET");
   
-  if (!stripeSecretKey || !webhookSecret) {
-    return new Response(JSON.stringify({ error: "Stripe secrets not configured" }), {
+  if (!stripeSecretKey) {
+    return new Response(JSON.stringify({ error: "STRIPE_SECRET_KEY not configured" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
   }
 
+  if (!webhookSecret && !webhookSecretTest && !cliWebhookSecret) {
+    log("Warning: No webhook secret configured");
+  }
+
   const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
   const body = await req.text();
-
-  // Secure webhook signature verification - no test bypasses
-  const signature = req.headers.get("stripe-signature") || req.headers.get("Stripe-Signature");
-  let event: Stripe.Event;
-  
-  try {
-    // Try primary webhook secret first
-    event = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
-  } catch (primaryError) {
-    // Fallback to test secret only in development environments
-    if (webhookSecretTest) {
-      try {
-        event = stripe.webhooks.constructEvent(body, signature || "", webhookSecretTest);
-      } catch (testError) {
-        // Final fallback to CLI secret for local development
-        if (cliWebhookSecret) {
-          try {
-            event = stripe.webhooks.constructEvent(body, signature || "", cliWebhookSecret);
-          } catch (cliError) {
-            log("Signature verification failed for all secrets", { 
-              primaryError: (primaryError as Error).message,
-              testError: (testError as Error).message,
-              cliError: (cliError as Error).message
-            });
-            return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 400,
-            });
-          }
-        } else {
-          log("Signature verification failed", { 
-            primaryError: (primaryError as Error).message,
-            testError: (testError as Error).message
-          });
-          return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 400,
-          });
-        }
-      }
-    } else {
-      log("Signature verification failed", { error: (primaryError as Error).message });
-      return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
-    }
-  }
 
   // Supabase client with service role for writes
   const supabase = createClient(
@@ -86,85 +42,255 @@ serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
+  // Webhook signature verification
+  const signature = req.headers.get("stripe-signature") || req.headers.get("Stripe-Signature");
+  let event: Stripe.Event;
+  
+  try {
+    // Try primary webhook secret first
+    if (webhookSecret) {
+      event = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
+    } else if (webhookSecretTest) {
+      event = stripe.webhooks.constructEvent(body, signature || "", webhookSecretTest);
+    } else if (cliWebhookSecret) {
+      event = stripe.webhooks.constructEvent(body, signature || "", cliWebhookSecret);
+    } else {
+      log("No webhook secret available, skipping signature verification (DEV ONLY)");
+      event = JSON.parse(body);
+    }
+  } catch (err) {
+    log("Signature verification failed", { error: (err as Error).message });
+    return new Response(JSON.stringify({ error: "Invalid webhook signature" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
+    });
+  }
+
+  log(`Processing event: ${event.type}`, { id: event.id });
+
+  // Log event to database (prevents duplicate processing)
+  try {
+    const { error: logError } = await supabase.rpc('log_stripe_event', {
+      p_stripe_event_id: event.id,
+      p_event_type: event.type,
+      p_event_data: event as any
+    });
+
+    if (logError) {
+      // Check if it's a duplicate event (already processed)
+      if (logError.message?.includes('duplicate') || logError.code === '23505') {
+        log(`Duplicate event detected: ${event.id}`, { type: event.type });
+        return new Response(JSON.stringify({ received: true, status: 'duplicate' }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+      log("Failed to log event", { error: logError.message });
+    }
+  } catch (err) {
+    log("Error logging event (function may not exist yet)", { error: (err as Error).message });
+  }
+
+  // Process the event
+  let errorMessage: string | null = null;
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        log('checkout.session.completed', { id: session.id, customer: session.customer });
+        log('Processing checkout.session.completed', { id: session.id });
 
-        let customerEmail = session.customer_details?.email || undefined;
-        let customerId = typeof session.customer === 'string' ? session.customer : undefined;
+        const customerId = typeof session.customer === 'string' ? session.customer : undefined;
         const subscriptionId = typeof session.subscription === 'string' ? session.subscription : undefined;
 
-        if (!customerEmail && customerId) {
-          const customer = await stripe.customers.retrieve(customerId);
-          customerEmail = (customer as any)?.email || undefined;
-        }
+        if (subscriptionId && customerId) {
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          const priceId = subscription.items.data[0]?.price?.id;
 
-        let subscriptionTier: string | null = null;
-        let subscriptionEnd: string | null = null;
-        if (subscriptionId) {
-          const sub = await stripe.subscriptions.retrieve(subscriptionId);
-          subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
-          const price = sub.items.data[0].price;
-          const lookupKey = price.lookup_key || null;
-          if (lookupKey) {
-            const [, tierId] = (lookupKey as string).split(":");
-            subscriptionTier = tierId === 'starter' ? 'Starter'
-              : tierId === 'growth' ? 'Growth'
-              : tierId === 'professional' ? 'Professional'
-              : tierId === 'enterprise' ? 'Enterprise'
-              : null;
+          try {
+            await supabase.rpc('update_subscriber_from_webhook', {
+              p_stripe_customer_id: customerId,
+              p_stripe_subscription_id: subscriptionId,
+              p_stripe_price_id: priceId,
+              p_subscription_status: subscription.status,
+              p_current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+              p_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              p_cancel_at_period_end: subscription.cancel_at_period_end
+            });
+            log('Updated subscriber via database function');
+          } catch (err) {
+            log("Database function not available, using fallback", { error: (err as Error).message });
+            // Fallback to direct insert
+            await supabase.from('subscribers').upsert({
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              subscribed: true,
+              subscription_status: subscription.status,
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'stripe_customer_id' });
           }
         }
+        break;
+      }
 
-        if (customerEmail) {
-          await supabase.from('subscribers').upsert({
-            email: customerEmail,
-            stripe_customer_id: customerId || null,
-            subscribed: true,
-            subscription_tier: subscriptionTier,
-            subscription_end: subscriptionEnd,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'email' });
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        log(`Processing ${event.type}`, { id: subscription.id });
+
+        const customerId = typeof subscription.customer === 'string' ? subscription.customer : undefined;
+        const priceId = subscription.items.data[0]?.price?.id;
+
+        if (customerId) {
+          try {
+            await supabase.rpc('update_subscriber_from_webhook', {
+              p_stripe_customer_id: customerId,
+              p_stripe_subscription_id: subscription.id,
+              p_stripe_price_id: priceId,
+              p_subscription_status: subscription.status,
+              p_current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+              p_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              p_cancel_at_period_end: subscription.cancel_at_period_end
+            });
+            log('Updated subscriber via database function');
+          } catch (err) {
+            log("Database function not available, using fallback", { error: (err as Error).message });
+            await supabase.from('subscribers').upsert({
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscription.id,
+              subscribed: subscription.status === 'active',
+              subscription_status: subscription.status,
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              cancel_at_period_end: subscription.cancel_at_period_end,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'stripe_customer_id' });
+          }
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        log('Processing subscription deletion', { id: subscription.id });
+
+        const customerId = typeof subscription.customer === 'string' ? subscription.customer : undefined;
+        if (customerId) {
+          await supabase.from('subscribers')
+            .update({
+              subscribed: false,
+              subscription_status: 'canceled',
+              canceled_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_customer_id', customerId);
         }
         break;
       }
 
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        log('invoice.payment_succeeded', { id: invoice.id, customer: invoice.customer });
+        log('Processing invoice.payment_succeeded', { id: invoice.id });
+
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : undefined;
-        const customerEmail = invoice.customer_email || undefined;
-        if (customerEmail || customerId) {
-          await supabase.from('subscribers').upsert({
-            email: customerEmail || undefined,
-            stripe_customer_id: customerId || null,
-            subscribed: true,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'email' });
+        const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : undefined;
+
+        // Find user_id from customer_id
+        const { data: subscriber } = await supabase
+          .from('subscribers')
+          .select('user_id')
+          .eq('stripe_customer_id', customerId)
+          .single();
+
+        // Try to insert invoice record
+        try {
+          await supabase.from('stripe_invoices').insert({
+            stripe_invoice_id: invoice.id,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
+            user_id: subscriber?.user_id,
+            amount_due: invoice.amount_due,
+            amount_paid: invoice.amount_paid,
+            currency: invoice.currency,
+            status: invoice.status || 'paid',
+            invoice_pdf: invoice.invoice_pdf,
+            hosted_invoice_url: invoice.hosted_invoice_url,
+            period_start: invoice.period_start ? new Date(invoice.period_start * 1000).toISOString() : null,
+            period_end: invoice.period_end ? new Date(invoice.period_end * 1000).toISOString() : null,
+            paid_at: new Date().toISOString(),
+          });
+          log('Invoice record created');
+        } catch (err) {
+          log("Failed to create invoice record (table may not exist)", { error: (err as Error).message });
+        }
+
+        // Update subscriber status
+        if (customerId) {
+          await supabase.from('subscribers')
+            .update({
+              subscribed: true,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_customer_id', customerId);
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        log('Processing invoice.payment_failed', { id: invoice.id });
+
+        const customerId = typeof invoice.customer === 'string' ? invoice.customer : undefined;
+        if (customerId) {
+          await supabase.from('subscribers')
+            .update({
+              subscription_status: 'past_due',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('stripe_customer_id', customerId);
         }
         break;
       }
 
       default:
-        log('Unhandled event', { type: event.type });
+        log('Unhandled event type', { type: event.type });
     }
-
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
   } catch (err) {
-    log('Processing error', { 
-      message: (err as Error).message,
+    errorMessage = (err as Error).message;
+    log('Error processing event', { 
+      error: errorMessage,
       stack: (err as Error).stack 
     });
-    return new Response(JSON.stringify({ error: 'Webhook processing failed' }), {
+  }
+
+  // Mark event as processed
+  try {
+    await supabase.rpc('mark_event_processed', {
+      p_stripe_event_id: event.id,
+      p_error_message: errorMessage
+    });
+  } catch (err) {
+    log("Failed to mark event as processed (function may not exist)", { error: (err as Error).message });
+  }
+
+  if (errorMessage) {
+    return new Response(JSON.stringify({ 
+      error: 'Webhook processing failed', 
+      details: errorMessage 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
   }
+
+  return new Response(JSON.stringify({ 
+    received: true, 
+    eventId: event.id,
+    eventType: event.type 
+  }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status: 200,
+  });
 });
 
 export const verifyJWT = false;
