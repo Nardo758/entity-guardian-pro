@@ -420,9 +420,11 @@ const PaidRegister = () => {
       <div className="w-full max-w-2xl space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <Building className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <Link to="/" className="inline-block hover:opacity-80 transition-opacity cursor-pointer">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <Building className="h-8 w-8 text-primary-foreground" />
+            </div>
+          </Link>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
             Join Entity Renewal Pro
           </h1>

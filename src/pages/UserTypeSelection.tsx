@@ -9,9 +9,11 @@ const UserTypeSelection = () => {
       <div className="w-full max-w-4xl space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <Building className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <Link to="/" className="inline-block hover:opacity-80 transition-opacity cursor-pointer">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <Building className="h-8 w-8 text-primary-foreground" />
+            </div>
+          </Link>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent mb-4">
             Choose Your Account Type
           </h1>

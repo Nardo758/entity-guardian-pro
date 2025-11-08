@@ -314,14 +314,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
       <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
                 <Building className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">Entity Renewal Pro</span>
-            </div>
+            </Link>
 
             <div className="hidden md:flex items-center space-x-8">
+              <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                Home
+              </Link>
               <button
                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                 className="text-muted-foreground hover:text-foreground transition-colors"
