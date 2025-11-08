@@ -20,7 +20,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { stripePromise } from '@/lib/stripe';
+import { STRIPE_PRICING_TIERS, getFreshStripePromise } from '@/lib/stripe';
 import {
   Elements,
   PaymentElement,
@@ -30,7 +30,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
+
 
 // Use the shared Stripe promise from lib
 
@@ -335,7 +335,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
           ) : clientSecret ? (
             <Elements
-              stripe={stripePromise}
+              stripe={getFreshStripePromise()}
               options={{
                 clientSecret,
                 appearance,

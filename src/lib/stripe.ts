@@ -1,33 +1,46 @@
 import { loadStripe } from '@stripe/stripe-js';
 
-// Initialize Stripe promise that will load the key and Stripe.js
-export const stripePromise = (async () => {
+// Lazy-loaded and cacheable Stripe loader. Resolves to null on failure.
+let cachedStripePromise: Promise<import('@stripe/stripe-js').Stripe | null> | null = null;
+
+async function createStripePromise() {
   try {
-    // Get the key securely from Supabase edge function
     const response = await fetch('https://wcuxqopfcgivypbiynjp.supabase.co/functions/v1/get-stripe-config', {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
     });
-    
+
     if (!response.ok) {
       console.error('Failed to fetch Stripe config:', response.status);
-      throw new Error(`HTTP error! status: ${response.status}`);
+      return null;
     }
-    
+
     const data = await response.json();
     if (!data.publishableKey) {
-      throw new Error('No publishable key returned from server');
+      console.error('No publishable key returned from server');
+      return null;
     }
-    
-    console.log('Stripe key loaded successfully');
+
     return loadStripe(data.publishableKey);
   } catch (error) {
     console.error('Failed to initialize Stripe:', error);
-    throw new Error('Unable to initialize Stripe - please check your connection and try again');
+    return null;
   }
-})();
+}
+
+export function getFreshStripePromise() {
+  // Always create a new promise (useful after config changes)
+  return createStripePromise();
+}
+
+export function getStripePromise() {
+  // Cache between renders to avoid multiple loads
+  if (!cachedStripePromise) cachedStripePromise = createStripePromise();
+  return cachedStripePromise;
+}
+
+// Backwards compatibility export (may resolve to null)
+export const stripePromise = getStripePromise();
 
 export const STRIPE_PRICING_TIERS = {
   starter: {
