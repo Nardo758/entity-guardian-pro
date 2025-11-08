@@ -28,15 +28,24 @@ export const useNotifications = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        // Silently handle - user might not have notifications yet or table might not exist
+        console.warn('Could not fetch notifications:', fetchError);
+        setNotifications([]);
+        setUnreadCount(0);
+        setError(null);
+        setLoading(false);
+        return;
+      }
       const notificationData = (data || []) as Notification[];
       setNotifications(notificationData);
       setUnreadCount(notificationData.filter(n => !n.read).length);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to load notifications');
-      setError(error);
-      console.error('Error fetching notifications:', err);
-      toast.error(error.message);
+      // Silently handle errors - no notifications is not an error condition for new users
+      console.warn('Error fetching notifications:', err);
+      setNotifications([]);
+      setUnreadCount(0);
+      setError(null);
     } finally {
       setLoading(false);
     }

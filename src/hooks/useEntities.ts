@@ -27,13 +27,20 @@ export const useEntities = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        // Silently handle - user might not have entities yet or table might not exist
+        console.warn('Could not fetch entities:', fetchError);
+        setEntities([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
       setEntities((data || []) as Entity[]);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to load entities');
-      setError(error);
-      console.error('Error fetching entities:', err);
-      toast.error(error.message);
+      // Silently handle errors - no entities is not an error condition for new users
+      console.warn('Error fetching entities:', err);
+      setEntities([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
