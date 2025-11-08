@@ -86,8 +86,9 @@ export const useAgentNotifications = () => {
 
       setNotifications(allNotifications);
     } catch (error) {
-      console.error('Error fetching agent notifications:', error);
-      toast.error('Failed to load notifications');
+      // Silently handle errors - tables or data may not exist yet for new users
+      console.warn('Could not fetch notifications (non-fatal):', error);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
