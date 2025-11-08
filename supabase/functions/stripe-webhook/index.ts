@@ -47,13 +47,13 @@ serve(async (req) => {
   let event: Stripe.Event;
   
   try {
-    // Try primary webhook secret first
+    // Try primary webhook secret first (use async version for Deno)
     if (webhookSecret) {
-      event = stripe.webhooks.constructEvent(body, signature || "", webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature || "", webhookSecret);
     } else if (webhookSecretTest) {
-      event = stripe.webhooks.constructEvent(body, signature || "", webhookSecretTest);
+      event = await stripe.webhooks.constructEventAsync(body, signature || "", webhookSecretTest);
     } else if (cliWebhookSecret) {
-      event = stripe.webhooks.constructEvent(body, signature || "", cliWebhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature || "", cliWebhookSecret);
     } else {
       log("No webhook secret available, skipping signature verification (DEV ONLY)");
       event = JSON.parse(body);
