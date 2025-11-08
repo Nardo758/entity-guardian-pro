@@ -108,8 +108,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error fetching profile:', profileError);
+      if (profileError) {
+        // PGRST116 is "no rows returned" - this is ok for new users
+        if (profileError.code !== 'PGRST116') {
+          console.warn('Could not fetch profile:', profileError);
+        }
+        // Set minimal profile so app doesn't break
+        setProfile({
+          id: userId,
+          user_id: userId,
+          first_name: null,
+          last_name: null,
+          company: null,
+          company_size: null,
+          plan: null,
+          user_type: null,
+          created_at: null,
+          updated_at: null,
+          roles: [],
+          is_admin: false
+        });
         return;
       }
 
@@ -120,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId);
 
       if (rolesError) {
-        console.error('Error fetching roles:', rolesError);
+        console.warn('Could not fetch roles:', rolesError);
       }
 
       const roles = rolesData?.map(r => r.role) || [];
@@ -132,7 +150,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         is_admin
       });
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.warn('Error fetching profile:', error);
+      // Set minimal profile as fallback
+      setProfile({
+        id: userId,
+        user_id: userId,
+        first_name: null,
+        last_name: null,
+        company: null,
+        company_size: null,
+        plan: null,
+        user_type: null,
+        created_at: null,
+        updated_at: null,
+        roles: [],
+        is_admin: false
+      });
     }
   };
 
@@ -156,6 +189,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Handle session errors by clearing stale data
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          console.warn('Token refresh failed, clearing session');
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -217,11 +260,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     console.log('Attempting sign in for email:', email);
     
-    // Clean up any existing state
+    // Clean up any stale refresh tokens from previous sessions
     try {
-      await supabase.auth.signOut({ scope: 'global' });
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (err) {
       // Continue even if this fails
+      console.warn('Could not clear previous session:', err);
     }
     
     const { data, error } = await supabase.auth.signInWithPassword({
