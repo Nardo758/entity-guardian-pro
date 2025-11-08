@@ -3,26 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Globe, Building, Phone } from 'lucide-react';
-
-interface SMSVerificationProps {
-  onVerificationComplete?: (phoneNumber: string) => void;
-}
-
-// Simple SMS verification placeholder component
-const SMSVerification: React.FC<SMSVerificationProps> = ({ onVerificationComplete }) => {
-  return (
-    <div className="text-center p-4">
-      <p className="text-muted-foreground mb-4">Phone verification coming soon</p>
-      <Button 
-        variant="outline" 
-        onClick={() => onVerificationComplete?.('Phone verified')}
-      >
-        Skip for now
-      </Button>
-    </div>
-  );
-};
 
 interface QuickAccessAuthProps {
   onSuccess?: () => void;
@@ -31,7 +11,6 @@ interface QuickAccessAuthProps {
 const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
   const { signInWithOAuth } = useAuth();
   const { toast } = useToast();
-  const [showSMSVerification, setShowSMSVerification] = useState(false);
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
   // Listen for OAuth errors
@@ -39,8 +18,8 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
     const handleOAuthError = (event: CustomEvent) => {
       const { error, errorDescription } = event.detail;
       toast({
-        title: "Google Sign-in Failed",
-        description: errorDescription || "Unable to complete Google authentication. Please try again.",
+        title: "Authentication Failed",
+        description: errorDescription || "Unable to complete authentication. Please try again or configure OAuth in Supabase.",
         variant: "destructive"
       });
     };
@@ -59,7 +38,7 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
       if (error) {
         toast({
           title: "Authentication Error",
-          description: error.message,
+          description: error.message || "Please ensure OAuth is configured in Supabase Dashboard.",
           variant: "destructive"
         });
       } else {
@@ -80,27 +59,6 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
     }
   };
 
-  const handlePhoneAuth = () => {
-    setShowSMSVerification(true);
-  };
-
-  const handleSMSVerificationComplete = (phoneNumber: string) => {
-    toast({
-      title: "Phone Verification Complete",
-      description: `Successfully verified ${phoneNumber}`,
-    });
-    setShowSMSVerification(false);
-    if (onSuccess) onSuccess();
-  };
-
-  if (showSMSVerification) {
-    return (
-      <SMSVerification 
-        onVerificationComplete={handleSMSVerificationComplete}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="relative">
@@ -108,17 +66,17 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
           <Separator className="w-full" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">Quick Access</span>
+          <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
         </div>
       </div>
 
-      {/* Quick Access Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* OAuth Buttons */}
+      <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
           onClick={() => handleOAuthSignIn('google')}
           disabled={isLoading === 'google'}
-          className="flex items-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors"
+          className="flex items-center justify-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors"
         >
           <div className="w-5 h-5 flex items-center justify-center">
             <svg viewBox="0 0 24 24" className="w-5 h-5">
@@ -128,7 +86,7 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
           </div>
-          <span className="text-sm font-medium text-black hover:text-primary">
+          <span className="text-sm font-medium">
             {isLoading === 'google' ? 'Connecting...' : 'Google'}
           </span>
         </Button>
@@ -137,7 +95,7 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
           variant="outline"
           onClick={() => handleOAuthSignIn('microsoft')}
           disabled={isLoading === 'microsoft'}
-          className="flex items-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors"
+          className="flex items-center justify-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors"
         >
           <div className="w-5 h-5 flex items-center justify-center">
             <svg viewBox="0 0 24 24" className="w-5 h-5">
@@ -147,20 +105,15 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
               <path fill="#FFB900" d="M13 13h10v10H13z"/>
             </svg>
           </div>
-          <span className="text-sm font-medium text-black hover:text-primary">
+          <span className="text-sm font-medium">
             {isLoading === 'microsoft' ? 'Connecting...' : 'Microsoft'}
           </span>
         </Button>
-
-        <Button
-          variant="outline"
-          onClick={handlePhoneAuth}
-          className="flex items-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors"
-        >
-          <Phone className="h-5 w-5 text-muted-foreground" />
-          <span className="text-sm font-medium text-black hover:text-primary">Phone</span>
-        </Button>
       </div>
+
+      <p className="text-xs text-center text-muted-foreground">
+        Note: OAuth providers must be configured in Supabase Dashboard
+      </p>
     </div>
   );
 };
