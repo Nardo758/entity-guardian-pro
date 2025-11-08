@@ -47,45 +47,43 @@ export const useSubscription = () => {
   const createCheckout = async (tier: string, billing: 'monthly' | 'yearly') => {
     if (!user) {
       toast.error('Please log in to subscribe');
-      return;
+      return null;
     }
 
     try {
+      toast.loading('Creating checkout session...', { id: 'checkout' });
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { tier, billing }
       });
 
       if (error) throw error;
-      const stripe = await stripePromise;
-      if (stripe) {
-        const result = await stripe.redirectToCheckout({ sessionId: data.id });
-        if (result.error) {
-          // Fallback to opening the Checkout URL if redirect fails
-          if (data?.url) {
-            if (window.top) {
-              (window.top as Window).location.href = data.url;
-            } else {
-              window.location.href = data.url;
-            }
-            return;
-          }
-          throw result.error;
-        }
-      } else {
-        // Fallback if Stripe failed to initialize
-        if (data?.url) {
-          if (window.top) {
-            (window.top as Window).location.href = data.url;
-          } else {
-            window.location.href = data.url;
-          }
-          return;
-        }
-        throw new Error('Stripe failed to initialize and no checkout URL provided');
+
+      if (!data || !data.id) {
+        throw new Error('Invalid checkout session response');
       }
+
+      toast.success('Redirecting to checkout...', { id: 'checkout' });
+
+      // Consolidated flow: Always use Stripe redirect (removes dual path confusion)
+      const stripe = await stripePromise;
+      
+      if (!stripe) {
+        throw new Error('Stripe failed to load. Please check your internet connection and try again.');
+      }
+
+      const result = await stripe.redirectToCheckout({ sessionId: data.id });
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to redirect to checkout');
+      }
+
+      return data;
     } catch (error) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to create checkout session');
+      const message = error instanceof Error ? error.message : 'Failed to create checkout session';
+      toast.error(message, { id: 'checkout' });
+      return null;
     }
   };
 
