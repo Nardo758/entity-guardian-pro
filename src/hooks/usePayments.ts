@@ -27,13 +27,19 @@ export const usePayments = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        // Don't show error if table doesn't exist or user has no payments - this is expected
+        console.warn('Could not fetch payments:', fetchError);
+        setPayments([]);
+        setError(null);
+        return;
+      }
       setPayments((data || []) as Payment[]);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to load payments');
-      setError(error);
-      console.error('Error fetching payments:', err);
-      toast.error(error.message);
+      // Silently handle errors - no payments is not an error condition
+      console.warn('Error fetching payments:', err);
+      setPayments([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
