@@ -76,11 +76,26 @@ const Register = () => {
       });
 
       if (error) {
-        toast({
-          title: "Registration failed",
-          description: error.message || "Failed to create account. Please try again.",
-          variant: "destructive"
-        });
+        // Check for common error types
+        if (error.message?.includes('already registered') || error.message?.includes('already exists') || error.message?.includes('User already registered')) {
+          toast({
+            title: "Account already exists",
+            description: "This email is already registered. Please sign in instead.",
+            variant: "destructive"
+          });
+        } else if (error.message?.includes('Email rate limit exceeded')) {
+          toast({
+            title: "Too many requests",
+            description: "Please wait a few minutes before trying again.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Registration failed",
+            description: error.message || "Failed to create account. Please try again.",
+            variant: "destructive"
+          });
+        }
       } else {
         toast({
           title: "Account created successfully!",
