@@ -1,12 +1,9 @@
 import { loadStripe } from '@stripe/stripe-js';
 
-// Get Stripe publishable key securely via edge function
-const getStripePublishableKey = async (): Promise<string> => {
-  // Always use edge function for security - no hardcoded keys
-  const fallbackKey = 'pk_test_placeholder_removed_for_security';
-  
+// Initialize Stripe promise that will load the key and Stripe.js
+export const stripePromise = (async () => {
   try {
-    // Always get the key securely from Supabase edge function
+    // Get the key securely from Supabase edge function
     const response = await fetch('https://wcuxqopfcgivypbiynjp.supabase.co/functions/v1/get-stripe-config', {
       method: 'GET',
       headers: {
@@ -15,31 +12,22 @@ const getStripePublishableKey = async (): Promise<string> => {
     });
     
     if (!response.ok) {
+      console.error('Failed to fetch Stripe config:', response.status);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
     if (!data.publishableKey) {
-      throw new Error('No publishable key returned from secure endpoint');
+      throw new Error('No publishable key returned from server');
     }
-    return data.publishableKey;
+    
+    console.log('Stripe key loaded successfully');
+    return loadStripe(data.publishableKey);
   } catch (error) {
-    console.error('Failed to get secure Stripe key:', error);
-    if (import.meta.env.DEV) {
-      console.warn('Using development fallback for Stripe key');
-      return 'pk_test_51S0ulgCnuIeihlVEQ5uqJLXPxaJWIHZqGaRj0pRgk9F8ZbzKYrJLp2yNR7YqKwJYO5xZl1Z1Z1Z1Z1Z1Z1Z1Z1Z1'; // Your test publishable key
-    }
-    throw new Error('Unable to initialize Stripe - please check configuration');
+    console.error('Failed to initialize Stripe:', error);
+    throw new Error('Unable to initialize Stripe - please check your connection and try again');
   }
-};
-
-// Initialize Stripe with secure key loading
-const initializeStripe = async () => {
-  const key = await getStripePublishableKey();
-  return (await import('@stripe/stripe-js')).loadStripe(key);
-};
-
-export const stripePromise = initializeStripe();
+})();
 
 export const STRIPE_PRICING_TIERS = {
   starter: {
