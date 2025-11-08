@@ -149,6 +149,13 @@ const PaidRegister = () => {
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    } else {
+      // If on first step, navigate back or go home as a fallback
+      if (window.history.length > 1) {
+        navigate(-1);
+      } else {
+        navigate('/');
+      }
     }
   };
 
@@ -461,7 +468,7 @@ const PaidRegister = () => {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 1 || isLoading}
+                disabled={isLoading}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
