@@ -22,14 +22,21 @@ END $$;
 ALTER TABLE public.subscribers 
   ADD COLUMN IF NOT EXISTS subscription_end TIMESTAMPTZ;
 
+-- Add Stripe customer ID field (critical - needed for indexes and constraints)
+ALTER TABLE public.subscribers 
+  ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+
 -- Add Stripe subscription fields
 ALTER TABLE public.subscribers 
   ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT,
+  ADD COLUMN IF NOT EXISTS subscription_tier TEXT,
   ADD COLUMN IF NOT EXISTS stripe_price_id TEXT,
   ADD COLUMN IF NOT EXISTS stripe_product_id TEXT,
   ADD COLUMN IF NOT EXISTS subscription_status TEXT,
+  ADD COLUMN IF NOT EXISTS subscribed BOOLEAN DEFAULT false,
   ADD COLUMN IF NOT EXISTS current_period_start TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now(),
   ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN DEFAULT false,
   ADD COLUMN IF NOT EXISTS canceled_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS billing_cycle TEXT,
@@ -37,6 +44,15 @@ ALTER TABLE public.subscribers
   ADD COLUMN IF NOT EXISTS entities_limit INTEGER DEFAULT 4;
 
 -- Add constraints after columns exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'subscribers_stripe_customer_id_key'
+  ) THEN
+    ALTER TABLE public.subscribers ADD CONSTRAINT subscribers_stripe_customer_id_key UNIQUE (stripe_customer_id);
+  END IF;
+END $$;
+
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -92,6 +108,26 @@ USING (true);
 CREATE POLICY "insert_subscription" ON public.subscribers
 FOR INSERT
 WITH CHECK (true);
+
+-- Ensure webhook-driven inserts have a placeholder email when none is provided
+-- This prevents NOT NULL violations when Stripe events create/modify subscribers
+DROP TRIGGER IF EXISTS trg_subscribers_email_default ON public.subscribers;
+CREATE OR REPLACE FUNCTION public.subscribers_ensure_email()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.email IS NULL THEN
+    NEW.email := 'stripe+' || COALESCE(NEW.stripe_customer_id, gen_random_uuid()::text) || '@example.invalid';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_subscribers_email_default
+BEFORE INSERT ON public.subscribers
+FOR EACH ROW
+EXECUTE FUNCTION public.subscribers_ensure_email();
 
 -- ============================================
 -- STEP 2: Create stripe_invoices table
