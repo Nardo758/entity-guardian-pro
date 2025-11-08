@@ -17,7 +17,27 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
     const navigate = useNavigate();
     const { installApp, isInstallable, isInstalled, isSupported, canInstall, getBrowserInstructions } = usePWA();
     const { toast } = useToast();
-    const { user, loading, signOut } = useAuth();
+    const { user, profile, loading, signOut } = useAuth();
+
+    // Redirect authenticated users to their dashboard
+    React.useEffect(() => {
+      if (!loading && user && profile) {
+        // Check if user has a role assigned
+        if (!profile.user_type) {
+          navigate('/role-selection', { replace: true });
+          return;
+        }
+
+        // Redirect based on user type
+        if (profile.user_type === 'registered_agent') {
+          navigate('/agent-dashboard', { replace: true });
+        } else if (profile.is_admin || profile.roles?.includes('admin')) {
+          navigate('/admin-dashboard', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+      }
+    }, [user, profile, loading, navigate]);
 
     const handleDesktopDownload = async () => {
       if (isInstalled) {
