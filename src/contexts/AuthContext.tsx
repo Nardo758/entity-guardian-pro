@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Handle Supabase token hash fragments and OAuth errors
+  // Handle Supabase token hash fragments and OAuth errors with enhanced error handling
   useEffect(() => {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     const searchParams = new URLSearchParams(window.location.search);
@@ -54,9 +54,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for OAuth errors in URL parameters
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
+    const errorCode = searchParams.get('error_code');
     
     if (error) {
-      console.error('OAuth Error:', { error, errorDescription });
+      console.error('OAuth Error:', { error, errorDescription, errorCode });
+      
+      // Map error codes to user-friendly messages
+      let userMessage = errorDescription || 'Authentication failed. Please try again.';
+      
+      if (error === 'access_denied') {
+        userMessage = 'You denied access to your account. Please try again if you want to sign in.';
+      } else if (error === 'server_error') {
+        userMessage = 'Authentication service is temporarily unavailable. Please try again later.';
+      } else if (errorDescription?.includes('Email not confirmed')) {
+        userMessage = 'Please verify your email address before signing in.';
+      }
+      
       // Clear error parameters from URL
       const url = new URL(window.location.href);
       url.searchParams.delete('error');
@@ -65,33 +78,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       url.hash = '';
       window.history.replaceState({}, '', url.toString());
       
-      // Show error toast if available
+      // Show error to user via custom event
       if (typeof window !== 'undefined' && window.dispatchEvent) {
         window.dispatchEvent(new CustomEvent('oauth-error', { 
-          detail: { error, errorDescription } 
+          detail: { error, errorDescription: userMessage, errorCode } 
         }));
       }
       return;
     }
     
+    // Handle OAuth callback with access token
     if (hash && hash.includes('access_token')) {
       (async () => {
         try {
           const params = new URLSearchParams(hash.replace('#', ''));
           const access_token = params.get('access_token') ?? undefined;
           const refresh_token = params.get('refresh_token') ?? undefined;
+          
           if (access_token && refresh_token) {
+            console.log('Processing OAuth callback, setting session...');
             const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-            if (!error) {
+            
+            if (error) {
+              console.error('Session setup error:', error);
+              // Dispatch error event for user notification
+              window.dispatchEvent(new CustomEvent('oauth-error', {
+                detail: { 
+                  error: 'session_error',
+                  errorDescription: 'Failed to establish session. Please try signing in again.',
+                }
+              }));
+            } else if (data.session) {
+              console.log('OAuth session established successfully');
               setSession(data.session);
               setUser(data.session?.user ?? null);
-            } else {
-              console.error('Session setup error:', error);
+              
+              // Ensure profile exists for OAuth user with their metadata
+              if (data.session.user) {
+                setTimeout(async () => {
+                  const metadata = data.session.user.user_metadata || {};
+                  await ensureProfileExists(data.session.user.id, metadata, 5);
+                }, 0);
+              }
             }
           }
         } catch (err) {
-          console.error('Failed to process auth hash:', err);
+          console.error('Failed to process OAuth callback:', err);
+          window.dispatchEvent(new CustomEvent('oauth-error', {
+            detail: { 
+              error: 'callback_error',
+              errorDescription: 'An unexpected error occurred. Please try again.',
+            }
+          }));
         } finally {
+          // Clean up URL
           const url = new URL(window.location.href);
           url.hash = '';
           window.history.replaceState({}, '', url.toString());

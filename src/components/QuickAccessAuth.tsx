@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,15 +13,20 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState<string | null>(null);
 
-  // Listen for OAuth errors
-  React.useEffect(() => {
+  // Listen for OAuth errors with enhanced error messages
+  useEffect(() => {
     const handleOAuthError = (event: CustomEvent) => {
-      const { error, errorDescription } = event.detail;
+      const { error, errorDescription, errorCode } = event.detail;
+      
+      console.log('OAuth error received:', { error, errorDescription, errorCode });
+      
       toast({
         title: "Authentication Failed",
-        description: errorDescription || "Unable to complete authentication. Please try again or configure OAuth in Supabase.",
+        description: errorDescription || "Unable to complete authentication. Please try again.",
         variant: "destructive"
       });
+      
+      setIsLoading(null);
     };
 
     window.addEventListener('oauth-error', handleOAuthError as EventListener);
@@ -32,29 +37,41 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
 
   const handleOAuthSignIn = async (provider: 'google' | 'microsoft') => {
     setIsLoading(provider);
+    
     try {
+      console.log(`Initiating OAuth sign-in with ${provider}...`);
       const { error } = await signInWithOAuth(provider);
       
       if (error) {
+        console.error('OAuth initiation error:', error);
+        
+        // Provide helpful error messages based on error type
+        let message = error.message || 'Failed to initiate authentication.';
+        
+        if (error.message?.includes('not enabled')) {
+          message = `${provider === 'google' ? 'Google' : 'Microsoft'} OAuth is not enabled in Supabase. Please configure it in the Supabase Dashboard.`;
+        } else if (error.message?.includes('Invalid OAuth provider')) {
+          message = 'OAuth provider configuration is invalid. Please check your Supabase settings.';
+        }
+        
         toast({
           title: "Authentication Error",
-          description: error.message || "Please ensure OAuth is configured in Supabase Dashboard.",
+          description: message,
           variant: "destructive"
         });
+        setIsLoading(null);
       } else {
-        toast({
-          title: "Redirecting...",
-          description: `Signing in with ${provider === 'google' ? 'Google' : 'Microsoft'}`,
-        });
+        console.log('OAuth redirect initiated successfully');
         if (onSuccess) onSuccess();
+        // Note: User will be redirected to OAuth provider, loading state stays active
       }
     } catch (error: any) {
+      console.error('Unexpected OAuth error:', error);
       toast({
         title: "Authentication Error",
-        description: error.message || "Something went wrong. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsLoading(null);
     }
   };
