@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Building, MapPin, FileText, Eye, EyeOff } from 'lucide-react';
+import PasswordStrengthIndicator from '@/components/ui/PasswordStrengthIndicator';
 
 const US_STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -290,9 +291,7 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
                             </Button>
                           </div>
                         </FormControl>
-                        <FormDescription>
-                          Password must be at least 8 characters long.
-                        </FormDescription>
+                        <PasswordStrengthIndicator password={field.value} />
                         <FormMessage />
                       </FormItem>
                     )}

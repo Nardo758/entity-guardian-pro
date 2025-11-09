@@ -10,6 +10,7 @@ import { EyeIcon, EyeOffIcon, Building, Mail, Lock, User, Building2 } from "luci
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import QuickAccessAuth from "@/components/QuickAccessAuth";
+import PasswordStrengthIndicator from "@/components/ui/PasswordStrengthIndicator";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -287,6 +288,7 @@ const Register = () => {
                     )}
                   </Button>
                 </div>
+                <PasswordStrengthIndicator password={formData.password} />
               </div>
 
               <div className="space-y-2">

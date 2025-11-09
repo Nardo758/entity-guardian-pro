@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Lock, Eye, EyeOff, Mail } from 'lucide-react';
 import QuickAccessAuth from './QuickAccessAuth';
+import PasswordStrengthIndicator from '@/components/ui/PasswordStrengthIndicator';
 
 const QuickAccountSetup: React.FC = () => {
   const { signUp } = useAuth();
@@ -153,6 +154,7 @@ const QuickAccountSetup: React.FC = () => {
                   {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                 </button>
               </div>
+              <PasswordStrengthIndicator password={formData.password} />
             </div>
 
             <div className="space-y-2">

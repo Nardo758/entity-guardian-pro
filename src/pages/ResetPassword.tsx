@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import PasswordStrengthIndicator from '@/components/ui/PasswordStrengthIndicator';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -208,6 +209,7 @@ const ResetPassword = () => {
                     )}
                   </Button>
                 </div>
+                <PasswordStrengthIndicator password={password} />
               </div>
 
               <div className="space-y-2">

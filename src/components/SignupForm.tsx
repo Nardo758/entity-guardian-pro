@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserPlus, Mail, Lock, Eye, EyeOff, User, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import QuickAccessAuth from './QuickAccessAuth';
+import PasswordStrengthIndicator from '@/components/ui/PasswordStrengthIndicator';
 
 const SignupForm: React.FC = () => {
   const { signUp } = useAuth();
@@ -208,6 +209,7 @@ const SignupForm: React.FC = () => {
                 {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
               </button>
             </div>
+            <PasswordStrengthIndicator password={formData.password} />
           </div>
 
           <div className="space-y-2">
