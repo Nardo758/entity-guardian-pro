@@ -71,12 +71,12 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
       </div>
 
       {/* OAuth Buttons */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex justify-center">
         <Button
           variant="outline"
           onClick={() => handleOAuthSignIn('google')}
           disabled={isLoading === 'google'}
-          className="flex items-center justify-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors"
+          className="flex items-center justify-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors w-full max-w-sm"
         >
           <div className="w-5 h-5 flex items-center justify-center">
             <svg viewBox="0 0 24 24" className="w-5 h-5">
@@ -87,26 +87,7 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
             </svg>
           </div>
           <span className="text-sm font-medium">
-            {isLoading === 'google' ? 'Connecting...' : 'Google'}
-          </span>
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={() => handleOAuthSignIn('microsoft')}
-          disabled={isLoading === 'microsoft'}
-          className="flex items-center justify-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors"
-        >
-          <div className="w-5 h-5 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-5 h-5">
-              <path fill="#F25022" d="M1 1h10v10H1z"/>
-              <path fill="#00A4EF" d="M13 1h10v10H13z"/>
-              <path fill="#7FBA00" d="M1 13h10v10H1z"/>
-              <path fill="#FFB900" d="M13 13h10v10H13z"/>
-            </svg>
-          </div>
-          <span className="text-sm font-medium">
-            {isLoading === 'microsoft' ? 'Connecting...' : 'Microsoft'}
+            {isLoading === 'google' ? 'Connecting...' : 'Continue with Google'}
           </span>
         </Button>
       </div>
