@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import EmailVerificationBanner from '@/components/EmailVerificationBanner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,17 +12,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-      // If email confirmation is required and user is unverified, gate access for email/password users only
-      const provider = (user as any)?.app_metadata?.provider;
-      if (provider === 'email' && !user.email_confirmed_at) {
-        navigate('/verify-email');
-        return;
-      }
+    if (!loading && !user) {
+      navigate('/login');
     }
   }, [user, loading, navigate]);
 
@@ -40,10 +32,10 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return null;
   }
 
-  const provider = (user as any)?.app_metadata?.provider;
-  if (provider === 'email' && !user.email_confirmed_at) {
-    return null;
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      <EmailVerificationBanner />
+      {children}
+    </>
+  );
 };
