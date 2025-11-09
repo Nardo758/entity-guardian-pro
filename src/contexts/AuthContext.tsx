@@ -245,7 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const redirectUrl = 'https://entityrenewalpro.com';
+    const redirectUrl = `${window.location.origin}/`;
     const { error, data } = await supabase.auth.signUp({
       email,
       password,

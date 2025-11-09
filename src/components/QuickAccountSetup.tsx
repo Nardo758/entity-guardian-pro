@@ -39,7 +39,7 @@ const QuickAccountSetup: React.FC = () => {
         type: 'signup',
         email: formData.email,
         options: {
-          emailRedirectTo: 'https://entityrenewalpro.com'
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
