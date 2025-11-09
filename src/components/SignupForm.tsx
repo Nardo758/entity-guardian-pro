@@ -43,6 +43,17 @@ const SignupForm: React.FC = () => {
       });
 
       if (error) {
+        // Handle rate limiting
+        if ((error as any).retryAfter) {
+          const retryAfter = (error as any).retryAfter;
+          toast({
+            title: "Too Many Attempts",
+            description: error.message || `Too many signup attempts. Please try again in ${retryAfter} seconds.`,
+            variant: "destructive",
+          });
+          return;
+        }
+
         toast({
           title: "Sign up failed",
           description: error.message,

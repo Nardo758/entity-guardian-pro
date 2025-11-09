@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordResetRequestSchema, type PasswordResetRequestFormData } from '@/lib/validations/auth';
@@ -19,6 +20,8 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
 
   const form = useForm<PasswordResetRequestFormData>({
     resolver: zodResolver(passwordResetRequestSchema),
@@ -28,9 +31,58 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
   });
 
   const onSubmit = async (data: PasswordResetRequestFormData) => {
+    // Check if locked out
+    if (isLocked && lockoutTime) {
+      const remainingTime = Math.ceil((lockoutTime - Date.now()) / 1000);
+      if (remainingTime > 0) {
+        toast({
+          title: "Too Many Attempts",
+          description: `Please try again in ${remainingTime} seconds.`,
+          variant: "destructive",
+        });
+        return;
+      } else {
+        setIsLocked(false);
+        setLockoutTime(null);
+      }
+    }
+
     setIsLoading(true);
 
     try {
+      // Check rate limit first
+      const clientIP = await fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => data.ip)
+        .catch(() => '0.0.0.0');
+
+      const { data: rateLimitData, error: rateLimitError } = await supabase.functions.invoke('rate-limiter', {
+        body: {
+          endpoint: 'auth',
+          ipAddress: clientIP
+        }
+      });
+
+      if (rateLimitError || !rateLimitData?.allowed) {
+        const retryAfter = rateLimitData?.retryAfter || 300;
+        const lockoutEndTime = Date.now() + (retryAfter * 1000);
+        setIsLocked(true);
+        setLockoutTime(lockoutEndTime);
+
+        toast({
+          title: "Too Many Attempts",
+          description: `Too many password reset requests. Please try again in ${retryAfter} seconds.`,
+          variant: "destructive",
+        });
+
+        setTimeout(() => {
+          setIsLocked(false);
+          setLockoutTime(null);
+        }, retryAfter * 1000);
+
+        return;
+      }
+
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -110,12 +162,22 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
               )}
             />
 
+            {isLocked && lockoutTime && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Too Many Attempts</AlertTitle>
+                <AlertDescription>
+                  Too many password reset requests. Please try again in {Math.ceil((lockoutTime - Date.now()) / 1000)} seconds.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Button 
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isLocked}
               className="w-full"
             >
-              {isLoading ? 'Sending...' : 'Send Reset Email'}
+              {isLoading ? 'Sending...' : isLocked ? 'Temporarily Locked' : 'Send Reset Email'}
             </Button>
           </form>
         </Form>

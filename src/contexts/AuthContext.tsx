@@ -2,6 +2,59 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+// Rate limiter utility
+const checkRateLimit = async (endpoint: string, userId?: string): Promise<{
+  allowed: boolean;
+  remaining?: number;
+  resetTime?: string;
+  retryAfter?: number;
+  error?: string;
+}> => {
+  try {
+    const clientIP = await fetch('https://api.ipify.org?format=json')
+      .then(res => res.json())
+      .then(data => data.ip)
+      .catch(() => '0.0.0.0');
+
+    const { data, error } = await supabase.functions.invoke('rate-limiter', {
+      body: {
+        endpoint,
+        userId,
+        ipAddress: clientIP
+      }
+    });
+
+    if (error) {
+      console.error('Rate limiter error:', error);
+      // For critical auth operations, fail secure
+      return { 
+        allowed: false, 
+        error: 'Security service temporarily unavailable. Please try again later.',
+        retryAfter: 300
+      };
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error('Rate limit check failed:', error);
+    
+    if (error.message?.includes('429') || error.status === 429) {
+      return {
+        allowed: false,
+        error: 'Too many attempts. Please try again later.',
+        retryAfter: 60
+      };
+    }
+    
+    // For auth endpoints, deny on error
+    return { 
+      allowed: false, 
+      error: 'Security check failed. Please try again.',
+      retryAfter: 60
+    };
+  }
+};
+
 interface Profile {
   id: string;
   user_id: string;
@@ -369,6 +422,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
+    // Check rate limit first
+    const rateLimitResult = await checkRateLimit('auth');
+    
+    if (!rateLimitResult.allowed) {
+      return { 
+        error: { 
+          message: rateLimitResult.error || 'Too many signup attempts. Please try again later.',
+          retryAfter: rateLimitResult.retryAfter
+        },
+        data: null 
+      };
+    }
+    
     const redirectUrl = `${window.location.origin}/`;
     
     try {
@@ -410,6 +476,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     console.log('Attempting sign in for email:', email);
+    
+    // Check rate limit first to prevent brute force attacks
+    const rateLimitResult = await checkRateLimit('auth');
+    
+    if (!rateLimitResult.allowed) {
+      console.warn('Login rate limit exceeded');
+      return { 
+        error: { 
+          message: rateLimitResult.error || 'Too many login attempts. Please try again later.',
+          retryAfter: rateLimitResult.retryAfter,
+          rateLimited: true
+        }
+      };
+    }
     
     // Clean up any stale refresh tokens from previous sessions
     try {

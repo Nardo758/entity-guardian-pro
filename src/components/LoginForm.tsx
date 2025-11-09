@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Lock, Eye, EyeOff, RotateCcw } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, RotateCcw, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import QuickAccessAuth from './QuickAccessAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,8 @@ const LoginForm: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -74,12 +77,50 @@ const LoginForm: React.FC = () => {
   };
 
   const onSubmit = async (data: LoginFormData) => {
+    // Check if locked out
+    if (isLocked && lockoutTime) {
+      const remainingTime = Math.ceil((lockoutTime - Date.now()) / 1000);
+      if (remainingTime > 0) {
+        toast({
+          title: "Account Temporarily Locked",
+          description: `Too many failed attempts. Please try again in ${remainingTime} seconds.`,
+          variant: "destructive",
+        });
+        return;
+      } else {
+        setIsLocked(false);
+        setLockoutTime(null);
+      }
+    }
+
     setIsLoading(true);
 
     try {
       const { error } = await signIn(data.email, data.password);
 
       if (error) {
+        // Handle rate limiting
+        if ((error as any).rateLimited || (error as any).retryAfter) {
+          const retryAfter = (error as any).retryAfter || 300;
+          const lockoutEndTime = Date.now() + (retryAfter * 1000);
+          setIsLocked(true);
+          setLockoutTime(lockoutEndTime);
+          
+          toast({
+            title: "Too Many Attempts",
+            description: error.message || `Account temporarily locked. Please try again in ${retryAfter} seconds.`,
+            variant: "destructive",
+          });
+          
+          // Auto-unlock after timeout
+          setTimeout(() => {
+            setIsLocked(false);
+            setLockoutTime(null);
+          }, retryAfter * 1000);
+          
+          return;
+        }
+
         toast({
           title: "Sign in failed",
           description: error.message,
@@ -162,12 +203,22 @@ const LoginForm: React.FC = () => {
               )}
             />
 
+            {isLocked && lockoutTime && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Account Temporarily Locked</AlertTitle>
+                <AlertDescription>
+                  Too many failed login attempts. Please try again in {Math.ceil((lockoutTime - Date.now()) / 1000)} seconds.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isLocked}
               className="w-full"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Signing in...' : isLocked ? 'Account Locked' : 'Sign In'}
             </Button>
           </form>
         </Form>
