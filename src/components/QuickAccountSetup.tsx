@@ -6,151 +6,79 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Mail, Lock, Eye, EyeOff, RotateCcw } from 'lucide-react';
-import PasswordResetForm from './PasswordResetForm';
+import { UserPlus, Lock, Eye, EyeOff, Mail } from 'lucide-react';
 import QuickAccessAuth from './QuickAccessAuth';
-import { supabase } from '@/integrations/supabase/client';
 
 const QuickAccountSetup: React.FC = () => {
-  const { signUp, signIn } = useAuth();
+  const { signUp } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: ''
   });
 
-  const handleResendVerification = async () => {
-    if (!formData.email) {
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Email Required",
-        description: "Please enter your email address first.",
+        title: "Password Mismatch",
+        description: "Passwords don't match. Please check and try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 8 characters long.",
         variant: "destructive"
       });
       return;
     }
 
     setIsLoading(true);
+
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: formData.email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`
-        }
+      const { error, data } = await signUp(formData.email, formData.password, {
+        first_name: '',
+        last_name: '',
+        user_type: 'entity_owner'
       });
 
       if (error) {
-        toast({
-          title: "Failed to resend email",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Email Sent! 📧",
-          description: "Verification email has been sent. Please check your inbox.",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to resend verification email",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      if (mode === 'signup') {
-        if (formData.password !== formData.confirmPassword) {
+        if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
           toast({
-            title: "Password Mismatch",
-            description: "Passwords don't match. Please check and try again.",
+            title: "Account already exists",
+            description: "This email is already registered. Please sign in instead.",
             variant: "destructive"
           });
-          return;
-        }
-
-        // const { error, data } = await signUp(formData.email, formData.password, {
-        //   first_name: 'Admin',
-        //   last_name: 'User',
-        //   company: 'My Company'
-        // });
-
-        const { error, data } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              first_name: 'Admin',
-              last_name: 'User',
-              company: 'My Company'
-            }
-          }
-        });
-
-        if (error) {
+        } else if (error.message?.includes('Email rate limit exceeded')) {
+          toast({
+            title: "Too many requests",
+            description: "Please wait a few minutes before trying again.",
+            variant: "destructive"
+          });
+        } else {
           toast({
             title: "Sign up failed",
             description: error.message,
             variant: "destructive"
           });
-        } else {
-          // Attempt to create or update profile immediately after signup
-          // This may fail if the user isn't authenticated yet due to email confirmation; ignore non-critical errors
-          try {
-            const userId = data.user?.id;
-            if (userId) {
-              await supabase
-                .from('profiles')
-                .upsert({
-                  user_id: userId,
-                  updated_at: new Date().toISOString()
-                } as any, { onConflict: 'user_id' });
-            }
-          } catch (e) {
-            // Non-blocking: profile insertion will be retried post sign-in elsewhere if needed
-            console.warn('Profile upsert after signup failed:', e);
-          }
-          console.log('Signup data:', data);
-          if (data.user && !data.user.email_confirmed_at) {
-            toast({
-              title: "Account Created! 🎉",
-              description: "Check your email to confirm your account, then you can sign in.",
-            });
-          } else {
-            toast({
-              title: "Account Created! 🎉",
-              description: "Your account has been created successfully. You can now sign in.",
-            });
-          }
-          setMode('signin');
         }
       } else {
-        const { error } = await signIn(formData.email, formData.password);
-
-        if (error) {
-          toast({
-            title: "Sign in failed",
-            description: error.message + " - Try creating an account if you don't have one.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Welcome! 🎉",
-            description: "Successfully signed in.",
-          });
-        }
+        toast({
+          title: "Account Created! 🎉",
+          description: "Check your email to verify your account, then you can sign in.",
+        });
+        // Clear form
+        setFormData({ email: '', password: '', confirmPassword: '' });
       }
     } catch (error: any) {
       toast({
@@ -171,20 +99,17 @@ const QuickAccountSetup: React.FC = () => {
     }));
   };
 
-  if (mode === 'reset') {
-    return <PasswordResetForm onBack={() => setMode('signin')} />;
-  }
-
   return (
     <div className="max-w-md mx-auto">
       <Card>
         <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
-            <UserPlus className="h-8 w-8 text-white" />
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center mb-4">
+            <UserPlus className="h-8 w-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl font-bold">
-            {mode === 'signin' ? 'Sign In' : 'Create Account'}
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">
+            Quick signup to get started
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -213,7 +138,7 @@ const QuickAccountSetup: React.FC = () => {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Create a strong password (min 8 characters)"
                   value={formData.password}
                   onChange={handleInputChange}
                   className="pl-10 pr-10"
@@ -228,69 +153,58 @@ const QuickAccountSetup: React.FC = () => {
                 </button>
               </div>
             </div>
-{/* 
-            {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="pl-10 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                </button>
               </div>
-            )} */}
+            </div>
 
             <Button
               type="submit"
               disabled={isLoading}
               className="w-full"
             >
-              {isLoading ? 'Processing...' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 
-          <div className="text-center pt-4 space-y-2">
-            {/* <Button
-              variant="ghost"
-              onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-              className="text-sm"
-            >
-              {mode === 'signin' ? "Don't have an account? Create one" : "Already have an account? Sign in"}
-            </Button> */}
-
-            {mode === 'signin' && (
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setMode('reset')}
-                  className="text-sm text-orange-600 hover:text-white"
-                >
-                  <RotateCcw className="h-4 w-4 mr-1" />
-                  Forgot Password
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={handleResendVerification}
-                  disabled={isLoading}
-                  className="text-sm text-blue-600 hover:text-white"
-                >
-                  <Mail className="h-4 w-4 mr-1" />
-                  Resend Verification Email
-                </Button>
-              </div>
-            )}
+          <div className="relative my-4">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+              Or sign up with
+            </span>
           </div>
 
-          {/* Quick Access Authentication */}
+          {/* OAuth Sign Up */}
           <QuickAccessAuth />
+
+          <div className="text-center pt-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <a href="/login" className="text-primary hover:underline font-medium">
+                Sign in
+              </a>
+            </p>
+          </div>
 
         </CardContent>
       </Card>
