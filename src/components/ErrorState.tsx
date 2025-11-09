@@ -16,17 +16,17 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   title = 'Something went wrong'
 }) => {
   const containerClasses = fullScreen
-    ? 'min-h-screen flex items-center justify-center bg-gray-50 px-4'
+    ? 'min-h-screen flex items-center justify-center bg-background px-4'
     : 'flex items-center justify-center p-8';
 
   return (
     <div className={containerClasses}>
-      <div className="max-w-md w-full bg-white shadow-md rounded-lg p-6 text-center">
-        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
-          <AlertCircle className="w-6 h-6 text-red-600" />
+      <div className="max-w-md w-full bg-card shadow-md rounded-lg p-6 text-center border border-border">
+        <div className="flex items-center justify-center w-12 h-12 mx-auto bg-destructive/10 rounded-full mb-4">
+          <AlertCircle className="w-6 h-6 text-destructive" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-gray-600 text-sm mb-4">
+        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+        <p className="text-muted-foreground text-sm mb-4">
           {error?.message || 'An unexpected error occurred. Please try again.'}
         </p>
         {onRetry && (
@@ -49,12 +49,12 @@ export const InlineErrorState: React.FC<{ error: Error | null; onRetry?: () => v
   onRetry 
 }) => {
   return (
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
       <div className="flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="text-sm text-red-800 font-medium mb-1">Error</p>
-          <p className="text-sm text-red-700">
+          <p className="text-sm text-destructive font-medium mb-1">Error</p>
+          <p className="text-sm text-destructive/90">
             {error?.message || 'An unexpected error occurred.'}
           </p>
           {onRetry && (
@@ -62,7 +62,7 @@ export const InlineErrorState: React.FC<{ error: Error | null; onRetry?: () => v
               onClick={onRetry}
               variant="outline"
               size="sm"
-              className="mt-2 text-red-700 border-red-300 hover:bg-red-100"
+              className="mt-2"
             >
               <RefreshCw className="w-3 h-3 mr-1" />
               Retry
