@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CheckoutProvider } from "@/contexts/CheckoutContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import AuthErrorBoundary from "@/components/AuthErrorBoundary";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminSetupPage from "./pages/AdminSetupPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -73,18 +74,21 @@ const App = () => {
                 <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<Landing />} />
-                <Route path="/signup" element={<UserTypeSelection />} />
-                <Route path="/login" element={<Login />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/paid-register" element={<PaidRegister />} />
-              <Route path="/registration-success" element={<RegistrationSuccess />} />
-              <Route path="/payment-success" element={<PaymentSuccess />} />
-              <Route path="/role-selection" element={<ProtectedRoute><RoleSelection /></ProtectedRoute>} />
-              <Route path="/sign-out-confirmation" element={<SignOutConfirmation />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/sign-out-confirmation" element={<SignOutConfirmation />} />
+                
+                {/* Authentication routes with error recovery */}
+                <Route path="/signup" element={<AuthErrorBoundary maxRetries={3}><UserTypeSelection /></AuthErrorBoundary>} />
+                <Route path="/login" element={<AuthErrorBoundary maxRetries={3}><Login /></AuthErrorBoundary>} />
+                <Route path="/reset-password" element={<AuthErrorBoundary maxRetries={3}><ResetPassword /></AuthErrorBoundary>} />
+                <Route path="/register" element={<AuthErrorBoundary maxRetries={3}><Register /></AuthErrorBoundary>} />
+                <Route path="/paid-register" element={<AuthErrorBoundary maxRetries={3}><PaidRegister /></AuthErrorBoundary>} />
+                <Route path="/agent-signup" element={<AuthErrorBoundary maxRetries={3}><AgentSignup /></AuthErrorBoundary>} />
+                <Route path="/verify-email" element={<AuthErrorBoundary maxRetries={3}><VerifyEmail /></AuthErrorBoundary>} />
+                <Route path="/registration-success" element={<AuthErrorBoundary><RegistrationSuccess /></AuthErrorBoundary>} />
+                <Route path="/payment-success" element={<AuthErrorBoundary><PaymentSuccess /></AuthErrorBoundary>} />
+                <Route path="/role-selection" element={<AuthErrorBoundary maxRetries={3}><ProtectedRoute><RoleSelection /></ProtectedRoute></AuthErrorBoundary>} />
               
               {/* Protected routes */}
               <Route path="/dashboard" element={<ProtectedRoute><AuthRedirect><EntityOwnerDashboard /></AuthRedirect></ProtectedRoute>} />
@@ -109,7 +113,6 @@ const App = () => {
               <Route path="/agent-dashboard" element={<ProtectedRoute><AuthRedirect><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></AuthRedirect></ProtectedRoute>} />
               <Route path="/admin-setup" element={<ProtectedRoute><AdminSetupPage /></ProtectedRoute>} />
               <Route path="/agent-invitation/:token" element={<ProtectedRoute><AgentInvitationAccept /></ProtectedRoute>} />
-              <Route path="/agent-signup" element={<AgentSignup />} />
               <Route path="*" element={<NotFound />} />
               </Routes>
               </CheckoutProvider>
