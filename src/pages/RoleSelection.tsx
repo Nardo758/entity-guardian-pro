@@ -9,39 +9,78 @@ import { useToast } from '@/hooks/use-toast';
 
 const RoleSelection = () => {
   const [loading, setLoading] = useState<string | null>(null);
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, ensureProfileExists } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleRoleSelection = async (userType: string, redirectPath: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setLoading(userType);
     
     try {
-      // Update user profile with selected role
-      const { error } = await supabase
-        .from('profiles')
-        .update({ user_type: userType })
-        .eq('user_id', user.id);
+      // First ensure the profile exists
+      const profileExists = await ensureProfileExists(user.id);
+      
+      if (!profileExists) {
+        throw new Error('Could not create or verify user profile');
+      }
 
-      if (error) throw error;
+      // Update user profile with selected role with retry logic
+      let updateSuccess = false;
+      let lastError = null;
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            user_type: userType,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (!error) {
+          updateSuccess = true;
+          break;
+        }
+
+        lastError = error;
+        
+        // Wait before retry (exponential backoff)
+        if (attempt < 2) {
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 500));
+        }
+      }
+
+      if (!updateSuccess) {
+        throw lastError || new Error('Failed to update profile after multiple attempts');
+      }
 
       // Refresh profile to get updated data
       await refreshProfile();
 
+      // Wait a bit to ensure profile is updated
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       toast({
-        title: "Role selected successfully",
+        title: "Role selected successfully! 🎉",
         description: `Welcome to Entity Renewal Pro as ${userType === 'entity_owner' ? 'a Business Owner' : userType === 'registered_agent' ? 'a Registered Agent' : 'an Administrator'}!`,
       });
 
       // Redirect to appropriate dashboard
       navigate(redirectPath, { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user role:', error);
       toast({
         title: "Error selecting role",
-        description: "Please try again or contact support if the issue persists.",
+        description: error.message || "Please try again or contact support if the issue persists.",
         variant: "destructive"
       });
     } finally {

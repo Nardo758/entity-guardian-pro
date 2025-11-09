@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Building } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import QuickAccountSetup from "@/components/QuickAccountSetup";
+import LoginForm from "@/components/LoginForm";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -48,8 +48,8 @@ const Login = () => {
           <p className="text-muted-foreground mt-2">Sign in to access your account</p>
         </div>
 
-        {/* Quick Account Setup Component */}
-        <QuickAccountSetup />
+        {/* Login Form Component */}
+        <LoginForm />
       </div>
     </div>
   );

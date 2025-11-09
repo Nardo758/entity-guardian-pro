@@ -27,6 +27,7 @@ interface AuthContextType {
   signInWithOAuth: (provider: 'google' | 'microsoft') => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
+  ensureProfileExists: (userId: string, retries?: number) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,8 +100,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  // Helper to ensure profile exists with retry logic
+  const ensureProfileExists = async (userId: string, retries = 3): Promise<boolean> => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!error && data) {
+          return true;
+        }
+
+        // If profile doesn't exist, try to create it
+        if (!data || error?.code === 'PGRST116') {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: userId,
+              updated_at: new Date().toISOString()
+            });
+
+          if (!insertError) {
+            return true;
+          }
+        }
+
+        // Wait before retry (exponential backoff)
+        if (i < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 500));
+        }
+      } catch (error) {
+        console.warn(`Profile check attempt ${i + 1} failed:`, error);
+      }
+    }
+    return false;
+  };
+
+  const fetchProfile = async (userId: string, retries = 3) => {
     try {
+      // First ensure profile exists
+      const profileExists = await ensureProfileExists(userId, retries);
+      
+      if (!profileExists) {
+        console.warn('Could not ensure profile exists after retries');
+        // Set minimal profile as fallback
+        setProfile({
+          id: userId,
+          user_id: userId,
+          first_name: null,
+          last_name: null,
+          company: null,
+          company_size: null,
+          plan: null,
+          user_type: null,
+          created_at: null,
+          updated_at: null,
+          roles: [],
+          is_admin: false
+        });
+        return;
+      }
+
       // Fetch profile with roles
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -109,10 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (profileError) {
-        // PGRST116 is "no rows returned" - this is ok for new users
-        if (profileError.code !== 'PGRST116') {
-          console.warn('Could not fetch profile:', profileError);
-        }
+        console.warn('Could not fetch profile:', profileError);
         // Set minimal profile so app doesn't break
         setProfile({
           id: userId,
@@ -317,6 +377,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithOAuth,
     signOut,
     refreshProfile,
+    ensureProfileExists,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
