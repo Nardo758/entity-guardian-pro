@@ -27,7 +27,7 @@ interface AuthContextType {
   signInWithOAuth: (provider: 'google' | 'microsoft') => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
-  ensureProfileExists: (userId: string, retries?: number) => Promise<boolean>;
+  ensureProfileExists: (userId: string, metadata?: any, retries?: number) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -100,10 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Helper to ensure profile exists with retry logic
-  const ensureProfileExists = async (userId: string, retries = 3): Promise<boolean> => {
+  // Helper to ensure profile exists with retry logic and exponential backoff
+  const ensureProfileExists = async (userId: string, metadata?: any, retries = 5): Promise<boolean> => {
     for (let i = 0; i < retries; i++) {
       try {
+        // Check if profile exists
         const { data, error } = await supabase
           .from('profiles')
           .select('user_id')
@@ -111,31 +112,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .maybeSingle();
 
         if (!error && data) {
+          console.log('Profile already exists for user:', userId);
           return true;
         }
 
         // If profile doesn't exist, try to create it
         if (!data || error?.code === 'PGRST116') {
+          console.log(`Creating profile for user ${userId} (attempt ${i + 1}/${retries})`);
+          
           const { error: insertError } = await supabase
             .from('profiles')
             .insert({
               user_id: userId,
+              first_name: metadata?.first_name || null,
+              last_name: metadata?.last_name || null,
+              company: metadata?.company || null,
               updated_at: new Date().toISOString()
             });
 
           if (!insertError) {
+            console.log('Profile created successfully for user:', userId);
             return true;
           }
+          
+          // If unique constraint violation, profile was created by another process
+          if (insertError.code === '23505') {
+            console.log('Profile already exists (race condition resolved)');
+            return true;
+          }
+          
+          console.warn(`Profile creation attempt ${i + 1} failed:`, insertError);
         }
 
-        // Wait before retry (exponential backoff)
+        // Wait before retry with exponential backoff (500ms, 1s, 2s, 4s, 8s)
         if (i < retries - 1) {
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 500));
+          const delay = Math.pow(2, i) * 500;
+          console.log(`Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       } catch (error) {
         console.warn(`Profile check attempt ${i + 1} failed:`, error);
+        if (i < retries - 1) {
+          const delay = Math.pow(2, i) * 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
     }
+    
+    console.error('Failed to ensure profile exists after all retries');
     return false;
   };
 
@@ -306,15 +330,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error, data } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: metadata,
+    
+    try {
+      const { error, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: metadata,
+        }
+      });
+      
+      if (error) {
+        return { error, data };
       }
-    });
-    return { error, data };
+      
+      // Immediately ensure profile is created after successful signup
+      if (data.user) {
+        console.log('User created, ensuring profile exists:', data.user.id);
+        const profileCreated = await ensureProfileExists(data.user.id, metadata, 5);
+        
+        if (!profileCreated) {
+          console.error('Failed to create profile after signup');
+          return { 
+            error: { message: 'Account created but profile setup failed. Please contact support.' },
+            data 
+          };
+        }
+        
+        console.log('Profile created successfully after signup');
+      }
+      
+      return { error, data };
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      return { error: err, data: null };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
