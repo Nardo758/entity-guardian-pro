@@ -218,7 +218,7 @@ const SignupForm: React.FC = () => {
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your password"
+                placeholder="Re-enter your password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 className="pl-10 pr-10"

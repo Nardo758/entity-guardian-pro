@@ -138,11 +138,12 @@ const QuickAccountSetup: React.FC = () => {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password (min 8 characters)"
+                  placeholder="At least 8 characters"
                   value={formData.password}
                   onChange={handleInputChange}
                   className="pl-10 pr-10"
                   required
+                  minLength={8}
                 />
                 <button
                   type="button"
@@ -162,11 +163,12 @@ const QuickAccountSetup: React.FC = () => {
                   id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
+                  placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   className="pl-10 pr-10"
                   required
+                  minLength={8}
                 />
                 <button
                   type="button"

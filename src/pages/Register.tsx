@@ -268,9 +268,10 @@ const Register = () => {
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={handleInputChange}
-                    placeholder="Create a strong password"
+                    placeholder="At least 8 characters"
                     className="pl-10 pr-10"
                     required
+                    minLength={8}
                   />
                   <Button
                     type="button"
@@ -300,9 +301,10 @@ const Register = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    placeholder="Confirm your password"
+                    placeholder="Re-enter your password"
                     className="pl-10 pr-10"
                     required
+                    minLength={8}
                   />
                   <Button
                     type="button"

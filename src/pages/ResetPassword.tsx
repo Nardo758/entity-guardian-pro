@@ -187,7 +187,7 @@ const ResetPassword = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter new password"
+                    placeholder="At least 8 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
@@ -217,7 +217,7 @@ const ResetPassword = () => {
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
+                    placeholder="Re-enter your password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10 pr-10"
@@ -241,7 +241,7 @@ const ResetPassword = () => {
               </div>
 
               <div className="text-sm text-muted-foreground">
-                Password must be at least 8 characters long
+                Password must be at least 8 characters long.
               </div>
 
               <Button 
