@@ -99,16 +99,22 @@ const LoginForm: React.FC = () => {
       const { error } = await signIn(data.email, data.password);
 
       if (error) {
-        // Handle rate limiting
+        // Handle rate limiting with exponential backoff
         if ((error as any).rateLimited || (error as any).retryAfter) {
           const retryAfter = (error as any).retryAfter || 300;
+          const failedAttempts = (error as any).failedAttempts || 1;
+          const exponentialBackoff = (error as any).exponentialBackoff || false;
           const lockoutEndTime = Date.now() + (retryAfter * 1000);
           setIsLocked(true);
           setLockoutTime(lockoutEndTime);
           
+          const backoffMessage = exponentialBackoff 
+            ? `Attempt ${failedAttempts}: Wait time increased to ${retryAfter} seconds.`
+            : `Please try again in ${retryAfter} seconds.`;
+          
           toast({
-            title: "Too Many Attempts",
-            description: error.message || `Account temporarily locked. Please try again in ${retryAfter} seconds.`,
+            title: "Too Many Failed Attempts",
+            description: `${error.message || 'Account temporarily locked.'} ${backoffMessage}`,
             variant: "destructive",
           });
           
@@ -120,7 +126,7 @@ const LoginForm: React.FC = () => {
           
           return;
         }
-
+        
         toast({
           title: "Sign in failed",
           description: error.message,
@@ -206,9 +212,9 @@ const LoginForm: React.FC = () => {
             {isLocked && lockoutTime && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Account Temporarily Locked</AlertTitle>
+                <AlertTitle>Progressive Security Lockout</AlertTitle>
                 <AlertDescription>
-                  Too many failed login attempts. Please try again in {Math.ceil((lockoutTime - Date.now()) / 1000)} seconds.
+                  Multiple failed attempts detected. Retry in <strong>{Math.ceil((lockoutTime - Date.now()) / 1000)}</strong> seconds. Each additional failed attempt increases the wait time.
                 </AlertDescription>
               </Alert>
             )}

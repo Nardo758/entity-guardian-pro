@@ -481,11 +481,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const rateLimitResult = await checkRateLimit('auth');
     
     if (!rateLimitResult.allowed) {
-      console.warn('Login rate limit exceeded');
+      console.warn('Login rate limit exceeded with progressive backoff');
       return { 
         error: { 
           message: rateLimitResult.error || 'Too many login attempts. Please try again later.',
           retryAfter: rateLimitResult.retryAfter,
+          failedAttempts: (rateLimitResult as any).failedAttempts,
+          exponentialBackoff: (rateLimitResult as any).exponentialBackoff,
           rateLimited: true
         }
       };

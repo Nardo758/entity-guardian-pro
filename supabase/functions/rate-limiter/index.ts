@@ -10,16 +10,32 @@ interface RateLimitConfig {
   windowMs: number;
   maxRequests: number;
   endpoint: string;
+  useExponentialBackoff?: boolean;
+  baseDelaySeconds?: number;
 }
 
 const RATE_LIMITS: { [key: string]: RateLimitConfig } = {
-  'default': { windowMs: 60000, maxRequests: 100, endpoint: 'default' }, // 100 requests per minute
-  'auth': { windowMs: 300000, maxRequests: 5, endpoint: 'auth' }, // 5 login attempts per 5 minutes
-  'invitation': { windowMs: 300000, maxRequests: 10, endpoint: 'invitation' }, // 10 invitations per 5 minutes
-  'payment': { windowMs: 60000, maxRequests: 5, endpoint: 'payment' }, // 5 payment attempts per minute
-  'sms-verification': { windowMs: 300000, maxRequests: 3, endpoint: 'sms-verification' }, // 3 SMS attempts per 5 minutes
-  'admin-access': { windowMs: 60000, maxRequests: 50, endpoint: 'admin-access' }, // 50 admin actions per minute
-  'profile-access': { windowMs: 60000, maxRequests: 20, endpoint: 'profile-access' }, // 20 profile views per minute
+  'default': { windowMs: 60000, maxRequests: 100, endpoint: 'default' },
+  'auth': { 
+    windowMs: 300000, 
+    maxRequests: 5, 
+    endpoint: 'auth',
+    useExponentialBackoff: true,
+    baseDelaySeconds: 5 // Start with 5 seconds, doubles each time
+  },
+  'invitation': { windowMs: 300000, maxRequests: 10, endpoint: 'invitation' },
+  'payment': { windowMs: 60000, maxRequests: 5, endpoint: 'payment' },
+  'sms-verification': { windowMs: 300000, maxRequests: 3, endpoint: 'sms-verification' },
+  'admin-access': { windowMs: 60000, maxRequests: 50, endpoint: 'admin-access' },
+  'profile-access': { windowMs: 60000, maxRequests: 20, endpoint: 'profile-access' },
+};
+
+// Calculate exponential backoff delay
+const calculateBackoffDelay = (failedAttempts: number, baseDelay: number): number => {
+  // Exponential backoff: baseDelay * (2 ^ (attempts - 1))
+  // Capped at 15 minutes (900 seconds)
+  const delay = baseDelay * Math.pow(2, Math.min(failedAttempts - 1, 7));
+  return Math.min(delay, 900);
 };
 
 serve(async (req) => {
@@ -56,18 +72,9 @@ serve(async (req) => {
       .delete()
       .lt('window_start', windowStart.toISOString());
 
-    // Check current rate limit
-    let query = supabase
-      .from('api_rate_limits')
-      .select('request_count')
-      .eq('endpoint', endpoint)
-      .gte('window_start', windowStart.toISOString());
-
-    if (userId) {
-      query = query.eq('user_id', userId);
-    } else if (ipAddress) {
-      query = query.eq('ip_address', ipAddress);
-    } else {
+    // Build identifier for tracking
+    const identifier = userId || ipAddress;
+    if (!identifier) {
       return new Response(
         JSON.stringify({ error: "Either userId or ipAddress is required" }),
         { 
@@ -75,6 +82,19 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
+    }
+
+    // Check current rate limit
+    let query = supabase
+      .from('api_rate_limits')
+      .select('request_count, metadata')
+      .eq('endpoint', endpoint)
+      .gte('window_start', windowStart.toISOString());
+
+    if (userId) {
+      query = query.eq('user_id', userId);
+    } else if (ipAddress) {
+      query = query.eq('ip_address', ipAddress);
     }
 
     const { data: existing, error: selectError } = await query;
@@ -91,8 +111,22 @@ serve(async (req) => {
     }
 
     const currentRequests = existing?.reduce((sum, record) => sum + record.request_count, 0) || 0;
+    
+    // Get failed attempts count from metadata
+    const latestRecord = existing?.[0];
+    const failedAttempts = (latestRecord?.metadata as any)?.failed_attempts || 0;
 
     if (currentRequests >= config.maxRequests) {
+      let retryAfterSeconds = Math.ceil(config.windowMs / 1000);
+      
+      // Apply exponential backoff if configured
+      if (config.useExponentialBackoff && config.baseDelaySeconds) {
+        retryAfterSeconds = calculateBackoffDelay(
+          failedAttempts + 1,
+          config.baseDelaySeconds
+        );
+      }
+
       // Log rate limit violation
       await supabase.rpc('log_security_violation', {
         violation_type: 'rate_limit_exceeded',
@@ -102,38 +136,48 @@ serve(async (req) => {
           endpoint,
           current_requests: currentRequests,
           max_requests: config.maxRequests,
-          window_ms: config.windowMs
+          window_ms: config.windowMs,
+          failed_attempts: failedAttempts + 1,
+          retry_after_seconds: retryAfterSeconds,
+          backoff_applied: config.useExponentialBackoff || false
         }
       });
 
       return new Response(
         JSON.stringify({ 
           error: "Rate limit exceeded",
-          retryAfter: Math.ceil(config.windowMs / 1000),
+          retryAfter: retryAfterSeconds,
+          failedAttempts: failedAttempts + 1,
           limit: config.maxRequests,
-          windowMs: config.windowMs
+          windowMs: config.windowMs,
+          exponentialBackoff: config.useExponentialBackoff || false
         }),
         { 
           status: 429, 
           headers: { 
             ...corsHeaders, 
             "Content-Type": "application/json",
-            "Retry-After": Math.ceil(config.windowMs / 1000).toString()
+            "Retry-After": retryAfterSeconds.toString()
           } 
         }
       );
     }
 
-    // Record this request
+    // Record this request with updated metadata
+    const newFailedAttempts = currentRequests + 1;
     const { error: insertError } = await supabase
       .from('api_rate_limits')
       .upsert({
         user_id: userId || null,
         ip_address: ipAddress || null,
         endpoint,
-        request_count: 1,
+        request_count: newFailedAttempts,
         window_start: now.toISOString(),
-        updated_at: now.toISOString()
+        updated_at: now.toISOString(),
+        metadata: {
+          failed_attempts: newFailedAttempts,
+          last_attempt: now.toISOString()
+        }
       }, {
         onConflict: 'user_id,endpoint,window_start',
         ignoreDuplicates: false
@@ -148,7 +192,8 @@ serve(async (req) => {
       JSON.stringify({ 
         allowed: true,
         remaining: config.maxRequests - currentRequests - 1,
-        resetTime: new Date(now.getTime() + config.windowMs).toISOString()
+        resetTime: new Date(now.getTime() + config.windowMs).toISOString(),
+        currentAttempts: newFailedAttempts
       }),
       { 
         status: 200, 
