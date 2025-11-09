@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, ArrowLeft } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { passwordResetRequestSchema, type PasswordResetRequestFormData } from '@/lib/validations/auth';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface PasswordResetFormProps {
   onBack: () => void;
@@ -13,16 +16,22 @@ interface PasswordResetFormProps {
 
 const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
+  const [sentEmail, setSentEmail] = useState('');
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<PasswordResetRequestFormData>({
+    resolver: zodResolver(passwordResetRequestSchema),
+    defaultValues: {
+      email: ''
+    }
+  });
+
+  const onSubmit = async (data: PasswordResetRequestFormData) => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
@@ -33,6 +42,7 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
           variant: "destructive"
         });
       } else {
+        setSentEmail(data.email);
         setIsEmailSent(true);
         toast({
           title: "Reset Email Sent! 📧",
@@ -59,7 +69,7 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
         <CardContent className="text-center space-y-4">
           <div className="text-6xl">📧</div>
           <p className="text-muted-foreground">
-            We've sent password reset instructions to <strong>{email}</strong>
+            We've sent password reset instructions to <strong>{sentEmail}</strong>
           </p>
           <Button onClick={onBack} variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -76,31 +86,39 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
         <CardTitle>Reset Password</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form onSubmit={handleResetPassword} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10"
-                required
-              />
-            </div>
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="email"
+                        placeholder="Enter your email"
+                        className="pl-10"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <Button 
-            type="submit"
-            disabled={isLoading || !email}
-            className="w-full"
-          >
-            {isLoading ? 'Sending...' : 'Send Reset Email'}
-          </Button>
-        </form>
+            <Button 
+              type="submit"
+              disabled={isLoading}
+              className="w-full"
+            >
+              {isLoading ? 'Sending...' : 'Send Reset Email'}
+            </Button>
+          </form>
+        </Form>
 
         <Button onClick={onBack} variant="ghost" className="w-full">
           <ArrowLeft className="h-4 w-4 mr-2" />
