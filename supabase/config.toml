@@ -59,3 +59,6 @@ verify_jwt = true
 
 [functions.get-stripe-config]
 verify_jwt = false
+
+[functions.send-security-report]
+verify_jwt = false
