@@ -6,10 +6,15 @@ import { IPReputationTable } from '@/components/admin/IPReputationTable';
 import { SecurityViolationsLog } from '@/components/admin/SecurityViolationsLog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, AlertTriangle, Activity } from 'lucide-react';
+import { Shield, AlertTriangle, Activity, Download } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { exportToCSV, exportToJSON } from '@/lib/exportUtils';
+import { useToast } from '@/hooks/use-toast';
 
 const IPReputationDashboard: React.FC = () => {
+  const { toast } = useToast();
   const {
     ipReputations,
     isLoading: isLoadingIPs,
@@ -56,6 +61,50 @@ const IPReputationDashboard: React.FC = () => {
     deleteIP.mutate(ipAddress);
   };
 
+  const handleExportIPs = (format: 'csv' | 'json') => {
+    if (!ipReputations || ipReputations.length === 0) {
+      toast({
+        title: 'No Data',
+        description: 'No IP reputation data to export.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (format === 'csv') {
+      exportToCSV(ipReputations, 'ip_reputation');
+    } else {
+      exportToJSON(ipReputations, 'ip_reputation');
+    }
+
+    toast({
+      title: 'Export Successful',
+      description: `IP reputation data exported as ${format.toUpperCase()}.`,
+    });
+  };
+
+  const handleExportViolations = (format: 'csv' | 'json') => {
+    if (!violations || violations.length === 0) {
+      toast({
+        title: 'No Data',
+        description: 'No security violations to export.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (format === 'csv') {
+      exportToCSV(violations, 'security_violations');
+    } else {
+      exportToJSON(violations, 'security_violations');
+    }
+
+    toast({
+      title: 'Export Successful',
+      description: `Security violations exported as ${format.toUpperCase()}.`,
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -90,10 +139,30 @@ const IPReputationDashboard: React.FC = () => {
         <TabsContent value="ips" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>IP Reputation Management</CardTitle>
-              <CardDescription>
-                View and manage IP addresses, their reputation scores, and security status
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>IP Reputation Management</CardTitle>
+                  <CardDescription>
+                    View and manage IP addresses, their reputation scores, and security status
+                  </CardDescription>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleExportIPs('csv')}>
+                      Export as CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportIPs('json')}>
+                      Export as JSON
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoadingIPs ? (
@@ -118,13 +187,43 @@ const IPReputationDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="violations" className="space-y-4">
-          {isLoadingViolations ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <SecurityViolationsLog violations={violations || []} />
-          )}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Security Violations Log</CardTitle>
+                  <CardDescription>
+                    Recent security events and violation attempts
+                  </CardDescription>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleExportViolations('csv')}>
+                      Export as CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportViolations('json')}>
+                      Export as JSON
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoadingViolations ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <SecurityViolationsLog violations={violations || []} />
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
