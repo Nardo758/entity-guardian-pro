@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useSecurityMonitor } from './useSecurityMonitor';
 import { useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAdminAccess = () => {
   const { profile, user } = useAuth();
@@ -37,12 +38,33 @@ export const useAdminAccess = () => {
   const checkSensitivePermission = useCallback(async (operation: string) => {
     if (!hasAdminAccess) {
       await monitorUnauthorizedAccess('sensitive_operation', 'admin');
+      
+      // Send critical alert for unauthorized sensitive operation attempt
+      try {
+        await supabase.functions.invoke('send-security-alert', {
+          body: {
+            actionType: 'unauthorized_sensitive_access',
+            actionCategory: 'security',
+            severity: 'critical',
+            description: `Unauthorized attempt to access sensitive operation: ${operation}`,
+            targetUserEmail: user?.email,
+            metadata: {
+              operation,
+              userId: user?.id,
+              timestamp: new Date().toISOString()
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Failed to send security alert:', error);
+      }
+      
       return false;
     }
     
     await monitorAdminAccess(`sensitive_${operation}`, user?.id);
     return true;
-  }, [hasAdminAccess, monitorAdminAccess, monitorUnauthorizedAccess, user?.id]);
+  }, [hasAdminAccess, monitorAdminAccess, monitorUnauthorizedAccess, user?.id, user?.email]);
 
   return {
     isAdmin,
