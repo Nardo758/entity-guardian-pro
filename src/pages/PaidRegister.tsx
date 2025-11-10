@@ -150,12 +150,8 @@ const PaidRegister = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      // If on first step, navigate back or go home as a fallback
-      if (window.history.length > 1) {
-        navigate(-1);
-      } else {
-        navigate('/');
-      }
+      // If on first step, navigate back to signup page
+      navigate('/signup');
     }
   };
 
