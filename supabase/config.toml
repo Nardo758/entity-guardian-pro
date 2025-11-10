@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.send-security-report]
 verify_jwt = false
+
+[functions.bootstrap-admin]
+verify_jwt = true

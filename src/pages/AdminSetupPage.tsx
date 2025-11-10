@@ -1,5 +1,5 @@
 import React from 'react';
-import AdminSetup from '@/components/AdminSetup';
+import { AdminBootstrap } from '@/components/AdminBootstrap';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ const AdminSetupPage: React.FC = () => {
           </Button>
         </div>
         
-        <AdminSetup />
+        <AdminBootstrap />
         
         <div className="mt-8 text-center">
           <div className="bg-card border border-border rounded-lg p-6">
