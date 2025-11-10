@@ -482,12 +482,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (!rateLimitResult.allowed) {
       console.warn('Login rate limit exceeded with progressive backoff');
+      
+      // Extract reputation data
+      const reputationScore = (rateLimitResult as any).reputationScore;
+      const riskLevel = (rateLimitResult as any).riskLevel;
+      
+      let message = rateLimitResult.error || 'Too many login attempts. Please try again later.';
+      
+      // Add reputation context to message
+      if (riskLevel === 'critical') {
+        message = 'This IP address has been blocked due to suspicious activity. Please contact support if you believe this is an error.';
+      } else if (riskLevel === 'high') {
+        message = 'Multiple security violations detected from this IP address. Access temporarily restricted.';
+      }
+      
       return { 
         error: { 
-          message: rateLimitResult.error || 'Too many login attempts. Please try again later.',
+          message,
           retryAfter: rateLimitResult.retryAfter,
           failedAttempts: (rateLimitResult as any).failedAttempts,
           exponentialBackoff: (rateLimitResult as any).exponentialBackoff,
+          reputationScore,
+          riskLevel,
           rateLimited: true
         }
       };
@@ -505,6 +521,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email,
       password,
     });
+    
+    // Update IP reputation for failed auth attempts
+    if (error && error.message && !error.message.includes('Email not confirmed')) {
+      try {
+        const clientIP = await fetch('https://api.ipify.org?format=json')
+          .then(res => res.json())
+          .then(data => data.ip)
+          .catch(() => null);
+        
+        if (clientIP) {
+          await supabase.rpc('update_ip_reputation', {
+            p_ip_address: clientIP,
+            p_event_type: 'failed_auth',
+            p_metadata: {
+              email,
+              timestamp: new Date().toISOString(),
+              error_type: 'invalid_credentials'
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Could not update IP reputation:', err);
+      }
+    }
     
     console.log('Sign in result:', { data: data?.user?.email, error: error?.message });
     

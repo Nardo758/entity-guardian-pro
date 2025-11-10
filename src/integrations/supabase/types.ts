@@ -44,6 +44,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ip_reputation: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          failed_auth_attempts: number | null
+          first_seen_at: string
+          id: string
+          ip_address: unknown
+          last_seen_at: string
+          last_violation_at: string | null
+          metadata: Json | null
+          rate_limit_violations: number | null
+          reputation_score: number
+          risk_level: string | null
+          suspicious_patterns: number | null
+          total_requests: number | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          failed_auth_attempts?: number | null
+          first_seen_at?: string
+          id?: string
+          ip_address: unknown
+          last_seen_at?: string
+          last_violation_at?: string | null
+          metadata?: Json | null
+          rate_limit_violations?: number | null
+          reputation_score?: number
+          risk_level?: string | null
+          suspicious_patterns?: number | null
+          total_requests?: number | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          failed_auth_attempts?: number | null
+          first_seen_at?: string
+          id?: string
+          ip_address?: unknown
+          last_seen_at?: string
+          last_violation_at?: string | null
+          metadata?: Json | null
+          rate_limit_violations?: number | null
+          reputation_score?: number
+          risk_level?: string | null
+          suspicious_patterns?: number | null
+          total_requests?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -367,10 +421,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_ip_reputation: {
+        Args: {
+          p_failed_auth?: number
+          p_ip_address: unknown
+          p_rate_violations?: number
+          p_suspicious?: number
+        }
+        Returns: {
+          blocked_until: string
+          reputation_score: number
+          risk_level: string
+        }[]
+      }
       can_create_assignment_for_entity: {
         Args: { entity_uuid: string; user_uuid: string }
         Returns: boolean
       }
+      cleanup_ip_reputation: { Args: never; Returns: number }
       generate_agent_invitation_token: { Args: never; Returns: string }
       generate_invitation_token: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
@@ -569,6 +637,15 @@ export type Database = {
           user_agent_param?: string
         }
         Returns: string
+      }
+      update_ip_reputation: {
+        Args: { p_event_type: string; p_ip_address: unknown; p_metadata?: Json }
+        Returns: {
+          blocked_until: string
+          reputation_score: number
+          risk_level: string
+          should_block: boolean
+        }[]
       }
       update_subscriber_from_webhook: {
         Args: {

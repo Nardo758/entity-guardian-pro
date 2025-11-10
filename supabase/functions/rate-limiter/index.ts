@@ -62,7 +62,81 @@ serve(async (req) => {
       );
     }
 
+    // Build identifier for tracking
+    const identifier = userId || ipAddress;
+    if (!identifier) {
+      return new Response(
+        JSON.stringify({ error: "Either userId or ipAddress is required" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    // Check IP reputation first if IP address is provided
+    let ipReputationData: any = null;
+    let adjustedMaxRequests = null;
+    
+    if (ipAddress) {
+      const { data: ipRepData, error: ipRepError } = await supabase
+        .from('ip_reputation')
+        .select('reputation_score, risk_level, blocked_until')
+        .eq('ip_address', ipAddress)
+        .maybeSingle();
+      
+      if (!ipRepError && ipRepData) {
+        ipReputationData = ipRepData;
+        
+        // Check if IP is blocked
+        if (ipRepData.blocked_until && new Date(ipRepData.blocked_until) > new Date()) {
+          const blockedUntil = new Date(ipRepData.blocked_until);
+          const retryAfter = Math.ceil((blockedUntil.getTime() - Date.now()) / 1000);
+          
+          console.log(`IP ${ipAddress} is blocked until ${ipRepData.blocked_until}`);
+          
+          return new Response(
+            JSON.stringify({ 
+              error: "IP address blocked due to suspicious activity",
+              retryAfter,
+              riskLevel: ipRepData.risk_level,
+              reputationScore: ipRepData.reputation_score,
+              blockedUntil: ipRepData.blocked_until
+            }),
+            { 
+              status: 403, 
+              headers: { 
+                ...corsHeaders, 
+                "Content-Type": "application/json",
+                "Retry-After": retryAfter.toString()
+              } 
+            }
+          );
+        }
+      }
+    }
+
     const config = RATE_LIMITS[endpoint] || RATE_LIMITS['default'];
+    let maxRequests = config.maxRequests;
+    
+    // Adjust rate limits based on IP reputation
+    if (ipReputationData) {
+      const score = ipReputationData.reputation_score;
+      if (score < 30) {
+        // Critical risk: 25% of normal limits
+        maxRequests = Math.max(1, Math.floor(config.maxRequests * 0.25));
+      } else if (score < 60) {
+        // High risk: 50% of normal limits
+        maxRequests = Math.max(2, Math.floor(config.maxRequests * 0.5));
+      } else if (score < 80) {
+        // Medium risk: 75% of normal limits
+        maxRequests = Math.max(3, Math.floor(config.maxRequests * 0.75));
+      }
+      // Low risk (>=80): Use normal limits
+      
+      console.log(`IP ${ipAddress} reputation: ${score}, adjusted limit: ${maxRequests} (from ${config.maxRequests})`);
+    }
+
     const now = new Date();
     const windowStart = new Date(now.getTime() - config.windowMs);
 
@@ -116,7 +190,7 @@ serve(async (req) => {
     const latestRecord = existing?.[0];
     const failedAttempts = (latestRecord?.metadata as any)?.failed_attempts || 0;
 
-    if (currentRequests >= config.maxRequests) {
+    if (currentRequests >= maxRequests) {
       let retryAfterSeconds = Math.ceil(config.windowMs / 1000);
       
       // Apply exponential backoff if configured
@@ -127,6 +201,25 @@ serve(async (req) => {
         );
       }
 
+      // Update IP reputation for rate limit violation
+      if (ipAddress) {
+        const { data: repUpdateData } = await supabase.rpc('update_ip_reputation', {
+          p_ip_address: ipAddress,
+          p_event_type: 'rate_limit',
+          p_metadata: {
+            endpoint,
+            user_id: userId,
+            timestamp: now.toISOString(),
+            current_requests: currentRequests,
+            max_requests: maxRequests
+          }
+        });
+        
+        if (repUpdateData && repUpdateData.length > 0) {
+          console.log(`Updated IP reputation for ${ipAddress}: score=${repUpdateData[0].reputation_score}, risk=${repUpdateData[0].risk_level}`);
+        }
+      }
+
       // Log rate limit violation
       await supabase.rpc('log_security_violation', {
         violation_type: 'rate_limit_exceeded',
@@ -135,11 +228,15 @@ serve(async (req) => {
         details: {
           endpoint,
           current_requests: currentRequests,
-          max_requests: config.maxRequests,
+          max_requests: maxRequests,
+          adjusted_limit: maxRequests !== config.maxRequests,
+          original_limit: config.maxRequests,
           window_ms: config.windowMs,
           failed_attempts: failedAttempts + 1,
           retry_after_seconds: retryAfterSeconds,
-          backoff_applied: config.useExponentialBackoff || false
+          backoff_applied: config.useExponentialBackoff || false,
+          reputation_score: ipReputationData?.reputation_score,
+          risk_level: ipReputationData?.risk_level
         }
       });
 
@@ -148,9 +245,11 @@ serve(async (req) => {
           error: "Rate limit exceeded",
           retryAfter: retryAfterSeconds,
           failedAttempts: failedAttempts + 1,
-          limit: config.maxRequests,
+          limit: maxRequests,
           windowMs: config.windowMs,
-          exponentialBackoff: config.useExponentialBackoff || false
+          exponentialBackoff: config.useExponentialBackoff || false,
+          reputationScore: ipReputationData?.reputation_score,
+          riskLevel: ipReputationData?.risk_level
         }),
         { 
           status: 429, 
@@ -191,9 +290,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         allowed: true,
-        remaining: config.maxRequests - currentRequests - 1,
+        remaining: maxRequests - currentRequests - 1,
         resetTime: new Date(now.getTime() + config.windowMs).toISOString(),
-        currentAttempts: newFailedAttempts
+        currentAttempts: newFailedAttempts,
+        reputationScore: ipReputationData?.reputation_score,
+        riskLevel: ipReputationData?.risk_level,
+        adjustedLimit: maxRequests !== config.maxRequests
       }),
       { 
         status: 200, 

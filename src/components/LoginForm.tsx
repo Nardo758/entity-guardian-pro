@@ -99,21 +99,32 @@ const LoginForm: React.FC = () => {
       const { error } = await signIn(data.email, data.password);
 
       if (error) {
-        // Handle rate limiting with exponential backoff
+        // Handle rate limiting with exponential backoff and IP reputation
         if ((error as any).rateLimited || (error as any).retryAfter) {
           const retryAfter = (error as any).retryAfter || 300;
           const failedAttempts = (error as any).failedAttempts || 1;
           const exponentialBackoff = (error as any).exponentialBackoff || false;
+          const reputationScore = (error as any).reputationScore;
+          const riskLevel = (error as any).riskLevel;
           const lockoutEndTime = Date.now() + (retryAfter * 1000);
           setIsLocked(true);
           setLockoutTime(lockoutEndTime);
           
-          const backoffMessage = exponentialBackoff 
+          let backoffMessage = exponentialBackoff 
             ? `Attempt ${failedAttempts}: Wait time increased to ${retryAfter} seconds.`
             : `Please try again in ${retryAfter} seconds.`;
           
+          // Add reputation context
+          if (riskLevel === 'high' || riskLevel === 'critical') {
+            backoffMessage += ` Security level: ${riskLevel.toUpperCase()}.`;
+          }
+          
+          if (reputationScore !== undefined) {
+            backoffMessage += ` IP reputation: ${reputationScore}/100.`;
+          }
+          
           toast({
-            title: "Too Many Failed Attempts",
+            title: riskLevel === 'critical' ? "IP Address Blocked" : "Too Many Failed Attempts",
             description: `${error.message || 'Account temporarily locked.'} ${backoffMessage}`,
             variant: "destructive",
           });
