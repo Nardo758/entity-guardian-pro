@@ -59,23 +59,14 @@ const UserTypeSelection = () => {
                 </div>
               </div>
               
-              <div className="pt-4 space-y-3">
+              <div className="pt-4">
                 <Button 
                   asChild 
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-lg py-6"
                 >
-                  <Link to="/paid-register">
-                    Continue with Premium
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  className="w-full text-base py-6"
-                >
                   <Link to="/register">
-                    Continue with Free Account
+                    Create an Account
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
               </div>
@@ -123,7 +114,7 @@ const UserTypeSelection = () => {
                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-lg py-6"
                 >
                   <Link to="/agent-signup">
-                    Continue as Agent
+                    Create an Account
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
