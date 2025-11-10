@@ -11,6 +11,7 @@ import AuthErrorBoundary from "@/components/AuthErrorBoundary";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminSetupPage from "./pages/AdminSetupPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminMFAGuard } from "@/components/AdminMFAGuard";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 // Pages
 import Index from "./pages/Index";
@@ -96,13 +97,13 @@ const App = () => {
               
               {/* Protected routes */}
               <Route path="/dashboard" element={<ProtectedRoute><AuthRedirect><EntityOwnerDashboard /></AuthRedirect></ProtectedRoute>} />
-              <Route path="/admin-dashboard" element={<ProtectedRoute><AuthRedirect><AdminDashboard /></AuthRedirect></ProtectedRoute>} />
+              <Route path="/admin-dashboard" element={<ProtectedRoute><AuthRedirect><AdminMFAGuard><AdminDashboard /></AdminMFAGuard></AuthRedirect></ProtectedRoute>} />
               <Route path="/entity-dashboard" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><EntityOwnerDashboard /></AgentRoleGuard></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-              <Route path="/admin-analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
-              <Route path="/ip-reputation" element={<ProtectedRoute><IPReputationDashboard /></ProtectedRoute>} />
-              <Route path="/security-reports" element={<ProtectedRoute><SecurityReports /></ProtectedRoute>} />
+              <Route path="/admin-analytics" element={<ProtectedRoute><AdminMFAGuard><AdminAnalyticsDashboard /></AdminMFAGuard></ProtectedRoute>} />
+              <Route path="/ip-reputation" element={<ProtectedRoute><AdminMFAGuard><IPReputationDashboard /></AdminMFAGuard></ProtectedRoute>} />
+              <Route path="/security-reports" element={<ProtectedRoute><AdminMFAGuard><SecurityReports /></AdminMFAGuard></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/team" element={<ProtectedRoute><TeamManagement /></ProtectedRoute>} />
               <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
@@ -117,7 +118,7 @@ const App = () => {
               <Route path="/entity/:id" element={<ProtectedRoute><EntityDetails /></ProtectedRoute>} />
               <Route path="/find-agents" element={<ProtectedRoute><AgentRoleGuard requiredRole="entity_owner"><AgentDirectory /></AgentRoleGuard></ProtectedRoute>} />
               <Route path="/agent-dashboard" element={<ProtectedRoute><AuthRedirect><AgentRoleGuard requiredRole="registered_agent"><AgentDashboard /></AgentRoleGuard></AuthRedirect></ProtectedRoute>} />
-              <Route path="/admin-setup" element={<ProtectedRoute><AdminSetupPage /></ProtectedRoute>} />
+              <Route path="/admin-setup" element={<ProtectedRoute><AdminMFAGuard><AdminSetupPage /></AdminMFAGuard></ProtectedRoute>} />
               <Route path="/agent-invitation/:token" element={<ProtectedRoute><AgentInvitationAccept /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
               </Routes>
