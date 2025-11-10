@@ -16,13 +16,16 @@ import { NotificationPreferences } from "@/components/NotificationPreferences";
 import AdminRoleManager from "@/components/AdminRoleManager";
 import SecurityAuditLog from "@/components/SecurityAuditLog";
 import MFASetup from "@/components/MFASetup";
+import { MFARecoveryCodesManager } from "@/components/MFARecoveryCodesManager";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useAdminMFA } from "@/hooks/useAdminMFA";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const navigate = useNavigate();
-  const { hasAdminAccess } = useAdminAccess();
+  const { hasAdminAccess, isAdmin } = useAdminAccess();
+  const { isMFAEnabled } = useAdminMFA();
   const { user, profile: authProfile } = useAuth();
   const [showMFASetup, setShowMFASetup] = useState(false);
   const [settingsProfile, setSettingsProfile] = useState({
@@ -298,6 +301,15 @@ const Settings = () => {
                         </div>
                       </div>
                     </div>
+
+                    {isAdmin && isMFAEnabled && (
+                      <>
+                        <Separator />
+                        <div className="pt-4">
+                          <MFARecoveryCodesManager />
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

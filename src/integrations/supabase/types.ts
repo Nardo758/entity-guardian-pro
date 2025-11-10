@@ -98,6 +98,41 @@ export type Database = {
         }
         Relationships: []
       }
+      mfa_recovery_codes: {
+        Row: {
+          code_hash: string
+          created_at: string | null
+          id: string
+          used: boolean | null
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string | null
+          id?: string
+          used?: boolean | null
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string | null
+          id?: string
+          used?: boolean | null
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_recovery_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -129,7 +164,15 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       payment_methods: {
         Row: {
@@ -171,7 +214,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -210,7 +261,15 @@ export type Database = {
           user_id?: string
           user_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       security_report_config: {
         Row: {
@@ -264,7 +323,15 @@ export type Database = {
           schedule_type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "security_report_config_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       security_report_history: {
         Row: {
@@ -401,7 +468,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stripe_invoices_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       subscribers: {
         Row: {
@@ -470,7 +545,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscribers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       subscription_history: {
         Row: {
@@ -512,7 +595,15 @@ export type Database = {
           subscription_tier?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscription_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -536,11 +627,40 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      is_admin_v: {
+        Row: {
+          is_admin: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          is_admin?: never
+          user_id?: string | null
+        }
+        Update: {
+          is_admin?: never
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_ip_reputation: {
@@ -666,6 +786,10 @@ export type Database = {
           updated_at: string
           user_id: string
         }[]
+      }
+      get_unused_recovery_code_count: {
+        Args: { p_user_id: string }
+        Returns: number
       }
       get_user_analytics: {
         Args: never
@@ -797,6 +921,10 @@ export type Database = {
       }
       validate_payment_method_owner: {
         Args: { method_user_id: string }
+        Returns: boolean
+      }
+      validate_recovery_code: {
+        Args: { p_code: string; p_user_id: string }
         Returns: boolean
       }
     }

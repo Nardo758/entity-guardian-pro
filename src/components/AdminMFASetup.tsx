@@ -19,6 +19,32 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminMFA } from '@/hooks/useAdminMFA';
 
+// Generate cryptographically secure recovery codes
+const generateRecoveryCodes = (count: number = 10): string[] => {
+  const codes: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const randomValues = new Uint8Array(6);
+    crypto.getRandomValues(randomValues);
+    const code = Array.from(randomValues)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .toUpperCase()
+      .match(/.{1,4}/g)
+      ?.join('-') || '';
+    codes.push(code);
+  }
+  return codes;
+};
+
+// Hash recovery code for secure storage
+const hashRecoveryCode = async (code: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(code);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 interface AdminMFASetupProps {
   onComplete?: () => void;
 }
@@ -33,6 +59,7 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
   const [qrCode, setQrCode] = useState<string>('');
   const [secret, setSecret] = useState<string>('');
   const [factorId, setFactorId] = useState<string>('');
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
 
   const setupTOTP = async () => {
     setLoading(true);
@@ -85,8 +112,28 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
 
       if (error) throw error;
 
-      // Log the MFA setup
+      // Generate recovery codes
+      const codes = generateRecoveryCodes(10);
+      setRecoveryCodes(codes);
+
+      // Store hashed recovery codes in database
       if (user) {
+        const hashedCodes = await Promise.all(
+          codes.map(async (code) => ({
+            user_id: user.id,
+            code_hash: await hashRecoveryCode(code)
+          }))
+        );
+
+        const { error: codesError } = await supabase
+          .from('mfa_recovery_codes')
+          .insert(hashedCodes);
+
+        if (codesError) {
+          console.error('Failed to store recovery codes:', codesError);
+        }
+
+        // Log the MFA setup
         await supabase.from('analytics_data').insert({
           user_id: user.id,
           metric_type: 'security_event',
@@ -96,7 +143,8 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
           metadata: {
             method: 'totp',
             timestamp: new Date().toISOString(),
-            role: 'admin'
+            role: 'admin',
+            recovery_codes_generated: codes.length
           }
         });
       }
@@ -106,7 +154,7 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
       
       toast({
         title: "MFA Enabled Successfully",
-        description: "Two-factor authentication is now active for your admin account.",
+        description: "Two-factor authentication is now active. Save your recovery codes!",
       });
     } catch (error: any) {
       toast({
@@ -288,13 +336,78 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
             </AlertDescription>
           </Alert>
 
+          <Alert variant="destructive" className="border-destructive/50">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>IMPORTANT:</strong> Save these recovery codes now! They are your only backup
+              if you lose access to your authenticator app. Each code can only be used once.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Recovery Codes</Label>
+            <p className="text-sm text-muted-foreground">
+              Store these codes in a secure location. You can use them to access your account
+              if you lose your authenticator device.
+            </p>
+            <div className="grid grid-cols-2 gap-2 p-4 bg-muted rounded-lg border-2 border-border">
+              {recoveryCodes.map((code, index) => (
+                <div 
+                  key={index} 
+                  className="font-mono text-sm p-2 bg-background rounded border text-center"
+                >
+                  {code}
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(recoveryCodes.join('\n'));
+                  toast({
+                    title: "Copied",
+                    description: "Recovery codes copied to clipboard",
+                  });
+                }}
+                className="flex-1"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy All Codes
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const text = recoveryCodes.join('\n');
+                  const blob = new Blob([text], { type: 'text/plain' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'mfa-recovery-codes.txt';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast({
+                    title: "Downloaded",
+                    description: "Recovery codes saved to file",
+                  });
+                }}
+                className="flex-1"
+              >
+                Download Codes
+              </Button>
+            </div>
+          </div>
+
+          <Separator />
+
           <div className="space-y-2">
-            <h3 className="font-semibold">Important Reminders:</h3>
+            <h3 className="font-semibold">Security Reminders:</h3>
             <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
               <li>Keep your authenticator app secure and backed up</li>
-              <li>You'll be prompted for a code each time you sign in</li>
-              <li>Don't share your authenticator app access with anyone</li>
-              <li>Contact support if you lose access to your authenticator</li>
+              <li>Store recovery codes in a password manager or secure location</li>
+              <li>Each recovery code works only once - don't reuse them</li>
+              <li>Don't share codes or authenticator access with anyone</li>
+              <li>You can regenerate codes anytime from Settings</li>
             </ul>
           </div>
 
@@ -303,7 +416,7 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
           <div className="flex justify-center">
             <Button onClick={onComplete} size="lg">
               <CheckCircle className="w-4 h-4 mr-2" />
-              Continue to Admin Dashboard
+              I've Saved My Codes - Continue
             </Button>
           </div>
         </CardContent>
