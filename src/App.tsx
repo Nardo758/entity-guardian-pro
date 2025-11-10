@@ -52,6 +52,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import VerifyEmail from "./pages/VerifyEmail";
+import IPReputationDashboard from "./pages/IPReputationDashboard";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +98,7 @@ const App = () => {
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/admin-analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
+              <Route path="/ip-reputation" element={<ProtectedRoute><IPReputationDashboard /></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/team" element={<ProtectedRoute><TeamManagement /></ProtectedRoute>} />
               <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
