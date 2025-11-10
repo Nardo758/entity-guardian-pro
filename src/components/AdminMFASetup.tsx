@@ -133,18 +133,16 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
           console.error('Failed to store recovery codes:', codesError);
         }
 
-        // Log the MFA setup
-        await supabase.from('analytics_data').insert({
-          user_id: user.id,
-          metric_type: 'security_event',
-          metric_name: 'admin_mfa_enabled',
-          metric_value: 1,
-          metric_date: new Date().toISOString().split('T')[0],
-          metadata: {
+        // Log the MFA setup to audit log
+        await supabase.rpc('log_admin_action', {
+          p_action_type: 'admin_mfa_enabled',
+          p_action_category: 'mfa',
+          p_severity: 'info',
+          p_description: 'Administrator enabled MFA with authenticator app',
+          p_metadata: {
             method: 'totp',
-            timestamp: new Date().toISOString(),
-            role: 'admin',
-            recovery_codes_generated: codes.length
+            recovery_codes_generated: codes.length,
+            timestamp: new Date().toISOString()
           }
         });
       }

@@ -98,6 +98,18 @@ export const MFARecoveryCodesManager: React.FC = () => {
         }
       });
 
+      // Also log to audit log
+      await supabase.rpc('log_admin_action', {
+        p_action_type: 'mfa_recovery_codes_regenerated',
+        p_action_category: 'mfa',
+        p_severity: 'warning',
+        p_description: 'Administrator regenerated MFA recovery codes',
+        p_metadata: {
+          codes_count: codes.length,
+          timestamp: new Date().toISOString()
+        }
+      });
+
       return codes;
     },
     onSuccess: (codes) => {

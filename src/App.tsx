@@ -36,6 +36,7 @@ import Entities from "./pages/Entities";
 import Calendar from "./pages/Calendar";
 import Agents from "./pages/Agents";
 import AdminAnalyticsDashboard from "./pages/AdminAnalyticsDashboard";
+import AdminAuditLog from "./pages/AdminAuditLog";
 import Analytics from "./pages/Analytics";
 import AuditTrail from "./pages/AuditTrail";
 import EntityDetails from "./pages/EntityDetails";
@@ -102,6 +103,7 @@ const App = () => {
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/admin-analytics" element={<ProtectedRoute><AdminMFAGuard><AdminAnalyticsDashboard /></AdminMFAGuard></ProtectedRoute>} />
+              <Route path="/admin-audit" element={<ProtectedRoute><AdminMFAGuard><AdminAuditLog /></AdminMFAGuard></ProtectedRoute>} />
               <Route path="/ip-reputation" element={<ProtectedRoute><AdminMFAGuard><IPReputationDashboard /></AdminMFAGuard></ProtectedRoute>} />
               <Route path="/security-reports" element={<ProtectedRoute><AdminMFAGuard><SecurityReports /></AdminMFAGuard></ProtectedRoute>} />
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />

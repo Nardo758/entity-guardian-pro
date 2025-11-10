@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action_category: string
+          action_type: string
+          admin_user_id: string
+          created_at: string | null
+          description: string
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          severity: string
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_category: string
+          action_type: string
+          admin_user_id: string
+          created_at?: string | null
+          description: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          severity?: string
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_category?: string
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          severity?: string
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_log_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "admin_audit_log_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "is_admin_v"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       "business _owners": {
         Row: {
           company_name: string | null
@@ -715,6 +772,16 @@ export type Database = {
           unsent_count: number
         }[]
       }
+      get_audit_log_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          actions_by_category: Json
+          actions_by_severity: Json
+          recent_critical_events: number
+          top_admins: Json
+          total_actions: number
+        }[]
+      }
       get_business_intelligence: {
         Args: never
         Returns: {
@@ -824,6 +891,17 @@ export type Database = {
       is_invited_agent: {
         Args: { invitation_id: string; user_uuid: string }
         Returns: boolean
+      }
+      log_admin_action: {
+        Args: {
+          p_action_category: string
+          p_action_type: string
+          p_description?: string
+          p_metadata?: Json
+          p_severity?: string
+          p_target_user_id?: string
+        }
+        Returns: string
       }
       log_admin_operation: {
         Args: {

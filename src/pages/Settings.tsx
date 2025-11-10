@@ -15,6 +15,7 @@ import { toast } from "@/components/ui/use-toast";
 import { NotificationPreferences } from "@/components/NotificationPreferences";
 import AdminRoleManager from "@/components/AdminRoleManager";
 import SecurityAuditLog from "@/components/SecurityAuditLog";
+import { AdminAuditDashboard } from "@/components/AdminAuditDashboard";
 import MFASetup from "@/components/MFASetup";
 import { MFARecoveryCodesManager } from "@/components/MFARecoveryCodesManager";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
@@ -362,7 +363,7 @@ const Settings = () => {
                   </TabsContent>
                   
                   <TabsContent value="audit" className="space-y-6">
-                    <SecurityAuditLog />
+                    <AdminAuditDashboard />
                   </TabsContent>
                 </>
               )}
