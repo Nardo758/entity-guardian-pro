@@ -242,7 +242,7 @@ const LoginForm: React.FC = () => {
 
         <div className="text-center pt-2 space-y-2">
           <div className="flex flex-col gap-2">
-            <Link to="/reset-password">
+            <Link to="/forgot-password">
               <Button
                 variant="ghost"
                 type="button"

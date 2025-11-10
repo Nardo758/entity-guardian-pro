@@ -17,6 +17,7 @@ import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
+import ForgotPassword from "./pages/ForgotPassword";
 import Register from "./pages/Register";
 import PaidRegister from "./pages/PaidRegister";
 import UserTypeSelection from "./pages/UserTypeSelection";
@@ -83,6 +84,7 @@ const App = () => {
                 {/* Authentication routes with error recovery */}
                 <Route path="/signup" element={<AuthErrorBoundary maxRetries={3}><UserTypeSelection /></AuthErrorBoundary>} />
                 <Route path="/login" element={<AuthErrorBoundary maxRetries={3}><Login /></AuthErrorBoundary>} />
+                <Route path="/forgot-password" element={<AuthErrorBoundary maxRetries={3}><ForgotPassword /></AuthErrorBoundary>} />
                 <Route path="/reset-password" element={<AuthErrorBoundary maxRetries={3}><ResetPassword /></AuthErrorBoundary>} />
                 <Route path="/register" element={<AuthErrorBoundary maxRetries={3}><Register /></AuthErrorBoundary>} />
                 <Route path="/paid-register" element={<AuthErrorBoundary maxRetries={3}><PaidRegister /></AuthErrorBoundary>} />
