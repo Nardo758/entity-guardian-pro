@@ -212,6 +212,104 @@ export type Database = {
         }
         Relationships: []
       }
+      security_report_config: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          custom_html: string | null
+          email_subject: string
+          email_template: string
+          id: string
+          include_ip_reputation: boolean
+          include_violations: boolean
+          is_enabled: boolean
+          name: string
+          recipient_user_ids: string[]
+          schedule_day: number | null
+          schedule_time: string
+          schedule_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          custom_html?: string | null
+          email_subject?: string
+          email_template?: string
+          id?: string
+          include_ip_reputation?: boolean
+          include_violations?: boolean
+          is_enabled?: boolean
+          name: string
+          recipient_user_ids?: string[]
+          schedule_day?: number | null
+          schedule_time?: string
+          schedule_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          custom_html?: string | null
+          email_subject?: string
+          email_template?: string
+          id?: string
+          include_ip_reputation?: boolean
+          include_violations?: boolean
+          is_enabled?: boolean
+          name?: string
+          recipient_user_ids?: string[]
+          schedule_day?: number | null
+          schedule_time?: string
+          schedule_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      security_report_history: {
+        Row: {
+          config_id: string | null
+          error_message: string | null
+          executed_at: string
+          failure_count: number
+          id: string
+          recipients_count: number
+          report_type: string
+          stats: Json | null
+          success_count: number
+        }
+        Insert: {
+          config_id?: string | null
+          error_message?: string | null
+          executed_at?: string
+          failure_count?: number
+          id?: string
+          recipients_count?: number
+          report_type: string
+          stats?: Json | null
+          success_count?: number
+        }
+        Update: {
+          config_id?: string | null
+          error_message?: string | null
+          executed_at?: string
+          failure_count?: number
+          id?: string
+          recipients_count?: number
+          report_type?: string
+          stats?: Json | null
+          success_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_report_history_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "security_report_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_events: {
         Row: {
           created_at: string
@@ -412,6 +510,30 @@ export type Database = {
           status?: string
           stripe_subscription_id?: string | null
           subscription_tier?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []

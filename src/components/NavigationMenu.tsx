@@ -9,7 +9,8 @@ import {
   Search,
   Home,
   UserCircle,
-  Shield
+  Shield,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -32,6 +33,7 @@ const NavigationMenu: React.FC = () => {
   // Admin-specific links
   const adminLinks = [
     { href: '/ip-reputation', icon: Shield, label: 'IP Reputation', adminOnly: true },
+    { href: '/security-reports', icon: FileText, label: 'Security Reports', adminOnly: true },
   ];
 
   // Agent Navigation

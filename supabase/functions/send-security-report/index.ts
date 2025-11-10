@@ -10,6 +10,7 @@ const corsHeaders = {
 };
 
 interface ReportRequest {
+  configId?: string;
   reportType?: 'daily' | 'weekly';
   manualTrigger?: boolean;
 }
@@ -25,43 +26,79 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { reportType = 'daily', manualTrigger = false }: ReportRequest = 
+    const { configId, reportType = 'daily', manualTrigger = false }: ReportRequest = 
       req.method === 'POST' ? await req.json() : {};
 
-    console.log(`Generating ${reportType} security report...`);
+    console.log(`Generating security report...`, { configId, reportType, manualTrigger });
 
-    // Get admin users
-    const { data: adminRoles, error: adminError } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'admin');
-
-    if (adminError) {
-      console.error('Error fetching admin users:', adminError);
-      throw adminError;
+    // If configId provided, use that configuration
+    let config = null;
+    if (configId) {
+      const { data, error } = await supabase
+        .from('security_report_config')
+        .select('*')
+        .eq('id', configId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching config:', error);
+        throw new Error(`Configuration not found: ${error.message}`);
+      }
+      
+      config = data;
+      console.log('Using report configuration:', config.name);
     }
 
-    if (!adminRoles || adminRoles.length === 0) {
-      console.log('No admin users found');
-      return new Response(
-        JSON.stringify({ message: 'No admin users to send report to' }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get admin emails from auth.users
-    const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+    // Determine recipients
+    let adminEmails: string[] = [];
     
-    if (usersError) {
-      console.error('Error fetching users:', usersError);
-      throw usersError;
-    }
+    if (config && config.recipient_user_ids.length > 0) {
+      // Use configured recipients
+      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        throw usersError;
+      }
 
-    const adminUserIds = new Set(adminRoles.map(r => r.user_id));
-    const adminEmails = users
-      .filter(user => adminUserIds.has(user.id))
-      .map(user => user.email)
-      .filter(email => email) as string[];
+      const recipientIds = new Set(config.recipient_user_ids);
+      adminEmails = users
+        .filter(user => recipientIds.has(user.id))
+        .map(user => user.email)
+        .filter(email => email) as string[];
+    } else {
+      // Fallback to all admin users
+      const { data: adminRoles, error: adminError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      if (adminError) {
+        console.error('Error fetching admin users:', adminError);
+        throw adminError;
+      }
+
+      if (!adminRoles || adminRoles.length === 0) {
+        console.log('No admin users found');
+        return new Response(
+          JSON.stringify({ message: 'No admin users to send report to' }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: { users }, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) {
+        console.error('Error fetching users:', usersError);
+        throw usersError;
+      }
+
+      const adminUserIds = new Set(adminRoles.map(r => r.user_id));
+      adminEmails = users
+        .filter((user: any) => adminUserIds.has(user.id))
+        .map((user: any) => user.email)
+        .filter((email: string) => email);
+    }
 
     if (adminEmails.length === 0) {
       console.log('No admin emails found');
@@ -71,74 +108,101 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Determine date range based on report type
+    // Determine date range based on config or reportType
+    const effectiveReportType = config?.schedule_type || reportType;
     const now = new Date();
     const startDate = new Date();
-    if (reportType === 'weekly') {
+    if (effectiveReportType === 'weekly') {
       startDate.setDate(now.getDate() - 7);
     } else {
       startDate.setDate(now.getDate() - 1);
     }
 
-    // Fetch IP reputation data
-    const { data: ipReputations, error: ipError } = await supabase
-      .from('ip_reputation')
-      .select('*')
-      .gte('updated_at', startDate.toISOString())
-      .order('reputation_score', { ascending: true });
+    // Check what to include based on config
+    const includeIpReputation = config?.include_ip_reputation ?? true;
+    const includeViolations = config?.include_violations ?? true;
 
-    if (ipError) {
-      console.error('Error fetching IP reputation:', ipError);
-      throw ipError;
+    // Fetch IP reputation data if needed
+    let ipReputations = null;
+    if (includeIpReputation) {
+      const { data, error: ipError } = await supabase
+        .from('ip_reputation')
+        .select('*')
+        .gte('updated_at', startDate.toISOString())
+        .order('reputation_score', { ascending: true });
+
+      if (ipError) {
+        console.error('Error fetching IP reputation:', ipError);
+        throw ipError;
+      }
+      ipReputations = data;
     }
 
-    // Fetch security violations
-    const { data: violations, error: violationsError } = await supabase
-      .from('analytics_data')
-      .select('*')
-      .in('metric_type', ['security_violation', 'security_monitoring'])
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1000);
+    // Fetch security violations if needed
+    let violations = null;
+    if (includeViolations) {
+      const { data, error: violationsError } = await supabase
+        .from('analytics_data')
+        .select('*')
+        .in('metric_type', ['security_violation', 'security_monitoring'])
+        .gte('created_at', startDate.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1000);
 
-    if (violationsError) {
-      console.error('Error fetching violations:', violationsError);
-      throw violationsError;
+      if (violationsError) {
+        console.error('Error fetching violations:', violationsError);
+        throw violationsError;
+      }
+      violations = data;
     }
 
-    // Generate CSV for IP reputation
-    const ipCsv = generateIpReputationCsv(ipReputations || []);
+    // Generate CSV for IP reputation if included
+    const ipCsv = includeIpReputation && ipReputations ? generateIpReputationCsv(ipReputations) : null;
     
-    // Generate CSV for violations
-    const violationsCsv = generateViolationsCsv(violations || []);
+    // Generate CSV for violations if included
+    const violationsCsv = includeViolations && violations ? generateViolationsCsv(violations) : null;
 
     // Generate summary stats
     const stats = {
       totalIPs: ipReputations?.length || 0,
-      criticalIPs: ipReputations?.filter(ip => ip.risk_level === 'critical').length || 0,
-      highRiskIPs: ipReputations?.filter(ip => ip.risk_level === 'high').length || 0,
-      blockedIPs: ipReputations?.filter(ip => ip.blocked_until && new Date(ip.blocked_until) > now).length || 0,
+      criticalIPs: ipReputations?.filter((ip: any) => ip.risk_level === 'critical').length || 0,
+      highRiskIPs: ipReputations?.filter((ip: any) => ip.risk_level === 'high').length || 0,
+      blockedIPs: ipReputations?.filter((ip: any) => ip.blocked_until && new Date(ip.blocked_until) > now).length || 0,
       totalViolations: violations?.length || 0,
-      violationTypes: Array.from(new Set(violations?.map(v => v.metric_name) || [])),
+      violationTypes: Array.from(new Set(violations?.map((v: any) => v.metric_name) || [])),
     };
+
+    // Use custom subject or default
+    const emailSubject = config?.email_subject || 
+      `${effectiveReportType === 'daily' ? 'Daily' : 'Weekly'} Security Report - ${now.toLocaleDateString()}`;
+
+    // Use custom HTML template or default
+    const emailHtml = config?.custom_html || 
+      generateEmailHtml(effectiveReportType, stats, startDate, now);
+
+    // Prepare attachments
+    const attachments = [];
+    if (ipCsv) {
+      attachments.push({
+        filename: `ip_reputation_${effectiveReportType}_${now.toISOString().split('T')[0]}.csv`,
+        content: Buffer.from(ipCsv).toString('base64'),
+      });
+    }
+    if (violationsCsv) {
+      attachments.push({
+        filename: `security_violations_${effectiveReportType}_${now.toISOString().split('T')[0]}.csv`,
+        content: Buffer.from(violationsCsv).toString('base64'),
+      });
+    }
 
     // Send email to all admins
     const emailPromises = adminEmails.map(email => 
       resend.emails.send({
         from: "Security Reports <onboarding@resend.dev>",
         to: [email],
-        subject: `${reportType === 'daily' ? 'Daily' : 'Weekly'} Security Report - ${now.toLocaleDateString()}`,
-        html: generateEmailHtml(reportType, stats, startDate, now),
-        attachments: [
-          {
-            filename: `ip_reputation_${reportType}_${now.toISOString().split('T')[0]}.csv`,
-            content: Buffer.from(ipCsv).toString('base64'),
-          },
-          {
-            filename: `security_violations_${reportType}_${now.toISOString().split('T')[0]}.csv`,
-            content: Buffer.from(violationsCsv).toString('base64'),
-          },
-        ],
+        subject: emailSubject,
+        html: emailHtml,
+        attachments: attachments.length > 0 ? attachments : undefined,
       })
     );
 
@@ -149,11 +213,24 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Report sent successfully to ${successful} admins, ${failed} failed`);
 
+    // Log to report history if config exists
+    if (configId && config) {
+      await supabase.from('security_report_history').insert({
+        config_id: configId,
+        report_type: effectiveReportType,
+        recipients_count: adminEmails.length,
+        success_count: successful,
+        failure_count: failed,
+        stats,
+      });
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `${reportType} security report sent to ${successful} admin(s)`,
-        stats 
+        message: `${effectiveReportType} security report sent to ${successful} admin(s)`,
+        stats,
+        configName: config?.name,
       }),
       {
         status: 200,
