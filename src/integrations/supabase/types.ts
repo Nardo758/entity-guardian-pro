@@ -911,6 +911,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_failed_admin_login: {
+        Args: { p_email: string; p_ip_address?: string; p_reason?: string }
+        Returns: undefined
+      }
       log_security_event: {
         Args: { event_data?: Json; event_type: string }
         Returns: undefined
