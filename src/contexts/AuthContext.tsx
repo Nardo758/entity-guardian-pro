@@ -522,24 +522,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     
     // Update IP reputation for failed auth attempts
+    // Note: IP address will be extracted server-side from request headers
     if (error && error.message && !error.message.includes('Email not confirmed')) {
       try {
-        const clientIP = await fetch('https://api.ipify.org?format=json')
-          .then(res => res.json())
-          .then(data => data.ip)
-          .catch(() => null);
-        
-        if (clientIP) {
-          await supabase.rpc('update_ip_reputation', {
-            p_ip_address: clientIP,
-            p_event_type: 'failed_auth',
-            p_metadata: {
-              email,
-              timestamp: new Date().toISOString(),
-              error_type: 'invalid_credentials'
-            }
-          });
-        }
+        // Edge function will extract IP from request headers (x-forwarded-for, x-real-ip)
+        await supabase.rpc('update_ip_reputation', {
+          p_ip_address: '0.0.0.0', // Placeholder - edge function extracts real IP
+          p_event_type: 'failed_auth',
+          p_metadata: {
+            email,
+            timestamp: new Date().toISOString(),
+            error_type: 'invalid_credentials'
+          }
+        });
       } catch (err) {
         console.warn('Could not update IP reputation:', err);
       }

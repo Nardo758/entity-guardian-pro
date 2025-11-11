@@ -51,15 +51,11 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
 
     try {
       // Check rate limit first
-      const clientIP = await fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(data => data.ip)
-        .catch(() => '0.0.0.0');
-
+      // Note: IP address will be extracted server-side from request headers for better security
       const { data: rateLimitData, error: rateLimitError } = await supabase.functions.invoke('rate-limiter', {
         body: {
           endpoint: 'auth',
-          ipAddress: clientIP
+          ipAddress: 'client' // Edge function will extract real IP from request headers
         }
       });
 
