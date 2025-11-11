@@ -8,23 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Building, 
-  User, 
-  Mail, 
-  Building2, 
-  ArrowLeft, 
-  ArrowRight,
-  CheckCircle,
-  CreditCard,
-  EyeIcon,
-  EyeOffIcon,
-  Lock
+import {
+  Building, User, Mail, Building2, ArrowLeft, ArrowRight, CheckCircle, CreditCard, EyeIcon, EyeOffIcon, Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StripeProvider } from '@/components/payment/StripeProvider';
 import { PaymentForm } from '@/components/payment/PaymentForm';
+import { STRIPE_CHECKOUT_LINKS } from '@/lib/stripe';
 import { PlanSelector } from '@/components/payment/PlanSelector';
 
 interface FormData {
@@ -47,7 +38,7 @@ const PaidRegister = () => {
   const [clientSecret, setClientSecret] = useState<string>('');
   const [selectedPlan, setSelectedPlan] = useState('professional');
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
-  
+
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -77,8 +68,8 @@ const PaidRegister = () => {
   };
 
   const validateStep1 = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || 
-        !formData.company || !formData.companySize) {
+    if (!formData.firstName || !formData.lastName || !formData.email ||
+      !formData.company || !formData.companySize) {
       toast.error('Please fill in all required fields');
       return false;
     }
@@ -112,35 +103,19 @@ const PaidRegister = () => {
   const handleNext = async () => {
     if (currentStep === 1 && !validateStep1()) return;
     if (currentStep === 2 && !validateStep2()) return;
-    
+
     if (currentStep === 2) {
-      // Create payment intent
+      // Redirect directly to the prebuilt Stripe Checkout link
       setIsLoading(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('create-paid-registration', {
-          body: {
-            email: formData.email,
-            password: formData.password,
-            userData: {
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              company: formData.company,
-              company_size: formData.companySize,
-            },
-            tier: selectedPlan,
-            billing: selectedBilling,
-          }
-        });
-
-        if (error) throw error;
-
-        setClientSecret(data.clientSecret);
-        setCurrentStep(currentStep + 1);
-      } catch (error: any) {
-        toast.error('Failed to initialize payment: ' + error.message);
-      } finally {
+      const links = STRIPE_CHECKOUT_LINKS[selectedPlan as keyof typeof STRIPE_CHECKOUT_LINKS];
+      const url = links?.[selectedBilling];
+      if (!url) {
+        toast.error('No checkout link is configured for this plan/billing.');
         setIsLoading(false);
+        return;
       }
+      window.location.href = url;
+      return;
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -164,14 +139,14 @@ const PaidRegister = () => {
       if (error) throw error;
 
       toast.success('Account created successfully! Welcome to Entity Renewal Pro!');
-      
+
       // Redirect to success page with sign-in instructions
-      navigate('/registration-success', { 
-        state: { 
+      navigate('/registration-success', {
+        state: {
           email: formData.email,
           plan: selectedPlan,
-          signInUrl: data.signInUrl 
-        } 
+          signInUrl: data.signInUrl
+        }
       });
 
     } catch (error: any) {
@@ -188,8 +163,8 @@ const PaidRegister = () => {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold">Let's get to know you</h2>
-        <p className="text-muted-foreground">Tell us about yourself and your business</p>
+        {/* <h2 className="text-2xl font-bold">Let's get to know you</h2>
+        <p className="text-muted-foreground">Tell us about yourself and your business</p> */}
       </div>
 
       <div className="space-y-4">
@@ -276,10 +251,10 @@ const PaidRegister = () => {
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      <div className="text-center">
+      {/* <div className="text-center">
         <h2 className="text-2xl font-bold">Choose your plan & secure your account</h2>
         <p className="text-muted-foreground">Select a plan and create your password</p>
-      </div>
+      </div> */}
 
       <PlanSelector
         selectedPlan={selectedPlan}
@@ -292,7 +267,7 @@ const PaidRegister = () => {
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Secure Your Account</h3>
-        
+
         <div className="space-y-2">
           <Label htmlFor="password">Password *</Label>
           <div className="relative">
@@ -450,7 +425,7 @@ const PaidRegister = () => {
               {currentStep === 3 && "Complete payment to activate your account"}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
@@ -494,8 +469,8 @@ const PaidRegister = () => {
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Sign in here
