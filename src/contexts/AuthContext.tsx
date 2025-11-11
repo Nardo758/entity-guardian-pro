@@ -11,10 +11,9 @@ const checkRateLimit = async (endpoint: string, userId?: string): Promise<{
   error?: string;
 }> => {
   try {
-    const clientIP = await fetch('https://api.ipify.org?format=json')
-      .then(res => res.json())
-      .then(data => data.ip)
-      .catch(() => '0.0.0.0');
+    // Use our self-hosted IP detection service
+    const { data: ipData, error: ipError } = await supabase.functions.invoke('get-client-ip');
+    const clientIP = ipData?.ip || 'unknown';
 
     const { data, error } = await supabase.functions.invoke('rate-limiter', {
       body: {
