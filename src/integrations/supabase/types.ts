@@ -54,22 +54,7 @@ export type Database = {
           target_user_id?: string | null
           user_agent?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "admin_audit_log_admin_user_id_fkey"
-            columns: ["admin_user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "admin_audit_log_target_user_id_fkey"
-            columns: ["target_user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       "business _owners": {
         Row: {
@@ -183,15 +168,7 @@ export type Database = {
           used_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "mfa_recovery_codes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -224,15 +201,7 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       payment_methods: {
         Row: {
@@ -274,15 +243,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "payment_methods_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -321,15 +282,7 @@ export type Database = {
           user_id?: string
           user_type?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       security_report_config: {
         Row: {
@@ -383,15 +336,7 @@ export type Database = {
           schedule_type?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "security_report_config_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       security_report_history: {
         Row: {
@@ -528,15 +473,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "stripe_invoices_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       subscribers: {
         Row: {
@@ -605,15 +542,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscribers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       subscription_history: {
         Row: {
@@ -655,15 +584,7 @@ export type Database = {
           subscription_tier?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "subscription_history_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -687,40 +608,11 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "is_admin_v"
-            referencedColumns: ["user_id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
-      is_admin_v: {
-        Row: {
-          is_admin: boolean | null
-          user_id: string | null
-        }
-        Insert: {
-          is_admin?: never
-          user_id?: string | null
-        }
-        Update: {
-          is_admin?: never
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_ip_reputation: {
