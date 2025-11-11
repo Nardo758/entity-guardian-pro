@@ -12,14 +12,15 @@ serve(async (req) => {
   }
 
   try {
-    // Extract IP from request headers
+    // Get client IP from headers (Supabase/Deno Deploy provides these)
     const forwarded = req.headers.get('x-forwarded-for');
     const realIp = req.headers.get('x-real-ip');
     
     let clientIP = 'unknown';
     
     if (forwarded) {
-      // x-forwarded-for can contain multiple IPs, take the first one
+      // x-forwarded-for can contain multiple IPs (client, proxy1, proxy2, ...)
+      // The first one is the actual client IP
       clientIP = forwarded.split(',')[0].trim();
     } else if (realIp) {
       clientIP = realIp;
@@ -28,17 +29,26 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ ip: clientIP }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
       }
     );
   } catch (error) {
     console.error('Error getting client IP:', error);
+    
     return new Response(
-      JSON.stringify({ ip: 'unknown', error: error.message }),
+      JSON.stringify({ 
+        error: 'Failed to get client IP',
+        ip: 'unknown' 
+      }),
       { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
+        status: 500,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
       }
     );
   }

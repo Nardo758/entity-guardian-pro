@@ -80,6 +80,7 @@ export type Database = {
           first_name: string | null
           id: number
           last_name: string | null
+          user_id: string | null
         }
         Insert: {
           company_name?: string | null
@@ -89,6 +90,7 @@ export type Database = {
           first_name?: string | null
           id?: number
           last_name?: string | null
+          user_id?: string | null
         }
         Update: {
           company_name?: string | null
@@ -98,6 +100,7 @@ export type Database = {
           first_name?: string | null
           id?: number
           last_name?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
