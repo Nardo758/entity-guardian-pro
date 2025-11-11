@@ -20,7 +20,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { STRIPE_PRICING_TIERS, getFreshStripePromise } from '@/lib/stripe';
+import { STRIPE_PRICING_TIERS, stripePromise } from '@/lib/stripe';
 import {
   Elements,
   PaymentElement,
@@ -324,7 +324,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
           ) : clientSecret ? (
             <Elements
-              stripe={getFreshStripePromise()}
+              stripe={stripePromise}
               options={{
                 clientSecret,
                 appearance,

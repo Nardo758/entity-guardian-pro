@@ -2,35 +2,56 @@ import { loadStripe } from '@stripe/stripe-js';
 
 // Get Stripe publishable key securely via edge function
 const getStripePublishableKey = async (): Promise<string> => {
-  // Always use edge function for security - no hardcoded keys
-  const fallbackKey = 'pk_test_placeholder_removed_for_security';
-  
   try {
-    // Always get the key securely from Supabase edge function
     const response = await fetch('https://wcuxqopfcgivypbiynjp.supabase.co/functions/v1/get-stripe-config', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
-    
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch Stripe config');
+    }
+
     const data = await response.json();
     if (!data.publishableKey) {
       throw new Error('No publishable key returned from secure endpoint');
     }
 
-    return loadStripe(data.publishableKey);
+    return data.publishableKey as string;
   } catch (error) {
     console.error('Failed to get secure Stripe key:', error);
-    throw new Error('Unable to initialize Stripe - please check configuration');
+    throw error;
   }
 };
 
 // Initialize Stripe with secure key loading
 const initializeStripe = async () => {
   const key = await getStripePublishableKey();
-  return (await import('@stripe/stripe-js')).loadStripe(key);
+  return loadStripe(key);
 };
 
 export const stripePromise = initializeStripe();
+
+// Direct Stripe Checkout links by plan and billing period
+export const STRIPE_CHECKOUT_LINKS: Record<string, { monthly?: string; yearly?: string }> = {
+  starter: {
+    monthly: 'https://buy.stripe.com/fZu8wO0UF2am8a59f82go01',
+    yearly: 'https://buy.stripe.com/eVq8wO0UFeX8eyt3UO2go02',
+  },
+  professional: {
+    monthly: 'https://buy.stripe.com/4gM7sK1YJ16i3TP8b42go03',
+    yearly: 'https://buy.stripe.com/4gMcN40UFcP0bmh0IC2go04',
+  },
+  enterprise: {
+    monthly: 'https://buy.stripe.com/00weVc32N2am2PLajc2go05',
+    yearly: 'https://buy.stripe.com/3cI4gyeLv8yKbmh8b42go06',
+  },
+  growth: {
+    // Provided mapping uses the same link for both periods
+    monthly: 'https://buy.stripe.com/00weVc32N2am2PLajc2go05',
+    yearly: 'https://buy.stripe.com/00weVc32N2am2PLajc2go05',
+  },
+};
 
 export const STRIPE_PRICING_TIERS = {
   starter: {

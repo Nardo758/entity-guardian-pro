@@ -1,6 +1,6 @@
 import React from 'react';
 import { Elements } from '@stripe/react-stripe-js';
-import { getFreshStripePromise } from '@/lib/stripe';
+import { stripePromise } from '@/lib/stripe';
 
 interface StripeProviderProps {
   children: React.ReactNode;
@@ -49,7 +49,7 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({
   console.log('StripeProvider: options configured:', options);
 
   return (
-    <Elements stripe={getFreshStripePromise()} options={options}>
+    <Elements stripe={stripePromise} options={options}>
       {children}
     </Elements>
   );
