@@ -12,7 +12,7 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-const VALID_TIERS = ["starter", "professional", "enterprise", "unlimited"] as const;
+const VALID_TIERS = ["starter", "growth", "professional", "enterprise", "unlimited"] as const;
 type TierKey = typeof VALID_TIERS[number];
 
 function priceLookupKey(tier: TierKey, billing: 'monthly' | 'yearly') {
@@ -77,8 +77,15 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      payment_method_collection: "always",
+      payment_method_types: ["card"],
       success_url: `${origin}/billing?success=true`,
       cancel_url: `${origin}/billing?canceled=true`,
+      metadata: {
+        user_id: user.id,
+        tier,
+        billing,
+      },
     });
 
     logStep("Checkout session created", { sessionId: session.id, tier, billing, priceId });

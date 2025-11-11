@@ -24,6 +24,11 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // Gradually enable strict type checking
+      "@typescript-eslint/no-explicit-any": "warn", // Start with warnings
+      "@typescript-eslint/prefer-const": "error",
+      "@typescript-eslint/no-require-imports": "error",
+      "react-hooks/exhaustive-deps": "warn",
     },
   }
 );

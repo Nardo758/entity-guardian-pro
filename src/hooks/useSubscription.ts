@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -14,72 +14,76 @@ interface SubscriptionInfo {
 export const useSubscription = () => {
   const [subscription, setSubscription] = useState<SubscriptionInfo>({ subscribed: false });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     if (!user) {
       setSubscription({ subscribed: false });
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      setLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await supabase.functions.invoke('check-subscription');
       
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       
       setSubscription(data);
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      toast.error('Failed to check subscription status');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Failed to check subscription status');
+      setError(error);
+      console.error('Error checking subscription:', err);
+      toast.error(error.message);
       setSubscription({ subscribed: false });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const createCheckout = async (tier: string, billing: 'monthly' | 'yearly') => {
     if (!user) {
       toast.error('Please log in to subscribe');
-      return;
+      return null;
     }
 
     try {
+      toast.loading('Creating checkout session...', { id: 'checkout' });
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { tier, billing }
       });
 
       if (error) throw error;
-      const stripe = await stripePromise;
-      if (stripe) {
-        const result = await stripe.redirectToCheckout({ sessionId: data.id });
-        if (result.error) {
-          // Fallback to opening the Checkout URL if redirect fails
-          if (data?.url) {
-            if (window.top) {
-              (window.top as Window).location.href = data.url;
-            } else {
-              window.location.href = data.url;
-            }
-            return;
-          }
-          throw result.error;
-        }
-      } else {
-        // Fallback if Stripe failed to initialize
-        if (data?.url) {
-          if (window.top) {
-            (window.top as Window).location.href = data.url;
-          } else {
-            window.location.href = data.url;
-          }
-          return;
-        }
-        throw new Error('Stripe failed to initialize and no checkout URL provided');
+
+      if (!data || !data.id) {
+        throw new Error('Invalid checkout session response');
       }
+
+      toast.success('Redirecting to checkout...', { id: 'checkout' });
+
+      // Consolidated flow: Always use Stripe redirect (removes dual path confusion)
+      const stripe = await stripePromise;
+      
+      if (!stripe) {
+        throw new Error('Stripe failed to load. Please check your internet connection and try again.');
+      }
+
+      const result = await stripe.redirectToCheckout({ sessionId: data.id });
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to redirect to checkout');
+      }
+
+      return data;
     } catch (error) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to create checkout session');
+      const message = error instanceof Error ? error.message : 'Failed to create checkout session';
+      toast.error(message, { id: 'checkout' });
+      return null;
     }
   };
 
@@ -117,6 +121,7 @@ export const useSubscription = () => {
           filter: `user_id=eq.${user?.id}`,
         },
         () => {
+          console.log('Subscription changed, refreshing...');
           checkSubscription();
         }
       )
@@ -125,11 +130,12 @@ export const useSubscription = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, checkSubscription]);
 
   return {
     subscription,
     loading,
+    error,
     checkSubscription,
     createCheckout,
     openCustomerPortal,

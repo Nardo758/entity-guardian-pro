@@ -17,7 +17,27 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
     const navigate = useNavigate();
     const { installApp, isInstallable, isInstalled, isSupported, canInstall, getBrowserInstructions } = usePWA();
     const { toast } = useToast();
-    const { user, loading, signOut } = useAuth();
+    const { user, profile, loading, signOut } = useAuth();
+
+    // Redirect authenticated users to their dashboard
+    React.useEffect(() => {
+      if (!loading && user && profile) {
+        // Check if user has a role assigned
+        if (!profile.user_type) {
+          navigate('/role-selection', { replace: true });
+          return;
+        }
+
+        // Redirect based on user type
+        if (profile.user_type === 'registered_agent') {
+          navigate('/agent-dashboard', { replace: true });
+        } else if (profile.is_admin || profile.roles?.includes('admin')) {
+          navigate('/admin-dashboard', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+      }
+    }, [user, profile, loading, navigate]);
 
     const handleDesktopDownload = async () => {
       if (isInstalled) {
@@ -294,14 +314,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
       <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
                 <Building className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold">Entity Renewal Pro</span>
-            </div>
+            </Link>
 
             <div className="hidden md:flex items-center space-x-8">
+              <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                Home
+              </Link>
               <button
                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -333,7 +356,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                     <Link to="/login">Sign In</Link>
                   </Button>
                   <Button asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary">
-                    <Link to="/signup">Get Started</Link>
+                    <Link to="/register">Get Started</Link>
                   </Button>
                 </>
               )}
@@ -362,7 +385,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button size="lg" asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-lg px-8">
-                <Link to="/signup">
+                <Link to="/paid-register">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -481,7 +504,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               </div>
 
               <Button size="lg" asChild className="mt-8 bg-gradient-to-r from-primary to-primary-dark">
-                <Link to="/signup">
+                <Link to="/paid-register">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
@@ -714,7 +737,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
             </p>
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
               <Button asChild className="bg-gradient-to-r from-primary to-primary-dark">
-                <Link to="/signup">Subscribe Now</Link>
+                <Link to="/paid-register">Subscribe Now</Link>
               </Button>
               <a href="mailto:support@entityrenewal.pro" className="text-muted-foreground hover:text-foreground transition-colors">
                 <Mail className="h-5 w-5" />

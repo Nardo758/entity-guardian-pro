@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { LucideIcon } from 'lucide-react';
 
@@ -11,7 +11,7 @@ interface MetricsCardProps {
   backgroundColor: string;
 }
 
-export const MetricsCard: React.FC<MetricsCardProps> = ({
+export const MetricsCard = memo<MetricsCardProps>(({
   title,
   value,
   subtitle,
@@ -36,4 +36,6 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+MetricsCard.displayName = 'MetricsCard';

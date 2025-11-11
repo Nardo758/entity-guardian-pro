@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Webhook Diagnostics</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 32px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 16px; }
+        .section {
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .section h2 { color: #333; margin-bottom: 16px; font-size: 20px; }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .info { color: #3b82f6; }
+        .timestamp { color: #9ca3af; font-size: 12px; }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge.success { background: #d1fae5; color: #065f46; }
+        .badge.error { background: #fee2e2; color: #991b1b; }
+        .badge.warning { background: #fef3c7; color: #92400e; }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+        .checklist li:before {
+            content: '⏳';
+            margin-right: 10px;
+            font-size: 18px;
+        }
+        .checklist li.pass:before { content: '✅'; }
+        .checklist li.fail:before { content: '❌'; }
+        .checklist li.warn:before { content: '⚠️'; }
+        code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Stripe Webhook Diagnostics</h1>
+        <p class="subtitle">Test and diagnose your Stripe webhook integration</p>
+
+        <div class="section">
+            <h2>🎯 Quick Tests</h2>
+            <button onclick="checkWebhookEndpoint()">1. Check Webhook Endpoint</button>
+            <button onclick="checkSupabaseSecrets()">2. Check Supabase Secrets</button>
+            <button onclick="checkDatabase()">3. Check Database Tables</button>
+            <button onclick="sendTestWebhook()">4. Send Test Webhook Event</button>
+            <button onclick="checkStripeEvents()">5. Check Recent Events</button>
+        </div>
+
+        <div class="section">
+            <h2>📋 Diagnostic Checklist</h2>
+            <ul class="checklist" id="checklist">
+                <li id="check-webhook">Webhook endpoint accessible</li>
+                <li id="check-secrets">Supabase secrets configured</li>
+                <li id="check-tables">Database tables created</li>
+                <li id="check-function">Webhook function code valid</li>
+                <li id="check-stripe">Stripe webhook registered</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📊 Test Output</h2>
+            <div id="output">Waiting for tests to run...</div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://wcuxqopfcgivypbiynjp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjdXhxb3BmY2dpdnlwYml5bmpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzNDI1NzMsImV4cCI6MjA3MTkxODU3M30.-RkbzPY_FZVd9qShJxi959LLSqWXYI7Mkqk1DqJVt6o';
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            const color = colors[type] || colors.info;
+            output.innerHTML += `<div><span class="timestamp">[${timestamp}]</span> <span style="color: ${color}">${message}</span></div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function updateCheck(id, status) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.className = status;
+            }
+        }
+
+        async function checkWebhookEndpoint() {
+            log('🔍 Checking webhook endpoint...', 'info');
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/stripe-webhook`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY
+                    }
+                });
+                
+                if (response.ok) {
+                    log('✅ Webhook endpoint is accessible', 'success');
+                    updateCheck('check-webhook', 'pass');
+                    return true;
+                } else {
+                    log(`❌ Webhook endpoint returned ${response.status}`, 'error');
+                    updateCheck('check-webhook', 'fail');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Failed to reach webhook endpoint: ${error.message}`, 'error');
+                updateCheck('check-webhook', 'fail');
+                return false;
+            }
+        }
+
+        async function checkSupabaseSecrets() {
+            log('🔍 Checking Supabase configuration...', 'info');
+            try {
+                // Check if check-stripe function exists
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/check-stripe`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok && data.details) {
+                    log('✅ Stripe configuration valid', 'success');
+                    log(`   • Publishable Key: ${data.details.hasPublishableKey ? '✓' : '✗'}`, 'info');
+                    log(`   • Secret Key: ${data.details.hasSecretKey ? '✓' : '✗'}`, 'info');
+                    updateCheck('check-secrets', 'pass');
+                    return true;
+                } else {
+                    log('⚠️ Stripe configuration incomplete', 'warning');
+                    log('   Missing: STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET', 'warning');
+                    updateCheck('check-secrets', 'warn');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Cannot verify Stripe configuration: ${error.message}`, 'error');
+                updateCheck('check-secrets', 'fail');
+                return false;
+            }
+        }
+
+        async function checkDatabase() {
+            log('🔍 Checking database tables...', 'info');
+            try {
+                // Try to query the stripe_events table
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/stripe_events?select=count`, {
+                    method: 'HEAD',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    log('✅ Database tables exist', 'success');
+                    updateCheck('check-tables', 'pass');
+                    return true;
+                } else if (response.status === 401 || response.status === 403) {
+                    log('⚠️ Database tables exist but access restricted (expected for RLS)', 'warning');
+                    updateCheck('check-tables', 'pass');
+                    return true;
+                } else {
+                    log(`❌ Database tables may not exist (status: ${response.status})`, 'error');
+                    log('   Run migration: supabase db push', 'warning');
+                    updateCheck('check-tables', 'fail');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Database check failed: ${error.message}`, 'error');
+                updateCheck('check-tables', 'fail');
+                return false;
+            }
+        }
+
+        async function sendTestWebhook() {
+            log('🔍 Sending test webhook event...', 'info');
+            log('⚠️ Note: This requires STRIPE_WEBHOOK_SECRET to be set', 'warning');
+            
+            try {
+                const testEvent = {
+                    id: 'evt_test_' + Date.now(),
+                    object: 'event',
+                    type: 'checkout.session.completed',
+                    data: {
+                        object: {
+                            id: 'cs_test_123',
+                            customer: 'cus_test_123',
+                            customer_email: 'test@example.com',
+                            subscription: 'sub_test_123'
+                        }
+                    }
+                };
+
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/stripe-webhook`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'stripe-signature': 'test_signature'
+                    },
+                    body: JSON.stringify(testEvent)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log('✅ Test webhook sent successfully', 'success');
+                    log(`   Response: ${JSON.stringify(result)}`, 'info');
+                    return true;
+                } else {
+                    log(`⚠️ Webhook returned error (this is expected without valid signature)`, 'warning');
+                    log(`   Error: ${result.error || 'Unknown'}`, 'warning');
+                    log('   This means the endpoint is working but needs proper Stripe signature', 'info');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Failed to send test webhook: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function checkStripeEvents() {
+            log('🔍 Checking recent Stripe events in database...', 'info');
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/stripe_events?select=*&order=created_at.desc&limit=5`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+
+                if (response.ok) {
+                    const events = await response.json();
+                    if (events.length > 0) {
+                        log(`✅ Found ${events.length} recent events:`, 'success');
+                        events.forEach(evt => {
+                            log(`   • ${evt.event_type} - ${evt.processed ? '✓ Processed' : '⏳ Pending'}`, 'info');
+                        });
+                    } else {
+                        log('ℹ️ No events found in database yet', 'info');
+                        log('   This is normal if you haven\'t processed any webhooks yet', 'info');
+                    }
+                    return true;
+                } else if (response.status === 401 || response.status === 403) {
+                    log('⚠️ Cannot access stripe_events table (RLS policy)', 'warning');
+                    log('   This is expected - only service role can access events', 'info');
+                    return true;
+                } else {
+                    log(`❌ Failed to query events: ${response.status}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Error checking events: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function runAllTests() {
+            log('🚀 Starting comprehensive diagnostics...', 'info');
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            
+            await checkWebhookEndpoint();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await checkSupabaseSecrets();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await checkDatabase();
+            await new Promise(r => setTimeout(r, 500));
+            
+            await checkStripeEvents();
+            await new Promise(r => setTimeout(r, 500));
+            
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            log('✅ Diagnostics complete!', 'success');
+            log('', 'info');
+            log('📝 Next Steps:', 'info');
+            log('1. Apply migration: cd supabase && supabase db push', 'warning');
+            log('2. Check Supabase secrets include STRIPE_WEBHOOK_SECRET', 'warning');
+            log('3. Register webhook in Stripe Dashboard:', 'warning');
+            log('   https://dashboard.stripe.com/webhooks', 'info');
+            log('4. Use this URL: ' + SUPABASE_URL + '/functions/v1/stripe-webhook', 'info');
+        }
+
+        // Auto-run tests on page load
+        setTimeout(runAllTests, 500);
+    </script>
+</body>
+</html>

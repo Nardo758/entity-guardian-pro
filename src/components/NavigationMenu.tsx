@@ -8,7 +8,9 @@ import {
   Settings, 
   Search,
   Home,
-  UserCircle
+  UserCircle,
+  Shield,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -18,6 +20,7 @@ const NavigationMenu: React.FC = () => {
   const location = useLocation();
   
   const isAgent = profile?.user_type === 'registered_agent';
+  const isAdmin = profile?.is_admin || false;
 
   // Entity Owner Navigation
   const entityOwnerLinks = [
@@ -27,13 +30,20 @@ const NavigationMenu: React.FC = () => {
     { href: '/settings', icon: Settings, label: 'Settings' },
   ];
 
+  // Admin-specific links
+  const adminLinks = [
+    { href: '/ip-reputation', icon: Shield, label: 'IP Reputation', adminOnly: true },
+    { href: '/security-reports', icon: FileText, label: 'Security Reports', adminOnly: true },
+  ];
+
   // Agent Navigation
   const agentLinks = [
     { href: '/agent-dashboard', icon: Home, label: 'Agent Dashboard' },
     { href: '/settings', icon: Settings, label: 'Profile Settings' },
   ];
 
-  const navigationLinks = isAgent ? agentLinks : entityOwnerLinks;
+  const baseLinks = isAgent ? agentLinks : entityOwnerLinks;
+  const navigationLinks = isAdmin ? [...baseLinks, ...adminLinks] : baseLinks;
 
   return (
     <nav className="flex items-center gap-6">

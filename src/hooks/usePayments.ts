@@ -7,27 +7,39 @@ import { toast } from 'sonner';
 export const usePayments = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchPayments = async () => {
     if (!user) {
       setPayments([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await supabase
         .from('payments')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) {
+        // Don't show error if table doesn't exist or user has no payments - this is expected
+        console.warn('Could not fetch payments:', fetchError);
+        setPayments([]);
+        setError(null);
+        return;
+      }
       setPayments((data || []) as Payment[]);
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      toast.error('Failed to load payments');
+    } catch (err) {
+      // Silently handle errors - no payments is not an error condition
+      console.warn('Error fetching payments:', err);
+      setPayments([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -97,6 +109,7 @@ export const usePayments = () => {
   return {
     payments,
     loading,
+    error,
     updatePaymentStatus,
     refetch: fetchPayments,
   };

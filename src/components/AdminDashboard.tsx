@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, BarChart3, Settings, AlertTriangle, UserCog, Crown, 
   Database, TrendingUp, CreditCard, FileText, Activity, DollarSign,
-  Trash2, Edit, Eye, Download, RefreshCw, Search, Filter
+  Trash2, Edit, Eye, Download, RefreshCw, Search, Filter, ScrollText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -294,6 +294,15 @@ const AdminDashboard = () => {
                         >
                           <Shield className="h-4 w-4 mr-2" />
                           Security Audit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate('/admin-audit')}
+                          className="w-full justify-start"
+                        >
+                          <ScrollText className="h-4 w-4 mr-2" />
+                          View Audit Log
                         </Button>
                       </div>
                     </div>

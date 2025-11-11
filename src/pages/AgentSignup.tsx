@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Building, MapPin, FileText, Eye, EyeOff } from 'lucide-react';
+import PasswordStrengthIndicator from '@/components/ui/PasswordStrengthIndicator';
 
 const US_STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -28,7 +29,7 @@ const US_STATES = [
 const agentSchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
   contact_email: z.string().email('Valid email is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters long.'),
   confirmPassword: z.string(),
   states: z.array(z.string()).min(1, 'Select at least one state'),
   years_experience: z.number().min(0, 'Years of experience must be 0 or greater').max(50, 'Maximum 50 years').optional(),
@@ -271,7 +272,8 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
                           <div className="relative">
                             <Input 
                               type={showPassword ? "text" : "password"} 
-                              placeholder="Create a secure password" 
+                              placeholder="At least 8 characters"
+                              minLength={8}
                               {...field} 
                             />
                             <Button
@@ -289,9 +291,7 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
                             </Button>
                           </div>
                         </FormControl>
-                        <FormDescription>
-                          Minimum 8 characters required
-                        </FormDescription>
+                        <PasswordStrengthIndicator password={field.value} />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -307,7 +307,8 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
                           <div className="relative">
                             <Input 
                               type={showConfirmPassword ? "text" : "password"} 
-                              placeholder="Confirm your password" 
+                              placeholder="Re-enter your password"
+                              minLength={8}
                               {...field} 
                             />
                             <Button

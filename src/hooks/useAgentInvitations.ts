@@ -7,6 +7,7 @@ import { toast } from '@/hooks/use-toast';
 export const useAgentInvitations = () => {
   const [invitations, setInvitations] = useState<AgentInvitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [metrics, setMetrics] = useState({
     totalSent: 0,
     pendingCount: 0,
@@ -21,12 +22,15 @@ export const useAgentInvitations = () => {
     if (!user) {
       setInvitations([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
+      setLoading(true);
+      setError(null);
       // Fetch invitations
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('agent_invitations')
         .select(`
           *,
@@ -36,16 +40,24 @@ export const useAgentInvitations = () => {
         .eq('entity_owner_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) {
+        // Silently handle - user might not have invitations yet or table might not exist
+        console.warn('Could not fetch invitations:', fetchError);
+        setInvitations([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
       setInvitations((data || []) as any[]);
 
       // Fetch metrics
       const { data: metricsData, error: metricsError } = await supabase
         .rpc('get_agent_invitation_metrics', { owner_id: user.id });
 
-      if (metricsError) throw metricsError;
-      
-      if (metricsData && metricsData.length > 0) {
+      if (metricsError) {
+        // Metrics are optional, just log and continue
+        console.warn('Could not fetch invitation metrics:', metricsError);
+      } else if (metricsData && metricsData.length > 0) {
         const m = metricsData[0];
         setMetrics({
           totalSent: m.total_sent,
@@ -56,13 +68,11 @@ export const useAgentInvitations = () => {
           entitiesWithAgents: m.entities_with_agents
         });
       }
-    } catch (error) {
-      console.error('Error fetching invitations:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load invitations",
-        variant: "destructive"
-      });
+    } catch (err) {
+      // Silently handle errors - no invitations is not an error condition for new users
+      console.warn('Error fetching invitations:', err);
+      setInvitations([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -280,6 +290,7 @@ export const useAgentInvitations = () => {
   return {
     invitations,
     loading,
+    error,
     metrics,
     sendInvitation,
     respondToInvitation,

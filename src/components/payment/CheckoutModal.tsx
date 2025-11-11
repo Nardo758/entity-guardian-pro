@@ -20,7 +20,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { stripePromise } from '@/lib/stripe';
+import { STRIPE_PRICING_TIERS, getFreshStripePromise } from '@/lib/stripe';
 import {
   Elements,
   PaymentElement,
@@ -30,7 +30,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
+
 
 // Use the shared Stripe promise from lib
 
@@ -186,13 +186,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to create payment intent');
+      }
+
+      if (!data?.clientSecret) {
+        throw new Error('No client secret returned from payment service');
+      }
 
       setClientSecret(data.clientSecret);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to initialize payment. Please try again.';
       console.error('Error creating payment intent:', error);
-      setError('Failed to initialize payment. Please try again.');
-      toast.error('Failed to initialize payment');
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -236,20 +244,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md mx-4">
+      <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">Complete Your Subscription</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              disabled={loading}
-              className="h-6 w-6"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-bold">Complete Your Subscription</DialogTitle>
           <DialogDescription>
             Subscribe to {tierInfo.name} plan and unlock all features
           </DialogDescription>
@@ -327,7 +324,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
           ) : clientSecret ? (
             <Elements
-              stripe={stripePromise}
+              stripe={getFreshStripePromise()}
               options={{
                 clientSecret,
                 appearance,

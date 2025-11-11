@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Phone, Mail } from 'lucide-react';
@@ -9,7 +9,7 @@ interface EntityDetailsCardProps {
   entity: Entity;
 }
 
-export const EntityDetailsCard: React.FC<EntityDetailsCardProps> = ({ entity }) => {
+export const EntityDetailsCard = memo<EntityDetailsCardProps>(({ entity }) => {
   const entityFee = stateRequirements[entity.state][entity.type].fee;
   const stateName = stateRequirements[entity.state].name;
 
@@ -117,4 +117,6 @@ export const EntityDetailsCard: React.FC<EntityDetailsCardProps> = ({ entity }) 
       </Card>
     </div>
   );
-};
+});
+
+EntityDetailsCard.displayName = 'EntityDetailsCard';

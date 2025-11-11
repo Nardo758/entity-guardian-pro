@@ -1,0 +1,34 @@
+🚀 QUICK MIGRATION GUIDE
+
+STEP 1: Copy the SQL
+  ✓ Open: fix-subscribers-migration.sql (already open in your IDE)
+  ✓ Select all: Ctrl+A
+  ✓ Copy: Ctrl+C
+
+STEP 2: Open Supabase SQL Editor
+  ✓ Click: https://supabase.com/dashboard/project/wcuxqopfcgivypbiynjp/sql/new
+
+STEP 3: Run the Migration
+  ✓ Paste: Ctrl+V
+  ✓ Click "Run" button
+  ✓ Wait for "Success"
+
+STEP 4: Verify It Worked
+  Run this query:
+  
+  SELECT count(*) FROM stripe_events;
+  
+  If it returns 0 (not an error), it worked! ✅
+
+STEP 5: Test Your Webhook
+  Run in PowerShell:
+  
+  .\test-webhook-cli.ps1
+  
+  Choose option 1 (Quick Test)
+
+---
+
+That's it! Your webhook integration will be fully functional after these steps.
+
+Questions? Check: APPLY_THIS_MIGRATION.md for detailed instructions.

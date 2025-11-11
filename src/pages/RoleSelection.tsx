@@ -9,39 +9,111 @@ import { useToast } from '@/hooks/use-toast';
 
 const RoleSelection = () => {
   const [loading, setLoading] = useState<string | null>(null);
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, ensureProfileExists } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleRoleSelection = async (userType: string, redirectPath: string) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setLoading(userType);
     
     try {
-      // Update user profile with selected role
-      const { error } = await supabase
-        .from('profiles')
-        .update({ user_type: userType })
-        .eq('user_id', user.id);
+      // First ensure the profile exists with enhanced retry
+      console.log('Ensuring profile exists for role assignment:', user.id);
+      const profileExists = await ensureProfileExists(user.id);
+      
+      if (!profileExists) {
+        throw new Error('Could not create or verify user profile after multiple attempts. Please contact support.');
+      }
 
-      if (error) throw error;
+      console.log('Profile verified, updating role to:', userType);
 
-      // Refresh profile to get updated data
-      await refreshProfile();
+      // Update user profile with selected role with retry logic and exponential backoff
+      let updateSuccess = false;
+      let lastError = null;
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        console.log(`Role update attempt ${attempt + 1}/3`);
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            user_type: userType,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (!error) {
+          updateSuccess = true;
+          console.log('Role updated successfully');
+          break;
+        }
+
+        lastError = error;
+        console.warn(`Role update attempt ${attempt + 1} failed:`, error);
+        
+        // Wait before retry with exponential backoff (500ms, 1s, 2s)
+        if (attempt < 2) {
+          const delay = Math.pow(2, attempt) * 500;
+          console.log(`Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+
+      if (!updateSuccess) {
+        console.error('Role update failed after all retries:', lastError);
+        throw lastError || new Error('Failed to update profile after multiple attempts. Please try again.');
+      }
+
+      // Refresh profile to get updated data with retry
+      console.log('Refreshing profile data...');
+      let refreshSuccess = false;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          await refreshProfile();
+          refreshSuccess = true;
+          console.log('Profile refreshed successfully');
+          break;
+        } catch (err) {
+          console.warn(`Profile refresh attempt ${attempt + 1} failed:`, err);
+          if (attempt < 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+      }
+
+      if (!refreshSuccess) {
+        console.warn('Profile refresh failed but role was updated');
+      }
+
+      // Additional delay to ensure state propagates
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const roleLabel = userType === 'entity_owner' ? 'Business Owner' : 
+                       userType === 'registered_agent' ? 'Registered Agent' : 
+                       'Administrator';
 
       toast({
-        title: "Role selected successfully",
-        description: `Welcome to Entity Renewal Pro as ${userType === 'entity_owner' ? 'a Business Owner' : userType === 'registered_agent' ? 'a Registered Agent' : 'an Administrator'}!`,
+        title: "Role selected successfully! 🎉",
+        description: `Welcome to Entity Renewal Pro as a ${roleLabel}!`,
       });
 
+      console.log(`Navigating to: ${redirectPath}`);
       // Redirect to appropriate dashboard
       navigate(redirectPath, { replace: true });
-    } catch (error) {
-      console.error('Error updating user role:', error);
+    } catch (error: any) {
+      console.error('Error in role selection:', error);
       toast({
         title: "Error selecting role",
-        description: "Please try again or contact support if the issue persists.",
+        description: error.message || "An unexpected error occurred. Please try again or contact support.",
         variant: "destructive"
       });
     } finally {

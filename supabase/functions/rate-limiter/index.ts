@@ -10,16 +10,32 @@ interface RateLimitConfig {
   windowMs: number;
   maxRequests: number;
   endpoint: string;
+  useExponentialBackoff?: boolean;
+  baseDelaySeconds?: number;
 }
 
 const RATE_LIMITS: { [key: string]: RateLimitConfig } = {
-  'default': { windowMs: 60000, maxRequests: 100, endpoint: 'default' }, // 100 requests per minute
-  'auth': { windowMs: 300000, maxRequests: 5, endpoint: 'auth' }, // 5 login attempts per 5 minutes
-  'invitation': { windowMs: 300000, maxRequests: 10, endpoint: 'invitation' }, // 10 invitations per 5 minutes
-  'payment': { windowMs: 60000, maxRequests: 5, endpoint: 'payment' }, // 5 payment attempts per minute
-  'sms-verification': { windowMs: 300000, maxRequests: 3, endpoint: 'sms-verification' }, // 3 SMS attempts per 5 minutes
-  'admin-access': { windowMs: 60000, maxRequests: 50, endpoint: 'admin-access' }, // 50 admin actions per minute
-  'profile-access': { windowMs: 60000, maxRequests: 20, endpoint: 'profile-access' }, // 20 profile views per minute
+  'default': { windowMs: 60000, maxRequests: 100, endpoint: 'default' },
+  'auth': { 
+    windowMs: 300000, 
+    maxRequests: 5, 
+    endpoint: 'auth',
+    useExponentialBackoff: true,
+    baseDelaySeconds: 5 // Start with 5 seconds, doubles each time
+  },
+  'invitation': { windowMs: 300000, maxRequests: 10, endpoint: 'invitation' },
+  'payment': { windowMs: 60000, maxRequests: 5, endpoint: 'payment' },
+  'sms-verification': { windowMs: 300000, maxRequests: 3, endpoint: 'sms-verification' },
+  'admin-access': { windowMs: 60000, maxRequests: 50, endpoint: 'admin-access' },
+  'profile-access': { windowMs: 60000, maxRequests: 20, endpoint: 'profile-access' },
+};
+
+// Calculate exponential backoff delay
+const calculateBackoffDelay = (failedAttempts: number, baseDelay: number): number => {
+  // Exponential backoff: baseDelay * (2 ^ (attempts - 1))
+  // Capped at 15 minutes (900 seconds)
+  const delay = baseDelay * Math.pow(2, Math.min(failedAttempts - 1, 7));
+  return Math.min(delay, 900);
 };
 
 serve(async (req) => {
@@ -46,7 +62,81 @@ serve(async (req) => {
       );
     }
 
+    // Build identifier for tracking
+    const identifier = userId || ipAddress;
+    if (!identifier) {
+      return new Response(
+        JSON.stringify({ error: "Either userId or ipAddress is required" }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    // Check IP reputation first if IP address is provided
+    let ipReputationData: any = null;
+    let adjustedMaxRequests = null;
+    
+    if (ipAddress) {
+      const { data: ipRepData, error: ipRepError } = await supabase
+        .from('ip_reputation')
+        .select('reputation_score, risk_level, blocked_until')
+        .eq('ip_address', ipAddress)
+        .maybeSingle();
+      
+      if (!ipRepError && ipRepData) {
+        ipReputationData = ipRepData;
+        
+        // Check if IP is blocked
+        if (ipRepData.blocked_until && new Date(ipRepData.blocked_until) > new Date()) {
+          const blockedUntil = new Date(ipRepData.blocked_until);
+          const retryAfter = Math.ceil((blockedUntil.getTime() - Date.now()) / 1000);
+          
+          console.log(`IP ${ipAddress} is blocked until ${ipRepData.blocked_until}`);
+          
+          return new Response(
+            JSON.stringify({ 
+              error: "IP address blocked due to suspicious activity",
+              retryAfter,
+              riskLevel: ipRepData.risk_level,
+              reputationScore: ipRepData.reputation_score,
+              blockedUntil: ipRepData.blocked_until
+            }),
+            { 
+              status: 403, 
+              headers: { 
+                ...corsHeaders, 
+                "Content-Type": "application/json",
+                "Retry-After": retryAfter.toString()
+              } 
+            }
+          );
+        }
+      }
+    }
+
     const config = RATE_LIMITS[endpoint] || RATE_LIMITS['default'];
+    let maxRequests = config.maxRequests;
+    
+    // Adjust rate limits based on IP reputation
+    if (ipReputationData) {
+      const score = ipReputationData.reputation_score;
+      if (score < 30) {
+        // Critical risk: 25% of normal limits
+        maxRequests = Math.max(1, Math.floor(config.maxRequests * 0.25));
+      } else if (score < 60) {
+        // High risk: 50% of normal limits
+        maxRequests = Math.max(2, Math.floor(config.maxRequests * 0.5));
+      } else if (score < 80) {
+        // Medium risk: 75% of normal limits
+        maxRequests = Math.max(3, Math.floor(config.maxRequests * 0.75));
+      }
+      // Low risk (>=80): Use normal limits
+      
+      console.log(`IP ${ipAddress} reputation: ${score}, adjusted limit: ${maxRequests} (from ${config.maxRequests})`);
+    }
+
     const now = new Date();
     const windowStart = new Date(now.getTime() - config.windowMs);
 
@@ -56,18 +146,9 @@ serve(async (req) => {
       .delete()
       .lt('window_start', windowStart.toISOString());
 
-    // Check current rate limit
-    let query = supabase
-      .from('api_rate_limits')
-      .select('request_count')
-      .eq('endpoint', endpoint)
-      .gte('window_start', windowStart.toISOString());
-
-    if (userId) {
-      query = query.eq('user_id', userId);
-    } else if (ipAddress) {
-      query = query.eq('ip_address', ipAddress);
-    } else {
+    // Build identifier for tracking
+    const identifier = userId || ipAddress;
+    if (!identifier) {
       return new Response(
         JSON.stringify({ error: "Either userId or ipAddress is required" }),
         { 
@@ -75,6 +156,19 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         }
       );
+    }
+
+    // Check current rate limit
+    let query = supabase
+      .from('api_rate_limits')
+      .select('request_count, metadata')
+      .eq('endpoint', endpoint)
+      .gte('window_start', windowStart.toISOString());
+
+    if (userId) {
+      query = query.eq('user_id', userId);
+    } else if (ipAddress) {
+      query = query.eq('ip_address', ipAddress);
     }
 
     const { data: existing, error: selectError } = await query;
@@ -91,8 +185,41 @@ serve(async (req) => {
     }
 
     const currentRequests = existing?.reduce((sum, record) => sum + record.request_count, 0) || 0;
+    
+    // Get failed attempts count from metadata
+    const latestRecord = existing?.[0];
+    const failedAttempts = (latestRecord?.metadata as any)?.failed_attempts || 0;
 
-    if (currentRequests >= config.maxRequests) {
+    if (currentRequests >= maxRequests) {
+      let retryAfterSeconds = Math.ceil(config.windowMs / 1000);
+      
+      // Apply exponential backoff if configured
+      if (config.useExponentialBackoff && config.baseDelaySeconds) {
+        retryAfterSeconds = calculateBackoffDelay(
+          failedAttempts + 1,
+          config.baseDelaySeconds
+        );
+      }
+
+      // Update IP reputation for rate limit violation
+      if (ipAddress) {
+        const { data: repUpdateData } = await supabase.rpc('update_ip_reputation', {
+          p_ip_address: ipAddress,
+          p_event_type: 'rate_limit',
+          p_metadata: {
+            endpoint,
+            user_id: userId,
+            timestamp: now.toISOString(),
+            current_requests: currentRequests,
+            max_requests: maxRequests
+          }
+        });
+        
+        if (repUpdateData && repUpdateData.length > 0) {
+          console.log(`Updated IP reputation for ${ipAddress}: score=${repUpdateData[0].reputation_score}, risk=${repUpdateData[0].risk_level}`);
+        }
+      }
+
       // Log rate limit violation
       await supabase.rpc('log_security_violation', {
         violation_type: 'rate_limit_exceeded',
@@ -101,39 +228,55 @@ serve(async (req) => {
         details: {
           endpoint,
           current_requests: currentRequests,
-          max_requests: config.maxRequests,
-          window_ms: config.windowMs
+          max_requests: maxRequests,
+          adjusted_limit: maxRequests !== config.maxRequests,
+          original_limit: config.maxRequests,
+          window_ms: config.windowMs,
+          failed_attempts: failedAttempts + 1,
+          retry_after_seconds: retryAfterSeconds,
+          backoff_applied: config.useExponentialBackoff || false,
+          reputation_score: ipReputationData?.reputation_score,
+          risk_level: ipReputationData?.risk_level
         }
       });
 
       return new Response(
         JSON.stringify({ 
           error: "Rate limit exceeded",
-          retryAfter: Math.ceil(config.windowMs / 1000),
-          limit: config.maxRequests,
-          windowMs: config.windowMs
+          retryAfter: retryAfterSeconds,
+          failedAttempts: failedAttempts + 1,
+          limit: maxRequests,
+          windowMs: config.windowMs,
+          exponentialBackoff: config.useExponentialBackoff || false,
+          reputationScore: ipReputationData?.reputation_score,
+          riskLevel: ipReputationData?.risk_level
         }),
         { 
           status: 429, 
           headers: { 
             ...corsHeaders, 
             "Content-Type": "application/json",
-            "Retry-After": Math.ceil(config.windowMs / 1000).toString()
+            "Retry-After": retryAfterSeconds.toString()
           } 
         }
       );
     }
 
-    // Record this request
+    // Record this request with updated metadata
+    const newFailedAttempts = currentRequests + 1;
     const { error: insertError } = await supabase
       .from('api_rate_limits')
       .upsert({
         user_id: userId || null,
         ip_address: ipAddress || null,
         endpoint,
-        request_count: 1,
+        request_count: newFailedAttempts,
         window_start: now.toISOString(),
-        updated_at: now.toISOString()
+        updated_at: now.toISOString(),
+        metadata: {
+          failed_attempts: newFailedAttempts,
+          last_attempt: now.toISOString()
+        }
       }, {
         onConflict: 'user_id,endpoint,window_start',
         ignoreDuplicates: false
@@ -147,8 +290,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         allowed: true,
-        remaining: config.maxRequests - currentRequests - 1,
-        resetTime: new Date(now.getTime() + config.windowMs).toISOString()
+        remaining: maxRequests - currentRequests - 1,
+        resetTime: new Date(now.getTime() + config.windowMs).toISOString(),
+        currentAttempts: newFailedAttempts,
+        reputationScore: ipReputationData?.reputation_score,
+        riskLevel: ipReputationData?.risk_level,
+        adjustedLimit: maxRequests !== config.maxRequests
       }),
       { 
         status: 200, 

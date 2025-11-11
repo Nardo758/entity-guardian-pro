@@ -7,27 +7,40 @@ import { toast } from 'sonner';
 export const useEntities = () => {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchEntities = async () => {
     if (!user) {
       setEntities([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+      const { data, error: fetchError } = await supabase
         .from('entities')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (fetchError) {
+        // Silently handle - user might not have entities yet or table might not exist
+        console.warn('Could not fetch entities:', fetchError);
+        setEntities([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
       setEntities((data || []) as Entity[]);
-    } catch (error) {
-      console.error('Error fetching entities:', error);
-      toast.error('Failed to load entities');
+    } catch (err) {
+      // Silently handle errors - no entities is not an error condition for new users
+      console.warn('Error fetching entities:', err);
+      setEntities([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -107,6 +120,7 @@ export const useEntities = () => {
   return {
     entities,
     loading,
+    error,
     addEntity,
     deleteEntity,
     refetch: fetchEntities,

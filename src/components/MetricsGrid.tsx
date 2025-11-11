@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Building, DollarSign, User, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -12,7 +12,7 @@ interface MetricsGridProps {
   };
 }
 
-export const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
+export const MetricsGrid = memo<MetricsGridProps>(({ metrics }) => {
   const metricCards = [
     {
       title: 'Active Entities',
@@ -120,4 +120,6 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
       })}
     </div>
   );
-};
+});
+
+MetricsGrid.displayName = 'MetricsGrid';

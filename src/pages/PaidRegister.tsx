@@ -89,8 +89,8 @@ const PaidRegister = () => {
       toast.error('Passwords do not match');
       return false;
     }
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters long');
+    if (formData.password.length < 8) {
+      toast.error('Password must be at least 8 characters long');
       return false;
     }
     if (!formData.agreeToTerms) {
@@ -124,6 +124,9 @@ const PaidRegister = () => {
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    } else {
+      // If on first step, navigate back to signup page
+      navigate('/signup');
     }
   };
 
@@ -163,8 +166,8 @@ const PaidRegister = () => {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="text-center">
-        {/* <h2 className="text-2xl font-bold">Let's get to know you</h2>
-        <p className="text-muted-foreground">Tell us about yourself and your business</p> */}
+        <h2 className="text-2xl font-bold">Let's get to know you</h2>
+        <p className="text-muted-foreground">Tell us about yourself and your business</p>
       </div>
 
       <div className="space-y-4">
@@ -388,9 +391,11 @@ const PaidRegister = () => {
       <div className="w-full max-w-2xl space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <Building className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <Link to="/" className="inline-block hover:opacity-80 transition-opacity cursor-pointer">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <Building className="h-8 w-8 text-primary-foreground" />
+            </div>
+          </Link>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
             Join Entity Renewal Pro
           </h1>
@@ -436,7 +441,7 @@ const PaidRegister = () => {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 1 || isLoading}
+                disabled={isLoading}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back

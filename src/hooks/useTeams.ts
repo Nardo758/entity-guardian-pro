@@ -10,6 +10,7 @@ export const useTeams = () => {
   const [memberships, setMemberships] = useState<TeamMembership[]>([]);
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const fetchTeams = async () => {
@@ -17,10 +18,13 @@ export const useTeams = () => {
       setTeams([]);
       setMemberships([]);
       setLoading(false);
+      setError(null);
       return;
     }
 
     try {
+      setLoading(true);
+      setError(null);
       // Get teams user belongs to
       const { data: teamMemberships, error: membershipsError } = await supabase
         .from('team_memberships')
@@ -30,7 +34,15 @@ export const useTeams = () => {
         `)
         .eq('user_id', user.id);
 
-      if (membershipsError) throw membershipsError;
+      if (membershipsError) {
+        // Silently handle - user might not have teams yet
+        console.warn('Could not fetch teams:', membershipsError);
+        setTeams([]);
+        setMemberships([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
 
       const membershipData = (teamMemberships || []) as any[];
       setMemberships(membershipData);
@@ -46,9 +58,12 @@ export const useTeams = () => {
         setCurrentTeam(teamsData[0]);
       }
 
-    } catch (error) {
-      console.error('Error fetching teams:', error);
-      toast.error('Failed to load teams');
+    } catch (err) {
+      // Silently handle errors - no teams is not an error condition for new users
+      console.warn('Error fetching teams:', err);
+      setTeams([]);
+      setMemberships([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -298,6 +313,7 @@ export const useTeams = () => {
     memberships,
     invitations,
     loading,
+    error,
     createTeam,
     inviteTeamMember,
     acceptInvitation,

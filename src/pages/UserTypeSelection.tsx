@@ -9,9 +9,11 @@ const UserTypeSelection = () => {
       <div className="w-full max-w-4xl space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <Building className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <Link to="/" className="inline-block hover:opacity-80 transition-opacity cursor-pointer">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <Building className="h-8 w-8 text-primary-foreground" />
+            </div>
+          </Link>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent mb-4">
             Choose Your Account Type
           </h1>
@@ -57,23 +59,14 @@ const UserTypeSelection = () => {
                 </div>
               </div>
               
-              <div className="pt-4 space-y-3">
+              <div className="pt-4">
                 <Button 
                   asChild 
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-lg py-6"
                 >
-                  <Link to="/paid-register">
-                    Start Free Trial
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button 
-                  asChild 
-                  variant="outline" 
-                  className="w-full"
-                >
                   <Link to="/register">
-                    Create Free Account
+                    Create an Account
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
               </div>
@@ -121,7 +114,7 @@ const UserTypeSelection = () => {
                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-lg py-6"
                 >
                   <Link to="/agent-signup">
-                    Join Agent Network
+                    Create an Account
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
