@@ -73,42 +73,15 @@ serve(async (req) => {
 
     // Check for Stripe secret key
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    console.log("Stripe key exists:", !!stripeKey);
-    console.log("Stripe key length:", stripeKey?.length || 0);
-    console.log("Stripe key starts with sk_:", stripeKey?.startsWith('sk_') || false);
-    
     if (!stripeKey) {
-      console.error("STRIPE_SECRET_KEY is not configured");
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
-    
-    if (!stripeKey.startsWith('sk_')) {
-      console.error("STRIPE_SECRET_KEY format is invalid");
-      throw new Error("STRIPE_SECRET_KEY format is invalid");
-    }
-    
     logStep("Stripe key found");
 
-    // Initialize Stripe with better error handling
-    let stripe;
-    try {
-      stripe = new Stripe(stripeKey, {
-        apiVersion: "2023-10-16",
-      });
-      logStep("Stripe initialized successfully");
-      
-      // Test Stripe connection
-      try {
-        await stripe.balance.retrieve();
-        logStep("Stripe connection test successful");
-      } catch (testError) {
-        logStep("Stripe connection test failed", { error: testError.message }, 'error');
-        throw new Error(`Stripe API key validation failed: ${testError.message}`);
-      }
-    } catch (error) {
-      logStep("Stripe initialization failed", { error: error.message }, 'error');
-      throw new Error(`Failed to initialize Stripe: ${error.message}`);
-    }
+    // Initialize Stripe
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16",
+    });
 
     // Create or retrieve Stripe customer
     let customer;

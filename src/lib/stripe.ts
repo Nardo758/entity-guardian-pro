@@ -1,36 +1,46 @@
 import { loadStripe } from '@stripe/stripe-js';
 
-// Get Stripe publishable key securely via edge function
-const getStripePublishableKey = async (): Promise<string> => {
-  // Always use edge function for security - no hardcoded keys
-  const fallbackKey = 'pk_test_placeholder_removed_for_security';
-  
+// Lazy-loaded and cacheable Stripe loader. Resolves to null on failure.
+let cachedStripePromise: Promise<import('@stripe/stripe-js').Stripe | null> | null = null;
+
+async function createStripePromise() {
   try {
-    // Always get the key securely from Supabase edge function
     const response = await fetch('https://wcuxqopfcgivypbiynjp.supabase.co/functions/v1/get-stripe-config', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
-    
+
+    if (!response.ok) {
+      console.error('Failed to fetch Stripe config:', response.status);
+      return null;
+    }
+
     const data = await response.json();
     if (!data.publishableKey) {
-      throw new Error('No publishable key returned from secure endpoint');
+      console.error('No publishable key returned from server');
+      return null;
     }
 
     return loadStripe(data.publishableKey);
   } catch (error) {
-    console.error('Failed to get secure Stripe key:', error);
-    throw new Error('Unable to initialize Stripe - please check configuration');
+    console.error('Failed to initialize Stripe:', error);
+    return null;
   }
-};
+}
 
-// Initialize Stripe with secure key loading
-const initializeStripe = async () => {
-  const key = await getStripePublishableKey();
-  return (await import('@stripe/stripe-js')).loadStripe(key);
-};
+export function getFreshStripePromise() {
+  // Always create a new promise (useful after config changes)
+  return createStripePromise();
+}
 
-export const stripePromise = initializeStripe();
+export function getStripePromise() {
+  // Cache between renders to avoid multiple loads
+  if (!cachedStripePromise) cachedStripePromise = createStripePromise();
+  return cachedStripePromise;
+}
+
+// Backwards compatibility export (may resolve to null)
+export const stripePromise = getStripePromise();
 
 export const STRIPE_PRICING_TIERS = {
   starter: {
