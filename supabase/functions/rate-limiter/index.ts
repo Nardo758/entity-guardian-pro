@@ -12,16 +12,18 @@ interface RateLimitConfig {
   endpoint: string;
   useExponentialBackoff?: boolean;
   baseDelaySeconds?: number;
+  disableReputationAdjustment?: boolean;
 }
 
 const RATE_LIMITS: { [key: string]: RateLimitConfig } = {
   'default': { windowMs: 60000, maxRequests: 100, endpoint: 'default' },
   'auth': { 
-    windowMs: 3600000, // 1 hour instead of 5 minutes
-    maxRequests: 15, // 15 attempts per hour instead of 5 per 5 minutes
+    windowMs: 3600000, // 1 hour window
+    maxRequests: 15, // 15 attempts per hour - minimum threshold before blocking
     endpoint: 'auth',
-    useExponentialBackoff: true,
-    baseDelaySeconds: 10 // Start with 10 seconds, doubles each time
+    useExponentialBackoff: false, // Disabled to allow full 15 attempts
+    baseDelaySeconds: 10,
+    disableReputationAdjustment: true // Don't reduce limit based on IP reputation
   },
   'invitation': { windowMs: 3600000, maxRequests: 20, endpoint: 'invitation' },
   'payment': { windowMs: 300000, maxRequests: 10, endpoint: 'payment' },
@@ -119,8 +121,8 @@ serve(async (req) => {
     const config = RATE_LIMITS[endpoint] || RATE_LIMITS['default'];
     let maxRequests = config.maxRequests;
     
-    // Adjust rate limits based on IP reputation
-    if (ipReputationData) {
+    // Adjust rate limits based on IP reputation (unless disabled for this endpoint)
+    if (ipReputationData && !(config as any).disableReputationAdjustment) {
       const score = ipReputationData.reputation_score;
       if (score < 30) {
         // Critical risk: 25% of normal limits
@@ -135,6 +137,8 @@ serve(async (req) => {
       // Low risk (>=80): Use normal limits
       
       console.log(`IP ${ipAddress} reputation: ${score}, adjusted limit: ${maxRequests} (from ${config.maxRequests})`);
+    } else if ((config as any).disableReputationAdjustment) {
+      console.log(`IP reputation adjustments disabled for ${endpoint}, using full limit: ${maxRequests}`);
     }
 
     const now = new Date();
