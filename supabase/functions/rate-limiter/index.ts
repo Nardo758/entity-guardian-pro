@@ -146,18 +146,6 @@ serve(async (req) => {
       .delete()
       .lt('window_start', windowStart.toISOString());
 
-    // Build identifier for tracking
-    const identifier = userId || ipAddress;
-    if (!identifier) {
-      return new Response(
-        JSON.stringify({ error: "Either userId or ipAddress is required" }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" } 
-        }
-      );
-    }
-
     // Check current rate limit
     let query = supabase
       .from('api_rate_limits')
