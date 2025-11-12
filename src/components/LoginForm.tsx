@@ -22,6 +22,22 @@ const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
+  const [currentIP, setCurrentIP] = useState<string | null>(null);
+  const [resettingIP, setResettingIP] = useState(false);
+
+  // Fetch current IP on mount
+  React.useEffect(() => {
+    const fetchIP = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        setCurrentIP(data.ip);
+      } catch (error) {
+        console.warn('Could not determine client IP:', error);
+      }
+    };
+    fetchIP();
+  }, []);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -30,6 +46,47 @@ const LoginForm: React.FC = () => {
       password: ''
     }
   });
+
+  const handleResetIPBlock = async () => {
+    if (!currentIP) {
+      toast({
+        title: "Error",
+        description: "Could not determine your IP address",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setResettingIP(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-ip-reputation', {
+        body: { ipAddress: currentIP }
+      });
+
+      if (error) {
+        toast({
+          title: "Failed to reset IP block",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        setIsLocked(false);
+        setLockoutTime(null);
+        toast({
+          title: "IP Block Reset",
+          description: "Your IP has been unblocked. You can now try logging in again.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset IP block",
+        variant: "destructive"
+      });
+    } finally {
+      setResettingIP(false);
+    }
+  };
 
   const handleResendVerification = async () => {
     const email = form.getValues('email');
@@ -224,8 +281,23 @@ const LoginForm: React.FC = () => {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Progressive Security Lockout</AlertTitle>
-                <AlertDescription>
-                  Multiple failed attempts detected. Retry in <strong>{Math.ceil((lockoutTime - Date.now()) / 1000)}</strong> seconds. Each additional failed attempt increases the wait time.
+                <AlertDescription className="space-y-2">
+                  <p>
+                    Multiple failed attempts detected. Retry in <strong>{Math.ceil((lockoutTime - Date.now()) / 1000)}</strong> seconds. Each additional failed attempt increases the wait time.
+                  </p>
+                  {currentIP && (
+                    <p className="text-xs">Your IP: {currentIP}</p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetIPBlock}
+                    disabled={resettingIP || !currentIP}
+                    className="mt-2"
+                  >
+                    {resettingIP ? 'Resetting...' : 'Reset IP Block (Dev)'}
+                  </Button>
                 </AlertDescription>
               </Alert>
             )}
