@@ -158,10 +158,10 @@ const Register = () => {
         }
       } else {
         toast({
-          title: "Account created successfully!",
-          description: "Please check your email to verify your account, then sign in.",
+          title: "Account Created!",
+          description: "Now let's set up your role.",
         });
-        navigate("/login");
+        navigate("/role-selection");
       }
     } catch (error: any) {
       toast({
