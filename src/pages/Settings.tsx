@@ -22,12 +22,16 @@ import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminMFA } from "@/hooks/useAdminMFA";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useTierPermissions } from "@/hooks/useTierPermissions";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { hasAdminAccess, isAdmin } = useAdminAccess();
   const { isMFAEnabled } = useAdminMFA();
   const { user, profile: authProfile } = useAuth();
+  const { subscription, loading: subLoading, openCustomerPortal } = useSubscription();
+  const { currentTier } = useTierPermissions();
   const [showMFASetup, setShowMFASetup] = useState(false);
   const [settingsProfile, setSettingsProfile] = useState({
     first_name: "",
@@ -150,7 +154,7 @@ const Settings = () => {
                     <div>
                       <p className="font-semibold text-sm">{(settingsProfile.first_name + ' ' + settingsProfile.last_name).trim()}</p>
                       <p className="text-xs text-muted-foreground">{settingsProfile.role}</p>
-                      <Badge variant="secondary" className="text-xs mt-1">Pro Plan</Badge>
+                      <Badge variant="secondary" className="text-xs mt-1 capitalize">{currentTier}</Badge>
                     </div>
                   </div>
                 </div>
@@ -322,36 +326,43 @@ const Settings = () => {
                     <CardDescription>Manage your subscription and payment methods</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-success">Pro Plan</h3>
-                          <p className="text-sm text-muted-foreground">$49/month • Next billing: Jan 15, 2024</p>
-                        </div>
-                        <Badge className="bg-success text-white">Active</Badge>
-                      </div>
-                    </div>
-                    <Separator />
-                    <div className="space-y-4">
-                      <Label>Payment Method</Label>
-                      <div className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-5 bg-primary rounded flex items-center justify-center">
-                            <span className="text-xs font-bold text-white">••••</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">•••• •••• •••• 4242</p>
-                            <p className="text-sm text-muted-foreground">Expires 12/2025</p>
+                    {subLoading ? (
+                      <div className="p-4 text-center text-muted-foreground">Loading subscription...</div>
+                    ) : subscription.subscribed ? (
+                      <>
+                        <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-semibold text-success capitalize">{subscription.subscription_tier || currentTier} Plan</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {subscription.subscription_end 
+                                  ? `Next billing: ${new Date(subscription.subscription_end).toLocaleDateString()}`
+                                  : 'Active subscription'}
+                              </p>
+                            </div>
+                            <Badge className="bg-success text-white">Active</Badge>
                           </div>
                         </div>
-                        <Button variant="outline" size="sm">Update</Button>
+                        <Separator />
+                        <div className="space-y-4">
+                          <div className="flex flex-col gap-3">
+                            <Button onClick={openCustomerPortal} className="w-full">
+                              Manage Subscription
+                            </Button>
+                            <p className="text-xs text-muted-foreground text-center">
+                              Update payment method, view invoices, and manage your billing through Stripe
+                            </p>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-4 bg-muted/50 border rounded-lg text-center">
+                        <p className="text-sm text-muted-foreground mb-4">No active subscription</p>
+                        <Button onClick={() => navigate('/billing')} variant="default">
+                          View Plans
+                        </Button>
                       </div>
-                    </div>
-                    <Separator />
-                    <div className="flex gap-2">
-                      <Button variant="outline">View Invoices</Button>
-                      <Button variant="outline">Download Receipt</Button>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -371,6 +382,18 @@ const Settings = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={showMFASetup} onOpenChange={setShowMFASetup}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Multi-Factor Authentication</DialogTitle>
+            <DialogDescription>
+              Enhance your account security with two-factor authentication
+            </DialogDescription>
+          </DialogHeader>
+          <MFASetup onComplete={() => setShowMFASetup(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
