@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          id: string
+          reason: string | null
+          requested_at: string
+          scheduled_deletion_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_deletion_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          reason?: string | null
+          requested_at?: string
+          scheduled_deletion_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_audit_log: {
         Row: {
           action_category: string
@@ -310,6 +337,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           company: string | null
           company_size: string | null
           created_at: string
@@ -323,6 +351,7 @@ export type Database = {
           user_type: string | null
         }
         Insert: {
+          avatar_url?: string | null
           company?: string | null
           company_size?: string | null
           created_at?: string
@@ -336,6 +365,7 @@ export type Database = {
           user_type?: string | null
         }
         Update: {
+          avatar_url?: string | null
           company?: string | null
           company_size?: string | null
           created_at?: string
@@ -672,6 +702,48 @@ export type Database = {
           created_by?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          browser: string | null
+          created_at: string
+          device_name: string | null
+          device_type: string | null
+          id: string
+          ip_address: unknown
+          is_current: boolean | null
+          last_active: string
+          location: string | null
+          os: string | null
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          created_at?: string
+          device_name?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: unknown
+          is_current?: boolean | null
+          last_active?: string
+          location?: string | null
+          os?: string | null
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          created_at?: string
+          device_name?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: unknown
+          is_current?: boolean | null
+          last_active?: string
+          location?: string | null
+          os?: string | null
           user_id?: string
         }
         Relationships: []

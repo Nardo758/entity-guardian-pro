@@ -4,20 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Bell, User, Shield, CreditCard, Users, ArrowLeft } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Bell, User, Shield, CreditCard, Users, ArrowLeft, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { NotificationPreferences } from "@/components/NotificationPreferences";
 import AdminRoleManager from "@/components/AdminRoleManager";
-import SecurityAuditLog from "@/components/SecurityAuditLog";
 import { AdminAuditDashboard } from "@/components/AdminAuditDashboard";
 import MFASetup from "@/components/MFASetup";
 import { MFARecoveryCodesManager } from "@/components/MFARecoveryCodesManager";
+import { PasswordChangeDialog } from "@/components/settings/PasswordChangeDialog";
+import { AvatarUpload } from "@/components/settings/AvatarUpload";
+import { EmailVerificationStatus } from "@/components/settings/EmailVerificationStatus";
+import { ActiveSessions } from "@/components/settings/ActiveSessions";
+import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminMFA } from "@/hooks/useAdminMFA";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +35,8 @@ const Settings = () => {
   const { subscription, loading: subLoading, openCustomerPortal } = useSubscription();
   const { currentTier } = useTierPermissions();
   const [showMFASetup, setShowMFASetup] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [settingsProfile, setSettingsProfile] = useState({
     first_name: "",
     last_name: "",
@@ -50,27 +54,17 @@ const Settings = () => {
     const lastName = (authProfile as any)?.last_name || "";
     const company = (authProfile as any)?.company || "";
     const phone = (authProfile as any)?.phone_number || "";
+    const avatar = (authProfile as any)?.avatar_url || "";
     setSettingsProfile(prev => ({
       ...prev,
       email: authEmail,
       first_name: firstName,
       last_name: lastName,
       company,
-      phone
+      phone,
+      avatar
     }));
   }, [user, authProfile]);
-
-  const [notifications, setNotifications] = useState({
-    emailAlerts: true,
-    pushNotifications: true,
-    weeklyReports: true,
-    urgentOnly: false
-  });
-
-  const [security, setSecurity] = useState({
-    twoFactorEnabled: true,
-    lastPasswordChange: "2024-01-15"
-  });
 
   const handleSaveProfile = async () => {
     try {
@@ -109,14 +103,6 @@ const Settings = () => {
     }
   };
 
-  const handleNotificationChange = (key: string, value: boolean) => {
-    setNotifications(prev => ({ ...prev, [key]: value }));
-    toast({
-      title: "Notification Settings Updated",
-      description: "Your notification preferences have been saved.",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
       <div className="container mx-auto px-4 py-8">
@@ -142,21 +128,17 @@ const Settings = () => {
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
             <Card>
-              <CardContent className="p-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={settingsProfile.avatar} />
-                      <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                        {(settingsProfile.first_name + ' ' + settingsProfile.last_name).trim().split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold text-sm">{(settingsProfile.first_name + ' ' + settingsProfile.last_name).trim()}</p>
-                      <p className="text-xs text-muted-foreground">{settingsProfile.role}</p>
-                      <Badge variant="secondary" className="text-xs mt-1 capitalize">{currentTier}</Badge>
-                    </div>
-                  </div>
+              <CardContent className="p-6">
+                <AvatarUpload
+                  avatarUrl={settingsProfile.avatar}
+                  onAvatarChange={(url) => setSettingsProfile(prev => ({ ...prev, avatar: url || "" }))}
+                  userName={`${settingsProfile.first_name} ${settingsProfile.last_name}`.trim()}
+                />
+                <Separator className="my-4" />
+                <div className="text-center space-y-1">
+                  <p className="font-semibold">{`${settingsProfile.first_name} ${settingsProfile.last_name}`.trim()}</p>
+                  <p className="text-sm text-muted-foreground">{settingsProfile.email}</p>
+                  <Badge variant="secondary" className="mt-2 capitalize">{currentTier}</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -203,6 +185,11 @@ const Settings = () => {
                     <CardDescription>Update your personal and company information</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <EmailVerificationStatus 
+                      isVerified={user?.email_confirmed_at != null}
+                      email={settingsProfile.email}
+                    />
+                    <Separator />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="first_name">First Name</Label>
@@ -271,15 +258,15 @@ const Settings = () => {
                         <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Badge variant={security.twoFactorEnabled ? "default" : "secondary"}>
-                          {security.twoFactorEnabled ? "Enabled" : "Disabled"}
+                        <Badge variant={isMFAEnabled ? "default" : "secondary"}>
+                          {isMFAEnabled ? "Enabled" : "Disabled"}
                         </Badge>
                         <Button 
-                          variant={security.twoFactorEnabled ? "outline" : "default"} 
+                          variant={isMFAEnabled ? "outline" : "default"} 
                           size="sm"
                           onClick={() => setShowMFASetup(true)}
                         >
-                          {security.twoFactorEnabled ? "Manage" : "Enable MFA"}
+                          {isMFAEnabled ? "Manage" : "Enable MFA"}
                         </Button>
                       </div>
                     </div>
@@ -288,33 +275,50 @@ const Settings = () => {
                       <div>
                         <Label>Password</Label>
                         <p className="text-sm text-muted-foreground">
-                          Last changed: {new Date(security.lastPasswordChange).toLocaleDateString()}
+                          Keep your password strong and unique
                         </p>
                       </div>
-                      <Button variant="outline">Change Password</Button>
-                    </div>
-                    <Separator />
-                    <div className="space-y-4">
-                      <Label>Active Sessions</Label>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <p className="font-medium">Current Session</p>
-                            <p className="text-sm text-muted-foreground">Chrome on Windows • New York, NY</p>
-                          </div>
-                          <Badge variant="outline" className="text-success">Active</Badge>
-                        </div>
-                      </div>
+                      <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
+                        Change Password
+                      </Button>
                     </div>
 
                     {isAdmin && isMFAEnabled && (
                       <>
                         <Separator />
-                        <div className="pt-4">
+                        <div>
                           <MFARecoveryCodesManager />
                         </div>
                       </>
                     )}
+                  </CardContent>
+                </Card>
+
+                <ActiveSessions />
+
+                <Card className="border-destructive/50">
+                  <CardHeader>
+                    <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                    <CardDescription>
+                      Irreversible actions that affect your account
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Delete Account</p>
+                        <p className="text-sm text-muted-foreground">
+                          Permanently delete your account and all associated data
+                        </p>
+                      </div>
+                      <Button 
+                        variant="destructive"
+                        onClick={() => setShowDeleteDialog(true)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Account
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -394,6 +398,17 @@ const Settings = () => {
           <MFASetup onComplete={() => setShowMFASetup(false)} />
         </DialogContent>
       </Dialog>
+
+      <PasswordChangeDialog 
+        open={showPasswordDialog} 
+        onOpenChange={setShowPasswordDialog} 
+      />
+
+      <DeleteAccountDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        userEmail={settingsProfile.email}
+      />
     </div>
   );
 };
