@@ -17,17 +17,17 @@ interface RateLimitConfig {
 const RATE_LIMITS: { [key: string]: RateLimitConfig } = {
   'default': { windowMs: 60000, maxRequests: 100, endpoint: 'default' },
   'auth': { 
-    windowMs: 300000, 
-    maxRequests: 5, 
+    windowMs: 3600000, // 1 hour instead of 5 minutes
+    maxRequests: 15, // 15 attempts per hour instead of 5 per 5 minutes
     endpoint: 'auth',
     useExponentialBackoff: true,
-    baseDelaySeconds: 5 // Start with 5 seconds, doubles each time
+    baseDelaySeconds: 10 // Start with 10 seconds, doubles each time
   },
-  'invitation': { windowMs: 300000, maxRequests: 10, endpoint: 'invitation' },
-  'payment': { windowMs: 60000, maxRequests: 5, endpoint: 'payment' },
-  'sms-verification': { windowMs: 300000, maxRequests: 3, endpoint: 'sms-verification' },
+  'invitation': { windowMs: 3600000, maxRequests: 20, endpoint: 'invitation' },
+  'payment': { windowMs: 300000, maxRequests: 10, endpoint: 'payment' },
+  'sms-verification': { windowMs: 3600000, maxRequests: 5, endpoint: 'sms-verification' },
   'admin-access': { windowMs: 60000, maxRequests: 50, endpoint: 'admin-access' },
-  'profile-access': { windowMs: 60000, maxRequests: 20, endpoint: 'profile-access' },
+  'profile-access': { windowMs: 60000, maxRequests: 30, endpoint: 'profile-access' },
 };
 
 // Calculate exponential backoff delay
