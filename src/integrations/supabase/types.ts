@@ -56,6 +56,39 @@ export type Database = {
         }
         Relationships: []
       }
+      api_rate_limits: {
+        Row: {
+          endpoint: string
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          request_count: number
+          updated_at: string
+          user_id: string | null
+          window_start: string
+        }
+        Insert: {
+          endpoint: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          request_count?: number
+          updated_at?: string
+          user_id?: string | null
+          window_start: string
+        }
+        Update: {
+          endpoint?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          request_count?: number
+          updated_at?: string
+          user_id?: string | null
+          window_start?: string
+        }
+        Relationships: []
+      }
       "business _owners": {
         Row: {
           company_name: string | null
