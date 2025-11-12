@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EyeIcon, EyeOffIcon, Building, Mail, Lock, User, Building2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EyeIcon, EyeOffIcon, Building, Mail, Lock, User, Building2, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import QuickAccessAuth from "@/components/QuickAccessAuth";
 import PasswordStrengthIndicator from "@/components/ui/PasswordStrengthIndicator";
 
@@ -19,6 +21,9 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [currentIP, setCurrentIP] = useState<string>('');
+  const [resettingIP, setResettingIP] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -35,6 +40,45 @@ const Register = () => {
       navigate("/dashboard");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const fetchIP = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-client-ip');
+        if (!error && data?.ip) {
+          setCurrentIP(data.ip);
+        }
+      } catch (err) {
+        console.error('Failed to fetch IP:', err);
+      }
+    };
+    fetchIP();
+  }, []);
+
+  const handleResetIPBlock = async () => {
+    setResettingIP(true);
+    try {
+      const { error } = await supabase.functions.invoke('reset-ip-reputation', {
+        body: { ipAddress: currentIP }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "IP Block Reset",
+        description: "You can now try registering again.",
+      });
+      setIsRateLimited(false);
+    } catch (err: any) {
+      toast({
+        title: "Failed to reset IP block",
+        description: err.message || "Please try again or contact support.",
+        variant: "destructive"
+      });
+    } finally {
+      setResettingIP(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +122,19 @@ const Register = () => {
       });
 
       if (error) {
+        console.log('Registration error:', error);
+        
+        // Check for rate limiting
+        if ((error as any).retryAfter || error.message?.includes('rate limit') || error.message?.includes('too many')) {
+          setIsRateLimited(true);
+          toast({
+            title: "Rate limit exceeded",
+            description: error.message || "Too many registration attempts. Use the Reset IP Block button below or wait a few minutes.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
         // Check for common error types
         if (error.message?.includes('already registered') || error.message?.includes('already exists') || error.message?.includes('User already registered')) {
           toast({
@@ -86,9 +143,10 @@ const Register = () => {
             variant: "destructive"
           });
         } else if (error.message?.includes('Email rate limit exceeded')) {
+          setIsRateLimited(true);
           toast({
             title: "Too many requests",
-            description: "Please wait a few minutes before trying again.",
+            description: "Please wait a few minutes before trying again or use the Reset IP Block button.",
             variant: "destructive"
           });
         } else {
@@ -161,6 +219,27 @@ const Register = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {isRateLimited && currentIP && (
+              <Alert variant="destructive">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">Registration temporarily blocked</p>
+                    <p className="text-sm mt-1">Your IP: {currentIP}</p>
+                  </div>
+                  <Button
+                    onClick={handleResetIPBlock}
+                    disabled={resettingIP}
+                    variant="outline"
+                    size="sm"
+                    className="ml-4"
+                  >
+                    {resettingIP ? 'Resetting...' : 'Reset IP Block (Dev)'}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-4">
