@@ -468,7 +468,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const rateLimitResult = await checkRateLimit('auth');
     
     if (!rateLimitResult.allowed) {
-      console.warn('Login rate limit exceeded with progressive backoff');
+      console.warn('Login rate limit exceeded');
       
       // Extract reputation data
       const reputationScore = (rateLimitResult as any).reputationScore;

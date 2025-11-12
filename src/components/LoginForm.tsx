@@ -280,10 +280,10 @@ const LoginForm: React.FC = () => {
             {isLocked && lockoutTime && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Progressive Security Lockout</AlertTitle>
+                <AlertTitle>Too Many Attempts</AlertTitle>
                 <AlertDescription className="space-y-2">
                   <p>
-                    Multiple failed attempts detected. Retry in <strong>{Math.ceil((lockoutTime - Date.now()) / 1000)}</strong> seconds. Each additional failed attempt increases the wait time.
+                    Too many login attempts. Retry in <strong>{Math.ceil((lockoutTime - Date.now()) / 1000)}</strong> seconds. Up to 15 attempts per hour are allowed.
                   </p>
                   {currentIP && (
                     <p className="text-xs">Your IP: {currentIP}</p>
