@@ -450,21 +450,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error, data };
       }
       
-      // Immediately ensure profile is created after successful signup
-      if (data.user) {
-        console.log('User created, ensuring profile exists:', data.user.id);
-        const profileCreated = await ensureProfileExists(data.user.id, metadata, 5);
-        
-        if (!profileCreated) {
-          console.error('Failed to create profile after signup');
-          return { 
-            error: { message: 'Account created but profile setup failed. Please contact support.' },
-            data 
-          };
-        }
-        
-        console.log('Profile created successfully after signup');
-      }
+      // Profile is now automatically created by database trigger
+      // No need to manually create it here
+      console.log('User account created successfully:', data.user?.id);
       
       return { error, data };
     } catch (err: any) {
