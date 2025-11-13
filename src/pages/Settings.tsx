@@ -20,6 +20,9 @@ import { AvatarUpload } from "@/components/settings/AvatarUpload";
 import { EmailVerificationStatus } from "@/components/settings/EmailVerificationStatus";
 import { ActiveSessions } from "@/components/settings/ActiveSessions";
 import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
+import { SecurityAlerts } from "@/components/SecurityAlerts";
+import { PaymentMethodManager } from "@/components/payment/PaymentMethodManager";
+import { InvoiceHistory } from "@/components/billing/InvoiceHistory";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminMFA } from "@/hooks/useAdminMFA";
 import { useAuth } from "@/contexts/AuthContext";
@@ -296,6 +299,8 @@ const Settings = () => {
 
                 <ActiveSessions />
 
+                <SecurityAlerts />
+
                 <Card className="border-destructive/50">
                   <CardHeader>
                     <CardTitle className="text-destructive">Danger Zone</CardTitle>
@@ -369,6 +374,10 @@ const Settings = () => {
                     )}
                   </CardContent>
                 </Card>
+
+                <PaymentMethodManager />
+
+                <InvoiceHistory />
               </TabsContent>
 
               {hasAdminAccess && (
