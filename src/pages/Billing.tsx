@@ -295,9 +295,9 @@ const Billing = () => {
                           <Button className="w-full" onClick={handleManageSubscription}>
                             Change Plan
                           </Button>
-                          <Button className="w-full" variant="outline" onClick={() => setActiveTab('payment-methods')}>
-                            Update Payment Method
-                          </Button>
+                            <Button className="w-full" variant="outline" onClick={handleManageSubscription}>
+                              Update Payment Method
+                            </Button>
                         </>
                       ) : (
                         <Button className="w-full" onClick={() => setActiveTab('plans')}>
