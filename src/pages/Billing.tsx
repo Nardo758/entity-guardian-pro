@@ -289,13 +289,18 @@ const Billing = () => {
                         Next billing: {new Date(subscription.subscription_end).toLocaleDateString()}
                       </p>
                     )}
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex flex-col gap-2 mt-4">
                       {subscription.subscribed ? (
-                        <Button className="flex-1" onClick={handleManageSubscription}>
-                          Manage Subscription
-                        </Button>
+                        <>
+                          <Button className="w-full" onClick={handleManageSubscription}>
+                            Change Plan
+                          </Button>
+                          <Button className="w-full" variant="outline" onClick={() => setActiveTab('payment-methods')}>
+                            Update Payment Method
+                          </Button>
+                        </>
                       ) : (
-                        <Button className="flex-1" onClick={() => setActiveTab('plans')}>
+                        <Button className="w-full" onClick={() => setActiveTab('plans')}>
                           Choose Plan
                         </Button>
                       )}
