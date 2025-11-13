@@ -94,18 +94,21 @@ export const useSubscription = () => {
     }
 
     try {
+      toast.loading('Opening billing portal...', { id: 'portal' });
       const { data, error } = await supabase.functions.invoke('customer-portal');
 
       if (error) throw error;
+      if (!data?.url) throw new Error('No portal URL returned');
 
-      // Open customer portal in a new tab
-      window.open(data.url, '_blank');
+      toast.dismiss('portal');
+      // Use same-tab navigation to avoid popup blockers
+      window.location.assign(data.url as string);
     } catch (error) {
       console.error('Error opening customer portal:', error);
-      toast.error('Failed to open customer portal');
+      const message = error instanceof Error ? error.message : 'Failed to open customer portal';
+      toast.error(message, { id: 'portal' });
     }
   };
-
   useEffect(() => {
     checkSubscription();
 
