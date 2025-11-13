@@ -23,6 +23,9 @@ import { DeleteAccountDialog } from "@/components/settings/DeleteAccountDialog";
 import { SecurityAlerts } from "@/components/SecurityAlerts";
 import { PaymentMethodManager } from "@/components/payment/PaymentMethodManager";
 import { InvoiceHistory } from "@/components/billing/InvoiceHistory";
+import { UsageMetrics } from "@/components/billing/UsageMetrics";
+import { SMSVerificationStatus } from "@/components/security/SMSVerificationStatus";
+import { DataExport } from "@/components/settings/DataExport";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminMFA } from "@/hooks/useAdminMFA";
 import { useAuth } from "@/contexts/AuthContext";
@@ -299,6 +302,8 @@ const Settings = () => {
 
                 <ActiveSessions />
 
+                <SMSVerificationStatus />
+
                 <SecurityAlerts />
 
                 <Card className="border-destructive/50">
@@ -375,9 +380,13 @@ const Settings = () => {
                   </CardContent>
                 </Card>
 
+                <UsageMetrics />
+
                 <PaymentMethodManager />
 
                 <InvoiceHistory />
+
+                <DataExport />
               </TabsContent>
 
               {hasAdminAccess && (
