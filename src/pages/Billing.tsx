@@ -32,20 +32,11 @@ import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
 import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
 import { CheckoutModal } from '@/components/payment/CheckoutModal';
+import { InvoiceHistory } from '@/components/billing/InvoiceHistory';
+import { UsageMetrics } from '@/components/billing/UsageMetrics';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  date: string;
-  dueDate: string;
-  amount: number;
-  status: 'Paid' | 'Pending' | 'Overdue' | 'Draft';
-  description: string;
-  downloadUrl: string;
-}
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -79,20 +70,6 @@ const Billing = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Mock invoices data
-  const invoices: Invoice[] = [
-    {
-      id: '1',
-      invoiceNumber: 'INV-2024-001',
-      date: '2024-08-15',
-      dueDate: '2024-08-30',
-      amount: 99.99,
-      status: 'Paid',
-      description: 'Professional Plan - Monthly',
-      downloadUrl: '#'
-    }
-  ];
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Paid': case 'Active': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
@@ -103,9 +80,6 @@ const Billing = () => {
     }
   };
 
-  const handleDownload = (invoice: Invoice) => {
-    toast.success(`Downloading ${invoice.invoiceNumber}`);
-  };
 
   const handleUpgradeClick = (tier: string) => {
     selectPlan(tier, selectedBilling);
@@ -384,46 +358,7 @@ const Billing = () => {
             </TabsContent>
 
             <TabsContent value="invoices" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Invoice History</CardTitle>
-                  <CardDescription>
-                    View and download your past invoices
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {invoices.length > 0 ? (
-                    <div className="space-y-4">
-                      {invoices.map((invoice) => (
-                        <div key={invoice.id} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium">{invoice.invoiceNumber}</div>
-                              <div className="text-sm text-muted-foreground">{invoice.description}</div>
-                              <div className="text-sm text-muted-foreground">{invoice.date}</div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-bold">${invoice.amount}</div>
-                              <Badge className={getStatusColor(invoice.status)}>
-                                {invoice.status}
-                              </Badge>
-                              <div className="flex gap-2 mt-2">
-                                <Button variant="ghost" size="sm" onClick={() => handleDownload(invoice)}>
-                                  <Download className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">No invoices available</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <InvoiceHistory />
             </TabsContent>
 
             <TabsContent value="payment-methods" className="space-y-6">
@@ -431,52 +366,7 @@ const Billing = () => {
             </TabsContent>
 
             <TabsContent value="usage" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Usage Statistics</CardTitle>
-                  <CardDescription>
-                    Track your plan usage and limits
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">Entities Tracked</span>
-                        <span className="text-sm text-muted-foreground">
-                          5 / {subscription.subscription_tier === 'Unlimited' ? 'Unlimited' : 
-                               pricingTiers.find(t => t.name === subscription.subscription_tier)?.entities || 'N/A'}
-                        </span>
-                      </div>
-                      <Progress value={subscription.subscription_tier === 'Unlimited' ? 10 : 20} />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">API Calls</span>
-                        <span className="text-sm text-muted-foreground">1,247 / 10,000</span>
-                      </div>
-                      <Progress value={12.47} />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">Team Members</span>
-                        <span className="text-sm text-muted-foreground">2 / 5</span>
-                      </div>
-                      <Progress value={40} />
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">Storage Used</span>
-                        <span className="text-sm text-muted-foreground">0.5 GB / 5 GB</span>
-                      </div>
-                      <Progress value={10} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <UsageMetrics />
             </TabsContent>
           </Tabs>
         </div>
