@@ -58,10 +58,10 @@ serve(async (req) => {
     }
     logStep("Found Stripe customer", { customerId });
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const appOrigin = req.headers.get("x-app-origin") || req.headers.get("origin") || "http://localhost:3000";
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/billing`,
+      return_url: `${appOrigin}/settings`,
     });
     logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
 

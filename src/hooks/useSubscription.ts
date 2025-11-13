@@ -95,7 +95,17 @@ export const useSubscription = () => {
 
     try {
       toast.loading('Opening billing portal...', { id: 'portal' });
-      const { data, error } = await supabase.functions.invoke('customer-portal');
+
+      // Ensure we have a fresh access token and pass the app origin explicitly
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          'x-app-origin': window.location.origin,
+        },
+      });
 
       if (error) throw error;
       if (!data?.url) throw new Error('No portal URL returned');
