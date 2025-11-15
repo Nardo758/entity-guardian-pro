@@ -1,14 +1,32 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Building, LayoutDashboard, Plus, FileText, CreditCard, Calendar, Users,
-  Settings, Crown, Menu, ChevronLeft, ChevronRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sidebar, SidebarContent, SidebarInset, SidebarProvider, SidebarTrigger, SidebarRail, useSidebar } from '@/components/ui/sidebar';
-import { TeamSwitcher } from '@/components/TeamSwitcher';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
-import { useSubscription } from '@/hooks/useSubscription';
+  Building,
+  LayoutDashboard,
+  Plus,
+  FileText,
+  CreditCard,
+  Calendar,
+  Users,
+  Settings,
+  Crown,
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarRail,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { TeamSwitcher } from "@/components/TeamSwitcher";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
+import { useSubscription } from "@/hooks/useSubscription";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -20,19 +38,24 @@ const DashboardSidebar = () => {
   const { isAdmin } = useAdminAccess();
   const { subscription } = useSubscription();
   const { state, toggleSidebar } = useSidebar();
-  const collapsed = state === 'collapsed';
+  const collapsed = state === "collapsed";
 
   const navigationItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { name: 'Entities', icon: Building, path: '/entities' },
-    { name: 'Documents', icon: FileText, path: '/documents' },
-    { name: 'Payments', icon: CreditCard, path: '/payments' },
-    { name: 'Calendar', icon: Calendar, path: '/calendar' },
-    { name: 'Agents', icon: Users, path: '/agents' },
+    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "Entities", icon: Building, path: "/entities" },
+    { name: "Documents", icon: FileText, path: "/documents" },
+    { name: "Payments", icon: CreditCard, path: "/payments" },
+    { name: "Calendar", icon: Calendar, path: "/calendar" },
+    { name: "Agents", icon: Users, path: "/agents" },
+    { name: "Settings", icon: Settings, path: "/settings" },
   ];
 
   if (isAdmin) {
-    navigationItems.push({ name: 'Admin', icon: Crown, path: '/admin-dashboard' });
+    navigationItems.push({
+      name: "Admin",
+      icon: Crown,
+      path: "/admin-dashboard",
+    });
   }
 
   const isActive = (path: string) => location.pathname === path;
@@ -41,25 +64,32 @@ const DashboardSidebar = () => {
     <Sidebar
       collapsible="icon"
       className="transition-all duration-300 z-50"
-      style={{
-        '--sidebar-width-icon': '4.5rem',
-      } as React.CSSProperties}
+      style={
+        {
+          "--sidebar-width-icon": "4.5rem",
+        } as React.CSSProperties
+      }
     >
       <SidebarRail className="z-50" />
       <SidebarContent className="flex flex-col h-full bg-sidebar-background border-r border-sidebar-border z-50">
         {/* Logo Section */}
-        <div className={`relative w-full flex items-center border-b border-sidebar-border ${collapsed
-            ? 'flex-col gap-2 px-2 py-3 justify-center'
-            : 'gap-3 p-4'
-          }`}>
+        <div
+          className={`relative w-full flex items-center border-b border-sidebar-border ${
+            collapsed ? "flex-col gap-2 px-2 py-3 justify-center" : "gap-3 p-4"
+          }`}
+        >
           <div className="bg-primary rounded-xl p-2 flex-shrink-0">
             <Building className="h-5 w-5 text-primary-foreground" />
           </div>
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <h1 className="font-bold text-lg text-sidebar-foreground truncate">Entity Renewal Pro</h1>
-              <p className="text-xs text-sidebar-foreground/60 truncate">Business Management</p>
+              <h1 className="font-bold text-lg text-sidebar-foreground truncate">
+                Entity Renewal Pro
+              </h1>
+              <p className="text-xs text-sidebar-foreground/60 truncate">
+                Business Management
+              </p>
             </div>
           )}
 
@@ -111,16 +141,20 @@ const DashboardSidebar = () => {
             <button
               key={item.name}
               onClick={() => navigate(item.path)}
-              className={`flex items-center gap-3 w-full px-3 py-2.5 text-left rounded-lg transition-all duration-200 group ${isActive(item.path)
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm'
-                  : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'
-                } ${collapsed ? 'justify-center' : ''}`}
+              className={`flex items-center gap-3 w-full px-3 py-2.5 text-left rounded-lg transition-all duration-200 group ${
+                isActive(item.path)
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
+                  : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              } ${collapsed ? "justify-center" : ""}`}
               title={collapsed ? item.name : undefined}
             >
-              <item.icon className={`h-4 w-4 flex-shrink-0 ${isActive(item.path)
-                  ? 'text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/70 group-hover:text-sidebar-foreground'
-                }`} />
+              <item.icon
+                className={`h-4 w-4 flex-shrink-0 ${
+                  isActive(item.path)
+                    ? "text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                }`}
+              />
               {!collapsed && <span className="text-sm">{item.name}</span>}
             </button>
           ))}
@@ -141,7 +175,7 @@ const DashboardSidebar = () => {
                   variant="outline"
                   size="sm"
                   className="w-full text-xs"
-                  onClick={() => navigate('/billing')}
+                  onClick={() => navigate("/billing")}
                 >
                   Manage Plan
                 </Button>
@@ -150,13 +184,17 @@ const DashboardSidebar = () => {
               <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-2 w-2 rounded-full bg-warning"></div>
-                  <span className="text-sm font-medium text-warning">Free Plan</span>
+                  <span className="text-sm font-medium text-warning">
+                    Free Plan
+                  </span>
                 </div>
-                <p className="text-xs text-sidebar-foreground/60 mb-2">Limited to 3 entities</p>
+                <p className="text-xs text-sidebar-foreground/60 mb-2">
+                  Limited to 3 entities
+                </p>
                 <Button
                   size="sm"
                   className="w-full text-xs"
-                  onClick={() => navigate('/billing')}
+                  onClick={() => navigate("/billing")}
                 >
                   Upgrade Now
                 </Button>
@@ -166,18 +204,16 @@ const DashboardSidebar = () => {
         )}
       </SidebarContent>
     </Sidebar>
-
-
   );
 };
 
-export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
+  children,
+}) => {
   return (
     <SidebarProvider>
       <DashboardSidebar />
-      <SidebarInset className="overflow-hidden">
-        {children}
-      </SidebarInset>
+      <SidebarInset className="overflow-hidden">{children}</SidebarInset>
     </SidebarProvider>
   );
 };
