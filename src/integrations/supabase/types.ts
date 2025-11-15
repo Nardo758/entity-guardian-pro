@@ -149,6 +149,98 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          category: string
+          description: string | null
+          entity_id: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          updated_at: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          description?: string | null
+          entity_id?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          updated_at?: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          entity_id?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          updated_at?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      entities: {
+        Row: {
+          created_at: string
+          formation_date: string | null
+          id: string
+          independent_director_fee: number | null
+          name: string
+          registered_agent_fee: number | null
+          state: string
+          status: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          formation_date?: string | null
+          id?: string
+          independent_director_fee?: number | null
+          name: string
+          registered_agent_fee?: number | null
+          state: string
+          status?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          formation_date?: string | null
+          id?: string
+          independent_director_fee?: number | null
+          name?: string
+          registered_agent_fee?: number | null
+          state?: string
+          status?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ip_reputation: {
         Row: {
           blocked_until: string | null
