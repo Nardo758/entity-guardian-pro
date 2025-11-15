@@ -1,93 +1,127 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  Building, Shield, Bell, Users, TrendingUp, CheckCircle, Star, ArrowRight, Clock,
-  FileText, Zap, Globe, Phone, Mail, Download, Monitor, ChevronDown, User, Settings, LogOut
-} from 'lucide-react';
-import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
-import { usePWA } from '@/hooks/usePWA';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Building,
+  Shield,
+  Bell,
+  Users,
+  TrendingUp,
+  CheckCircle,
+  Star,
+  ArrowRight,
+  Clock,
+  FileText,
+  Zap,
+  Globe,
+  Phone,
+  Mail,
+  Download,
+  Monitor,
+  ChevronDown,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import { STRIPE_PRICING_TIERS } from "@/lib/stripe";
+import { usePWA } from "@/hooks/usePWA";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
-  const Landing = () => {
-    const navigate = useNavigate();
-    const { installApp, isInstallable, isInstalled, isSupported, canInstall, getBrowserInstructions } = usePWA();
-    const { toast } = useToast();
-    const { user, profile, loading, signOut } = useAuth();
+const Landing = () => {
+  const navigate = useNavigate();
+  const {
+    installApp,
+    isInstallable,
+    isInstalled,
+    isSupported,
+    canInstall,
+    getBrowserInstructions,
+  } = usePWA();
+  const { toast } = useToast();
+  const { user, profile, loading, signOut } = useAuth();
 
-    // Redirect authenticated users to their dashboard
-    React.useEffect(() => {
-      if (!loading && user && profile) {
-        // Check if user has a role assigned
-        if (!profile.user_type) {
-          navigate('/role-selection', { replace: true });
-          return;
-        }
-
-        // Redirect based on user type
-        if (profile.user_type === 'registered_agent') {
-          navigate('/agent-dashboard', { replace: true });
-        } else if (profile.is_admin || profile.roles?.includes('admin')) {
-          navigate('/admin-dashboard', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
-      }
-    }, [user, profile, loading, navigate]);
-
-    const handleDesktopDownload = async () => {
-      if (isInstalled) {
-        toast({
-          title: "App Already Installed ✅",
-          description: "Entity Renewal Pro is already installed on your device. Look for it in your apps or desktop.",
-          variant: "default"
-        });
+  // Redirect authenticated users to their dashboard
+  React.useEffect(() => {
+    if (!loading && user && profile) {
+      // Check if user has a role assigned
+      if (!profile.user_type) {
+        navigate("/role-selection", { replace: true });
         return;
       }
 
-      if (!isSupported) {
-        const { browser, instruction } = getBrowserInstructions();
-        toast({
-          title: `Install on ${browser}`,
-          description: instruction,
-          duration: 6000
-        });
-        return;
-      }       
-
-      if (canInstall) {
-        toast({
-          title: "Installing App...",
-          description: "Please wait while we install Entity Renewal Pro to your device.",
-        });
-
-        const success = await installApp();
-        if (success) {
-          toast({
-            title: "App Installed Successfully! 🎉",
-            description: "Entity Renewal Pro has been added to your desktop. You can now access it directly from your device.",
-            duration: 6000
-          });
-        } else {
-          toast({
-            title: "Installation Cancelled",
-            description: "No worries! You can install the app anytime using your browser's menu options.",
-            variant: "destructive"
-          });
-        }
+      // Redirect based on user type
+      if (profile.user_type === "registered_agent") {
+        navigate("/agent-dashboard", { replace: true });
+      } else if (profile.is_admin || profile.roles?.includes("admin")) {
+        navigate("/admin-dashboard", { replace: true });
       } else {
-        const { browser, instruction } = getBrowserInstructions();
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [user, profile, loading, navigate]);
+
+  const handleDesktopDownload = async () => {
+    if (isInstalled) {
+      toast({
+        title: "App Already Installed ✅",
+        description:
+          "Entity Renewal Pro is already installed on your device. Look for it in your apps or desktop.",
+        variant: "default",
+      });
+      return;
+    }
+
+    if (!isSupported) {
+      const { browser, instruction } = getBrowserInstructions();
+      toast({
+        title: `Install on ${browser}`,
+        description: instruction,
+        duration: 6000,
+      });
+      return;
+    }
+
+    if (canInstall) {
+      toast({
+        title: "Installing App...",
+        description:
+          "Please wait while we install Entity Renewal Pro to your device.",
+      });
+
+      const success = await installApp();
+      if (success) {
         toast({
-          title: `Manual Installation - ${browser}`,
-          description: instruction,
-          duration: 8000
+          title: "App Installed Successfully! 🎉",
+          description:
+            "Entity Renewal Pro has been added to your desktop. You can now access it directly from your device.",
+          duration: 6000,
+        });
+      } else {
+        toast({
+          title: "Installation Cancelled",
+          description:
+            "No worries! You can install the app anytime using your browser's menu options.",
+          variant: "destructive",
         });
       }
-    };
+    } else {
+      const { browser, instruction } = getBrowserInstructions();
+      toast({
+        title: `Manual Installation - ${browser}`,
+        description: instruction,
+        duration: 8000,
+      });
+    }
+  };
 
   // User Menu Component
   const UserMenu = () => {
@@ -96,14 +130,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
     React.useEffect(() => {
       const handleClickOutside = (event) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target)
+        ) {
           setIsOpen(false);
         }
       };
 
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }, []);
 
@@ -113,35 +150,37 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
         toast({
           title: "Error signing out",
           description: error.message,
-          variant: "destructive"
+          variant: "destructive",
         });
       } else {
         toast({
           title: "Signed out successfully",
-          description: "You have been signed out of your account."
+          description: "You have been signed out of your account.",
         });
-        navigate('/');
+        navigate("/");
       }
       setIsOpen(false);
     };
 
     const getDisplayName = () => {
-      return user?.user_metadata?.full_name || 
-             user?.user_metadata?.name || 
-             user?.email?.split('@')[0] || 
-             'User';
+      return (
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email?.split("@")[0] ||
+        "User"
+      );
     };
 
     const getInitials = () => {
       if (user?.user_metadata?.full_name) {
         return user.user_metadata.full_name
-          .split(' ')
-          .map(n => n[0])
-          .join('')
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
           .toUpperCase()
           .slice(0, 2);
       }
-      return user?.email ? user.email[0].toUpperCase() : 'U';
+      return user?.email ? user.email[0].toUpperCase() : "U";
     };
 
     return (
@@ -152,8 +191,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
           onClick={() => setIsOpen(!isOpen)}
         >
           <Avatar className="w-8 h-8">
-            <AvatarImage 
-              src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture} 
+            <AvatarImage
+              src={
+                user?.user_metadata?.avatar_url || user?.user_metadata?.picture
+              }
               alt={getDisplayName()}
             />
             <AvatarFallback className="bg-gradient-to-br from-primary to-primary-dark text-primary-foreground">
@@ -168,7 +209,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               {user?.email}
             </span>
           </div>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          />
         </Button>
 
         {isOpen && (
@@ -177,8 +220,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               <div className="px-4 py-3 border-b border-border">
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-10 h-10">
-                    <AvatarImage 
-                      src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture} 
+                    <AvatarImage
+                      src={
+                        user?.user_metadata?.avatar_url ||
+                        user?.user_metadata?.picture
+                      }
                       alt={getDisplayName()}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-primary-dark text-primary-foreground">
@@ -186,8 +232,12 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{getDisplayName()}</p>
-                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                    <p className="text-sm font-medium truncate">
+                      {getDisplayName()}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.email}
+                    </p>
                     {user?.app_metadata?.provider && (
                       <p className="text-xs text-primary capitalize">
                         via {user.app_metadata.provider}
@@ -196,7 +246,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                   </div>
                 </div>
               </div>
-              
+
               <Link
                 to="/dashboard"
                 className="flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
@@ -205,27 +255,18 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 <Shield className="mr-3 h-4 w-4" />
                 Dashboard
               </Link>
-              
-              <Link
-                to="/profile"
-                className="flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                <User className="mr-3 h-4 w-4" />
-                Profile
-              </Link>
-              
+
               <Link
                 to="/settings"
                 className="flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <Settings className="mr-3 h-4 w-4" />
-                Settings
+                Account Settings
               </Link>
-              
+
               <div className="border-t border-border my-1" />
-              
+
               <button
                 onClick={handleSignOut}
                 className="flex items-center w-full px-4 py-2 text-sm hover:bg-muted/50 transition-colors text-destructive"
@@ -240,40 +281,44 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
     );
   };
 
-  
-
   // Features data
   const features = [
     {
       icon: Building,
       title: "Entity Management",
-      description: "Track and manage all your business entities in one centralized dashboard."
+      description:
+        "Track and manage all your business entities in one centralized dashboard.",
     },
     {
       icon: Bell,
       title: "Smart Notifications",
-      description: "Never miss a renewal deadline with intelligent reminder systems."
+      description:
+        "Never miss a renewal deadline with intelligent reminder systems.",
     },
     {
       icon: Shield,
       title: "Compliance Tracking",
-      description: "Stay compliant with automated monitoring of regulatory requirements."
+      description:
+        "Stay compliant with automated monitoring of regulatory requirements.",
     },
     {
       icon: FileText,
       title: "Document Storage",
-      description: "Securely store and organize all your important business documents."
+      description:
+        "Securely store and organize all your important business documents.",
     },
     {
       icon: TrendingUp,
       title: "Analytics & Reports",
-      description: "Get insights into your entity portfolio with detailed analytics."
+      description:
+        "Get insights into your entity portfolio with detailed analytics.",
     },
     {
       icon: Users,
       title: "Team Collaboration",
-      description: "Work together with your team and manage permissions effectively."
-    }
+      description:
+        "Work together with your team and manage permissions effectively.",
+    },
   ];
 
   // Benefits data
@@ -283,7 +328,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
     "Secure document management",
     "Real-time notifications",
     "Team collaboration tools",
-    "Detailed reporting & analytics"
+    "Detailed reporting & analytics",
   ];
 
   // Testimonials data
@@ -292,20 +337,20 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
       name: "Sarah Johnson",
       company: "Johnson & Associates LLC",
       text: "Entity Renewal Pro has saved us countless hours and prevented missed deadlines. It's indispensable for our business.",
-      rating: 5
+      rating: 5,
     },
     {
       name: "Mike Chen",
       company: "TechStart Ventures",
       text: "The automated notifications alone have paid for themselves. We've never missed a renewal since switching.",
-      rating: 5
+      rating: 5,
     },
     {
       name: "Lisa Rodriguez",
       company: "Rodriguez Holdings",
       text: "Managing multiple entities across different states used to be a nightmare. This platform makes it simple.",
-      rating: 5
-    }
+      rating: 5,
+    },
   ];
 
   return (
@@ -314,7 +359,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
       <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer">
+            <Link
+              to="/"
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
                 <Building className="h-5 w-5 text-primary-foreground" />
               </div>
@@ -322,22 +370,36 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
             </Link>
 
             <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                to="/"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Home
               </Link>
               <button
-                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() =>
+                  document
+                    .getElementById("features")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Features
               </button>
               <button
-                onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() =>
+                  document
+                    .getElementById("pricing")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Pricing
               </button>
-              <Link to="/support" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                to="/support"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Support
               </Link>
             </div>
@@ -355,7 +417,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                   <Button variant="ghost" asChild>
                     <Link to="/login">Sign In</Link>
                   </Button>
-                  <Button asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary">
+                  <Button
+                    asChild
+                    className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary"
+                  >
                     <Link to="/register">Get Started</Link>
                   </Button>
                 </>
@@ -379,12 +444,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
             </h1>
 
             <p className="text-xl lg:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Automate your entity management, stay compliant, and focus on growing your business.
-              Entity Renewal Pro handles the complexity so you don't have to.
+              Automate your entity management, stay compliant, and focus on
+              growing your business. Entity Renewal Pro handles the complexity
+              so you don't have to.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Button size="lg" asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-lg px-8">
+              <Button
+                size="lg"
+                asChild
+                className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-lg px-8"
+              >
                 <Link to="/paid-register">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -394,7 +464,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 size="lg"
                 variant="outline"
                 className="text-lg px-8"
-                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() =>
+                  document
+                    .getElementById("features")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
               >
                 Learn More
               </Button>
@@ -405,30 +479,34 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               <Button
                 size="lg"
                 variant="secondary"
-                className={`text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg transition-all duration-200 ${isInstalled ? 'bg-success/10 border-success/20 text-success-foreground' :
-                    canInstall ? 'bg-primary/10 border-primary/20 hover:bg-primary/20' :
-                      'bg-muted/50'
-                  }`}
+                className={`text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg transition-all duration-200 ${
+                  isInstalled
+                    ? "bg-success/10 border-success/20 text-success-foreground"
+                    : canInstall
+                      ? "bg-primary/10 border-primary/20 hover:bg-primary/20"
+                      : "bg-muted/50"
+                }`}
                 onClick={handleDesktopDownload}
               >
                 <Monitor className="mr-2 h-5 w-5" />
-                {isInstalled ? 'App Installed ✅' :
-                  canInstall ? 'Install Desktop App' :
-                    'Get Desktop Access'}
+                {isInstalled
+                  ? "App Installed ✅"
+                  : canInstall
+                    ? "Install Desktop App"
+                    : "Get Desktop Access"}
                 {!isInstalled && <Download className="ml-2 h-4 w-4" />}
               </Button>
             </div>
 
             <div className="text-center mb-8">
               <p className="text-sm text-muted-foreground">
-                {isInstalled ?
-                  '✅ Enjoy the full desktop experience with Entity Renewal Pro' :
-                  canInstall ?
-                    '💡 Install for offline access, faster loading, and native desktop experience' :
-                    isSupported ?
-                      '📱 Add Entity Renewal Pro to your desktop for quick access' :
-                      '🔗 Access Entity Renewal Pro directly from your desktop'
-                }
+                {isInstalled
+                  ? "✅ Enjoy the full desktop experience with Entity Renewal Pro"
+                  : canInstall
+                    ? "💡 Install for offline access, faster loading, and native desktop experience"
+                    : isSupported
+                      ? "📱 Add Entity Renewal Pro to your desktop for quick access"
+                      : "🔗 Access Entity Renewal Pro directly from your desktop"}
               </p>
             </div>
 
@@ -458,13 +536,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               Everything You Need to Manage Your Entities
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Comprehensive tools to track, manage, and maintain compliance for all your business entities
+              Comprehensive tools to track, manage, and maintain compliance for
+              all your business entities
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300">
+              <Card
+                key={index}
+                className="border-0 shadow-lg bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300"
+              >
                 <CardHeader>
                   <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center mb-4">
                     <feature.icon className="h-6 w-6 text-primary-foreground" />
@@ -491,7 +573,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 Why Choose Entity Renewal Pro?
               </h2>
               <p className="text-xl text-muted-foreground mb-8">
-                Save time, reduce risk, and stay compliant with our comprehensive entity management platform.
+                Save time, reduce risk, and stay compliant with our
+                comprehensive entity management platform.
               </p>
 
               <div className="space-y-4">
@@ -503,7 +586,11 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 ))}
               </div>
 
-              <Button size="lg" asChild className="mt-8 bg-gradient-to-r from-primary to-primary-dark">
+              <Button
+                size="lg"
+                asChild
+                className="mt-8 bg-gradient-to-r from-primary to-primary-dark"
+              >
                 <Link to="/paid-register">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -523,11 +610,15 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span>Manual tracking</span>
-                      <span className="text-muted-foreground">15 hrs/month</span>
+                      <span className="text-muted-foreground">
+                        15 hrs/month
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>With Entity Renewal Pro</span>
-                      <span className="text-green-600 font-semibold">2 hrs/month</span>
+                      <span className="text-green-600 font-semibold">
+                        2 hrs/month
+                      </span>
                     </div>
                   </div>
                   <div className="border-t pt-4">
@@ -557,7 +648,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {Object.values(STRIPE_PRICING_TIERS).map((tier) => (
-              <Card key={tier.id} className={`relative border-0 shadow-lg bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300 ${tier.popular ? 'ring-2 ring-primary shadow-2xl scale-105' : ''}`}>
+              <Card
+                key={tier.id}
+                className={`relative border-0 shadow-lg bg-card/50 backdrop-blur-sm hover:shadow-xl transition-all duration-300 ${tier.popular ? "ring-2 ring-primary shadow-2xl scale-105" : ""}`}
+              >
                 {tier.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-primary text-primary-foreground px-4 py-1">
@@ -571,15 +665,21 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                   <CardTitle className="text-xl">{tier.name}</CardTitle>
                   <CardDescription>{tier.description}</CardDescription>
                   <div className="mt-4">
-                    <div className="text-3xl font-bold">${tier.monthlyPrice}</div>
-                    <div className="text-sm text-muted-foreground">per month</div>
+                    <div className="text-3xl font-bold">
+                      ${tier.monthlyPrice}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      per month
+                    </div>
                   </div>
                 </CardHeader>
 
                 <CardContent className="pt-0">
                   <div className="text-center mb-4">
                     <div className="text-sm font-medium">
-                      {typeof tier.entities === 'number' ? `${tier.entities} entities` : tier.entities}
+                      {typeof tier.entities === "number"
+                        ? `${tier.entities} entities`
+                        : tier.entities}
                     </div>
                     {tier.perEntityCost && (
                       <div className="text-xs text-muted-foreground mt-1">
@@ -598,8 +698,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                   </ul>
 
                   <Button
-                    className={`w-full ${tier.popular ? 'bg-gradient-to-r from-primary to-primary-dark' : ''}`}
-                    variant={tier.popular ? 'default' : 'outline'}
+                    className={`w-full ${tier.popular ? "bg-gradient-to-r from-primary to-primary-dark" : ""}`}
+                    variant={tier.popular ? "default" : "outline"}
                     asChild
                   >
                     <Link to="/paid-register">Subscribe Now</Link>
@@ -611,7 +711,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
           <div className="text-center mt-12">
             <p className="text-muted-foreground mb-4">
-              All plans include a 14-day free trial • No setup fees • Cancel anytime
+              All plans include a 14-day free trial • No setup fees • Cancel
+              anytime
             </p>
             <Button variant="outline" asChild>
               <Link to="/paid-register">
@@ -637,11 +738,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+              <Card
+                key={index}
+                className="border-0 shadow-lg bg-card/50 backdrop-blur-sm"
+              >
                 <CardHeader>
                   <div className="flex items-center gap-1 mb-2">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <Star
+                        key={i}
+                        className="w-4 h-4 fill-yellow-400 text-yellow-400"
+                      />
                     ))}
                   </div>
                   <CardDescription className="text-base italic">
@@ -651,7 +758,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 <CardContent>
                   <div>
                     <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">{testimonial.company}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {testimonial.company}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -667,17 +776,28 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
             Ready to Simplify Your Entity Management?
           </h2>
           <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-            Join hundreds of businesses that trust Entity Renewal Pro to keep them compliant and organized.
+            Join hundreds of businesses that trust Entity Renewal Pro to keep
+            them compliant and organized.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" asChild className="text-lg px-8">
+            <Button
+              size="lg"
+              variant="secondary"
+              asChild
+              className="text-lg px-8"
+            >
               <Link to="/paid-register">
                 Start Your Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg px-8 border-white text-primary">
+            <Button
+              size="lg"
+              variant="outline"
+              asChild
+              className="text-lg px-8 border-white text-primary"
+            >
               <Link to="/support">
                 Talk to Sales
                 <Phone className="ml-2 h-5 w-5" />
@@ -706,27 +826,90 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="#features" className="hover:text-foreground transition-colors">Features</Link></li>
-                <li><Link to="#pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-                <li><Link to="/api-docs" className="hover:text-foreground transition-colors">API</Link></li>
-                <li><Link to="/integrations" className="hover:text-foreground transition-colors">Integrations</Link></li>
+                <li>
+                  <Link
+                    to="#features"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="#pricing"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Pricing
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/api-docs"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    API
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/integrations"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Integrations
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="/support" className="hover:text-foreground transition-colors">Help Center</Link></li>
-                <li><Link to="/support" className="hover:text-foreground transition-colors">Contact Us</Link></li>
-                <li><Link to="/api-docs" className="hover:text-foreground transition-colors">Documentation</Link></li>
+                <li>
+                  <Link
+                    to="/support"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/support"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/api-docs"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Documentation
+                  </Link>
+                </li>
               </ul>
             </div>
 
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+                <li>
+                  <Link
+                    to="/privacy"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/terms"
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Terms of Service
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
@@ -736,13 +919,22 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               © 2024 Entity Renewal Pro. All rights reserved.
             </p>
             <div className="flex items-center space-x-4 mt-4 md:mt-0">
-              <Button asChild className="bg-gradient-to-r from-primary to-primary-dark">
+              <Button
+                asChild
+                className="bg-gradient-to-r from-primary to-primary-dark"
+              >
                 <Link to="/paid-register">Subscribe Now</Link>
               </Button>
-              <a href="mailto:support@entityrenewal.pro" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href="mailto:support@entityrenewal.pro"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <Mail className="h-5 w-5" />
               </a>
-              <a href="tel:+1-555-0123" className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href="tel:+1-555-0123"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <Phone className="h-5 w-5" />
               </a>
             </div>
