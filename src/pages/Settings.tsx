@@ -342,7 +342,7 @@ const Settings = () => {
                   <CardContent className="space-y-6">
                     {subLoading ? (
                       <div className="p-4 text-center text-muted-foreground">Loading subscription...</div>
-                    ) : subscription.subscribed ? (
+                    ) : (subscription.subscribed && subscription.subscription_tier) ? (
                       <>
                         <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
                           <div className="flex items-center justify-between">

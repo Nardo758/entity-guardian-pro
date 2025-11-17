@@ -102,6 +102,8 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
+    const subscriptionStatus = hasActiveSub ? subscriptions.data[0].status : null;
+    
     await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
@@ -109,14 +111,17 @@ serve(async (req) => {
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
+      subscription_status: subscriptionStatus,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
+    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, subscriptionStatus });
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionEnd,
+      subscription_status: subscriptionStatus,
+      stripe_customer_id: customerId
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

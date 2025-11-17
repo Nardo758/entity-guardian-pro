@@ -173,7 +173,7 @@ const EntityRenewalPro = () => {
         </div>
 
         {/* Subscription Status Banner */}
-        {subscription.subscribed && (
+        {subscription.subscribed && subscription.subscription_tier && (
           <div className="mb-8 bg-success-muted border border-success/20 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ const EntityRenewalPro = () => {
         )}
 
         {/* No Subscription Banner */}
-        {!subscription.subscribed && (
+        {(!subscription.subscribed || !subscription.subscription_tier) && (
           <div className="mb-8 bg-warning-muted border border-warning/20 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

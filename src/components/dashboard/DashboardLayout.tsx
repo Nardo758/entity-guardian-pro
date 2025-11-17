@@ -129,7 +129,7 @@ const DashboardSidebar = () => {
         {/* Subscription Status */}
         {!collapsed && (
           <div className="p-4 border-t border-sidebar-border">
-            {subscription.subscribed ? (
+            {subscription.subscribed && subscription.subscription_tier ? (
               <div className="bg-success/10 border border-success/20 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-2 w-2 rounded-full bg-success"></div>
