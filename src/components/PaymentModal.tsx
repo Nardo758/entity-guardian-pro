@@ -134,12 +134,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                       <div className="flex items-center gap-3">
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium">{method.name}</div>
+                          <div className="font-medium">
+                            {method.card_brand || 'Card'} •••• {method.card_last4 || '••••'}
+                          </div>
                           <div className="text-xs text-muted-foreground">
-                            {method.type === 'credit_card' 
-                              ? `Expires ${method.expiry_date}` 
-                              : `Routing ${method.routing_number}`
-                            }
+                            Expires {method.card_exp_month?.toString().padStart(2, '0')}/{method.card_exp_year}
                           </div>
                         </div>
                       </div>
@@ -244,7 +243,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   <SelectContent>
                     {paymentMethods.map(method => (
                       <SelectItem key={method.id} value={method.id.toString()}>
-                        {method.name} {method.is_default ? '(Default)' : ''}
+                        {method.card_brand || 'Card'} •••• {method.card_last4 || '••••'} {method.is_default ? '(Default)' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
