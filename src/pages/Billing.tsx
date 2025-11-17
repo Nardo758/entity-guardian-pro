@@ -129,7 +129,7 @@ const Billing = () => {
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh Status
               </Button>
-              {subscription.subscribed && (
+              {subscription.subscribed && subscription.subscription_tier && (
                 <Button onClick={handleManageSubscription}>
                   Manage Subscription
                 </Button>
@@ -276,13 +276,13 @@ const Billing = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
-                    <Badge variant={subscription.subscribed ? "default" : "secondary"}>
+                    <Badge variant={subscription.subscribed && subscription.subscription_tier ? "default" : "secondary"}>
                       {subscription.subscription_tier || 'Free'}
                     </Badge>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {subscription.subscribed ? 'Active' : 'No active subscription'}
+                      {subscription.subscribed && subscription.subscription_tier ? 'Active' : 'No active subscription'}
                     </div>
                     {subscription.subscription_end && (
                       <p className="text-xs text-muted-foreground">
@@ -290,7 +290,7 @@ const Billing = () => {
                       </p>
                     )}
                     <div className="flex flex-col gap-2 mt-4">
-                      {subscription.subscribed ? (
+                      {subscription.subscribed && subscription.subscription_tier ? (
                         <>
                           <Button className="w-full" onClick={handleManageSubscription}>
                             Change Plan
@@ -315,7 +315,7 @@ const Billing = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${subscription.subscribed ? pricingTiers.find(t => t.name === subscription.subscription_tier)?.monthlyPrice || 0 : 0}
+                      ${(subscription.subscribed && subscription.subscription_tier) ? pricingTiers.find(t => t.name === subscription.subscription_tier)?.monthlyPrice || 0 : 0}
                     </div>
                     <p className="text-xs text-muted-foreground">Current month</p>
                   </CardContent>
@@ -328,7 +328,7 @@ const Billing = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {subscription.subscribed ? 
+                      {(subscription.subscribed && subscription.subscription_tier) ? 
                         pricingTiers.find(t => t.name === subscription.subscription_tier)?.features.length || 0 
                         : 0
                       }
@@ -338,7 +338,7 @@ const Billing = () => {
                 </Card>
               </div>
 
-              {subscription.subscribed && (
+              {(subscription.subscribed && subscription.subscription_tier) && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Plan Features</CardTitle>

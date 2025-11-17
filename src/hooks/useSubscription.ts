@@ -9,7 +9,19 @@ interface SubscriptionInfo {
   subscribed: boolean;
   subscription_tier?: string;
   subscription_end?: string;
+  subscription_status?: string;
+  stripe_customer_id?: string;
+  entities_limit?: number;
 }
+
+// Computed helper to check if user has an active paid subscription
+export const hasActiveSubscription = (subscription: SubscriptionInfo): boolean => {
+  return !!(
+    subscription.subscribed && 
+    subscription.subscription_tier && 
+    subscription.subscription_tier.toLowerCase() !== 'free'
+  );
+};
 
 export const useSubscription = () => {
   const [subscription, setSubscription] = useState<SubscriptionInfo>({ subscribed: false });
