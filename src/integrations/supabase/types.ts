@@ -83,6 +83,45 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_data: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          id: string
+          metadata: Json
+          metric_date: string
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          metric_date?: string
+          metric_name: string
+          metric_type: string
+          metric_value?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          metric_date?: string
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_rate_limits: {
         Row: {
           endpoint: string
