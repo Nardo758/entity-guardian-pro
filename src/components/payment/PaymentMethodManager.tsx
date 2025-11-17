@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard, ExternalLink, Shield, Trash2 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -13,6 +14,8 @@ export const PaymentMethodManager = () => {
   const { openCustomerPortal } = useSubscription();
   const { paymentMethods, loading, refetch } = usePaymentMethods();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [methodToDelete, setMethodToDelete] = useState<{ id: string; last4: string } | null>(null);
 
   const handleSetDefault = async (stripePaymentMethodId: string) => {
     console.log('handleSetDefault called', stripePaymentMethodId);
@@ -51,6 +54,14 @@ export const PaymentMethodManager = () => {
       console.error('detach error', e);
     } finally {
       setBusyId(null);
+      setDeleteConfirmOpen(false);
+      setMethodToDelete(null);
+    }
+  };
+
+  const confirmRemove = () => {
+    if (methodToDelete) {
+      handleRemove(methodToDelete.id);
     }
   };
 
@@ -112,7 +123,10 @@ export const PaymentMethodManager = () => {
                   size="icon"
                   className="text-destructive"
                   disabled={pm.is_default || busyId === pm.stripe_payment_method_id}
-                  onClick={() => handleRemove(pm.stripe_payment_method_id)}
+                  onClick={() => {
+                    setMethodToDelete({ id: pm.stripe_payment_method_id, last4: pm.card_last4 || '••••' });
+                    setDeleteConfirmOpen(true);
+                  }}
                   aria-label="Remove payment method"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -141,6 +155,28 @@ export const PaymentMethodManager = () => {
           </p>
         </div>
       </CardContent>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Payment Method?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove the payment method ending in {methodToDelete?.last4}? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!busyId}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemove}
+              disabled={!!busyId}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
