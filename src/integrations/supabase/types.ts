@@ -1005,13 +1005,21 @@ export type Database = {
         Args: { team_uuid: string; user_uuid: string }
         Returns: Database["public"]["Enums"]["team_role"]
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      has_role:
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_invited_agent: {
         Args: { invitation_id: string; user_uuid: string }
