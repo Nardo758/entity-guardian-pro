@@ -37,11 +37,13 @@ export interface Payment {
 export interface PaymentMethod {
   id: string;
   user_id: string;
-  type: 'credit_card' | 'bank_account';
-  name: string;
+  type: string;
+  stripe_payment_method_id: string;
+  card_brand: string | null;
+  card_last4: string | null;
+  card_exp_month: number | null;
+  card_exp_year: number | null;
   is_default: boolean;
-  expiry_date?: string;
-  routing_number?: string;
   created_at: string;
   updated_at: string;
 }
