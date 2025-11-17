@@ -1,11 +1,52 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CreditCard, ExternalLink, Shield } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CreditCard, ExternalLink, Shield, Trash2 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 export const PaymentMethodManager = () => {
   const { openCustomerPortal } = useSubscription();
+  const { paymentMethods, loading, refetch } = usePaymentMethods();
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const handleSetDefault = async (stripePaymentMethodId: string) => {
+    try {
+      setBusyId(stripePaymentMethodId);
+      const { error } = await supabase.functions.invoke('manage-payment-method', {
+        body: { action: 'set_default', payment_method_id: stripePaymentMethodId },
+      });
+      if (error) throw error;
+      toast.success('Default payment method updated');
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to set default');
+      console.error('set_default error', e);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleRemove = async (stripePaymentMethodId: string) => {
+    try {
+      setBusyId(stripePaymentMethodId);
+      const { error } = await supabase.functions.invoke('manage-payment-method', {
+        body: { action: 'detach', payment_method_id: stripePaymentMethodId },
+      });
+      if (error) throw error;
+      toast.success('Payment method removed');
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to remove payment method');
+      console.error('detach error', e);
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <Card>
@@ -22,31 +63,69 @@ export const PaymentMethodManager = () => {
         <Alert>
           <Shield className="h-4 w-4" />
           <AlertDescription>
-            Your payment methods are securely managed by Stripe. Click below to access the secure portal where you can add, update, or remove payment methods.
+            Your payment methods are securely managed by Stripe. You can manage them here or via the Stripe Customer Portal.
           </AlertDescription>
         </Alert>
 
+        {/* List methods */}
+        <div className="space-y-3">
+          {loading && (
+            <div className="text-sm text-muted-foreground">Loading payment methods…</div>
+          )}
+          {!loading && paymentMethods.length === 0 && (
+            <div className="text-sm text-muted-foreground">No payment methods yet.</div>
+          )}
+          {!loading && paymentMethods.map((pm) => (
+            <div key={pm.id} className="flex items-center justify-between rounded-md border p-4">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+                <div className="leading-tight">
+                  <div className="font-medium">
+                    •••• •••• •••• {pm.card_last4 || '••••'}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {pm.card_brand || 'Card'} · Expires {pm.card_exp_month?.toString().padStart(2, '0')}/{pm.card_exp_year}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {pm.is_default ? (
+                  <Badge variant="secondary">Default</Badge>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={busyId === pm.stripe_payment_method_id}
+                    onClick={() => handleSetDefault(pm.stripe_payment_method_id)}
+                  >
+                    Set Default
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive"
+                  disabled={pm.is_default || busyId === pm.stripe_payment_method_id}
+                  onClick={() => handleRemove(pm.stripe_payment_method_id)}
+                  aria-label="Remove payment method"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
         <div className="flex flex-col gap-3">
-          <Button 
-            onClick={openCustomerPortal}
-            className="w-full"
-            size="lg"
-          >
+          <Button onClick={openCustomerPortal} className="w-full" size="lg" variant="outline">
             <CreditCard className="w-4 h-4 mr-2" />
-            Manage Payment Methods
+            Add Payment Method
+          </Button>
+          <Button onClick={openCustomerPortal} className="w-full" size="sm">
+            Manage in Stripe Portal
             <ExternalLink className="w-4 h-4 ml-2" />
           </Button>
-
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p>In the Stripe Customer Portal, you can:</p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Add new payment methods</li>
-              <li>Update existing cards</li>
-              <li>Set a default payment method</li>
-              <li>Remove old payment methods</li>
-              <li>View payment history</li>
-            </ul>
-          </div>
         </div>
 
         <div className="pt-4 border-t">
