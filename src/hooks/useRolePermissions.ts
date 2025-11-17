@@ -28,10 +28,14 @@ export const useRolePermissions = () => {
         .select('role')
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Could not fetch roles:', error);
+        return [];
+      }
       return data?.map(r => r.role) || [];
     },
     enabled: !!user?.id,
+    retry: false,
   });
 
   const roles = userRoles || [];
