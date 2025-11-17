@@ -15,16 +15,19 @@ export const PaymentMethodManager = () => {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const handleSetDefault = async (stripePaymentMethodId: string) => {
+    console.log('handleSetDefault called', stripePaymentMethodId);
     try {
       setBusyId(stripePaymentMethodId);
-      const { error } = await supabase.functions.invoke('manage-payment-method', {
+      toast.loading('Setting as default...', { id: 'set-default' });
+      const { data, error } = await supabase.functions.invoke('manage-payment-method', {
         body: { action: 'set_default', payment_method_id: stripePaymentMethodId },
       });
+      console.log('set_default response', { data, error });
       if (error) throw error;
-      toast.success('Default payment method updated');
+      toast.success('Default payment method updated', { id: 'set-default' });
       await refetch();
     } catch (e: any) {
-      toast.error(e?.message || 'Failed to set default');
+      toast.error(e?.message || 'Failed to set default', { id: 'set-default' });
       console.error('set_default error', e);
     } finally {
       setBusyId(null);
@@ -32,16 +35,19 @@ export const PaymentMethodManager = () => {
   };
 
   const handleRemove = async (stripePaymentMethodId: string) => {
+    console.log('handleRemove called', stripePaymentMethodId);
     try {
       setBusyId(stripePaymentMethodId);
-      const { error } = await supabase.functions.invoke('manage-payment-method', {
+      toast.loading('Removing payment method...', { id: 'remove-pm' });
+      const { data, error } = await supabase.functions.invoke('manage-payment-method', {
         body: { action: 'detach', payment_method_id: stripePaymentMethodId },
       });
+      console.log('detach response', { data, error });
       if (error) throw error;
-      toast.success('Payment method removed');
+      toast.success('Payment method removed', { id: 'remove-pm' });
       await refetch();
     } catch (e: any) {
-      toast.error(e?.message || 'Failed to remove payment method');
+      toast.error(e?.message || 'Failed to remove payment method', { id: 'remove-pm' });
       console.error('detach error', e);
     } finally {
       setBusyId(null);
