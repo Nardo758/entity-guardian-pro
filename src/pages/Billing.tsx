@@ -31,7 +31,6 @@ import { ProgressSteps } from '@/components/ui/ProgressSteps';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
 import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
-import { CheckoutModal } from '@/components/payment/CheckoutModal';
 import { InvoiceHistory } from '@/components/billing/InvoiceHistory';
 import { UsageMetrics } from '@/components/billing/UsageMetrics';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
@@ -43,8 +42,6 @@ const Billing = () => {
   const [showPaymentMethodDialog, setShowPaymentMethodDialog] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [activeTab, setActiveTab] = useState('plans');
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<string>('');
   const { subscription, loading, error, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
   const { currentStep, isProcessing, selectPlan } = useCheckout();
 
@@ -81,17 +78,21 @@ const Billing = () => {
   };
 
 
-  const handleUpgradeClick = (tier: string) => {
-    selectPlan(tier, selectedBilling);
-    setSelectedTierForCheckout(tier);
-    setShowCheckoutModal(true);
-  };
-
-  const handleCheckoutSuccess = () => {
-    // Refresh subscription status after successful payment
-    checkSubscription();
-    setShowCheckoutModal(false);
-    setSelectedTierForCheckout('');
+  const handleUpgradeClick = async (tier: string) => {
+    try {
+      toast.loading('Creating checkout session...');
+      const sessionId = await createCheckout(tier, selectedBilling);
+      
+      if (!sessionId) {
+        toast.error('Failed to create checkout session');
+        return;
+      }
+      
+      toast.success('Redirecting to checkout...');
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout');
+    }
   };
 
   const handleManageSubscription = () => {
@@ -376,23 +377,6 @@ const Billing = () => {
           </Tabs>
         </div>
       </div>
-
-      {/* Checkout Modal */}
-      <CheckoutModal
-        isOpen={showCheckoutModal}
-        onClose={() => setShowCheckoutModal(false)}
-        selectedTier={selectedTierForCheckout}
-        selectedBilling={selectedBilling}
-        onSuccess={handleCheckoutSuccess}
-      />
-
-      {/* Processing Overlay */}
-      {isProcessing && (
-        <LoadingSkeleton 
-          variant="overlay" 
-          message="Creating your checkout session..." 
-        />
-      )}
     </div>
   );
 };
