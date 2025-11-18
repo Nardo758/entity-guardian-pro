@@ -39,10 +39,10 @@ interface TierPermissions {
 }
 
 export const useTierPermissions = (): TierPermissions => {
-  const { subscription } = useSubscription();
+    const { subscription } = useSubscription();
   const { canAddMore: canAddEntity } = useEntityLimits();
   
-  const currentTier = subscription.subscription_tier || 'starter';
+    const currentTier = subscription.plan_id || 'starter';
   const tierData = STRIPE_PRICING_TIERS[currentTier as keyof typeof STRIPE_PRICING_TIERS] || STRIPE_PRICING_TIERS.starter;
   
   // Base permissions for all tiers
@@ -165,7 +165,7 @@ export const useTierPermissions = (): TierPermissions => {
 // Helper function to check if upgrade is needed
 export const useUpgradeCheck = (requiredTier: string) => {
   const { subscription } = useSubscription();
-  const currentTier = subscription.subscription_tier || 'starter';
+  const currentTier = subscription.plan_id || 'starter';
   
   const tierOrder = ['starter', 'growth', 'professional', 'enterprise'];
   const currentIndex = tierOrder.indexOf(currentTier);

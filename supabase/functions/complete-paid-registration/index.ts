@@ -37,7 +37,8 @@ interface SubscriptionRecord {
   email: string;
   stripe_customer_id: string | null;
   subscribed: boolean;
-  subscription_tier: string;
+  plan_id: string;
+  status: string;
   subscription_end: string;
   updated_at: string;
   payment_intent_id?: string;
@@ -295,8 +296,8 @@ serve(async (req) => {
     const validatedMetadata = validatePaymentMetadata(paymentIntent.metadata);
 
     // Check for duplicate processing
-    const existingSubscriber = await supabaseAdmin
-      .from("subscribers")
+      const existingSubscriber = await supabaseAdmin
+        .from("subscriptions")
       .select("*")
       .eq("email", validatedMetadata.email)
       .single();
@@ -402,20 +403,21 @@ serve(async (req) => {
         subscriptionEnd.setDate(subscriptionEnd.getDate() + 30);
       }
 
-      const subscriptionRecord: SubscriptionRecord = {
-        user_id: authData.user.id,
-        email: validatedMetadata.email,
-        stripe_customer_id: paymentIntent.customer as string,
-        subscribed: true,
-        subscription_tier: validatedMetadata.tier.charAt(0).toUpperCase() + validatedMetadata.tier.slice(1),
-        subscription_end: subscriptionEnd.toISOString(),
-        updated_at: new Date().toISOString(),
-        payment_intent_id: paymentIntentId,
-      };
+        const subscriptionRecord: SubscriptionRecord = {
+          user_id: authData.user.id,
+          email: validatedMetadata.email,
+          stripe_customer_id: paymentIntent.customer as string,
+          subscribed: true,
+          plan_id: validatedMetadata.tier,
+          status: 'active',
+          subscription_end: subscriptionEnd.toISOString(),
+          updated_at: new Date().toISOString(),
+          payment_intent_id: paymentIntentId,
+        };
 
       // Upsert subscription record
-      const { error: subscriptionError } = await supabaseAdmin
-        .from("subscribers")
+        const { error: subscriptionError } = await supabaseAdmin
+          .from("subscriptions")
         .upsert(subscriptionRecord, { onConflict: 'email' });
 
       if (subscriptionError) {

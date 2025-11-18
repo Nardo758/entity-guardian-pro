@@ -31,7 +31,6 @@ import { ProgressSteps } from '@/components/ui/ProgressSteps';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorDisplay } from '@/components/ui/ErrorDisplay';
 import { PaymentMethodManager } from '@/components/payment/PaymentMethodManager';
-import { CheckoutModal } from '@/components/payment/CheckoutModal';
 import { InvoiceHistory } from '@/components/billing/InvoiceHistory';
 import { UsageMetrics } from '@/components/billing/UsageMetrics';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
@@ -40,15 +39,15 @@ import { useNavigate } from 'react-router-dom';
 
 const Billing = () => {
   const navigate = useNavigate();
-  const [showPaymentMethodDialog, setShowPaymentMethodDialog] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
   const [activeTab, setActiveTab] = useState('plans');
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [selectedTierForCheckout, setSelectedTierForCheckout] = useState<string>('');
   const { subscription, loading, error, createCheckout, openCustomerPortal, checkSubscription } = useSubscription();
   const { currentStep, isProcessing, selectPlan } = useCheckout();
 
   const pricingTiers = Object.values(STRIPE_PRICING_TIERS);
+  const normalizedPlanId = subscription.plan_id || 'free';
+  const planName = STRIPE_PRICING_TIERS[normalizedPlanId as keyof typeof STRIPE_PRICING_TIERS]?.name || 'Free';
+  const hasActivePaidPlan = subscription.subscribed && normalizedPlanId !== 'free';
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,17 +80,9 @@ const Billing = () => {
   };
 
 
-  const handleUpgradeClick = (tier: string) => {
+  const handleUpgradeClick = async (tier: string) => {
     selectPlan(tier, selectedBilling);
-    setSelectedTierForCheckout(tier);
-    setShowCheckoutModal(true);
-  };
-
-  const handleCheckoutSuccess = () => {
-    // Refresh subscription status after successful payment
-    checkSubscription();
-    setShowCheckoutModal(false);
-    setSelectedTierForCheckout('');
+    await createCheckout(tier, selectedBilling);
   };
 
   const handleManageSubscription = () => {
@@ -129,7 +120,7 @@ const Billing = () => {
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh Status
               </Button>
-              {subscription.subscribed && subscription.subscription_tier && (
+                {hasActivePaidPlan && (
                 <Button onClick={handleManageSubscription}>
                   Manage Subscription
                 </Button>
@@ -250,13 +241,13 @@ const Billing = () => {
                                 </li>
                               ))}
                             </ul>
-                            <Button 
+                              <Button 
                               className="w-full mt-4" 
                               variant={tier.popular ? 'default' : 'outline'}
                               onClick={() => handleUpgradeClick(tier.id)}
                               disabled={loading}
                             >
-                              {subscription.subscribed && subscription.subscription_tier === tier.name 
+                                {normalizedPlanId === tier.id && subscription.subscribed
                                 ? 'Current Plan' 
                                 : 'Choose Plan'
                               }
@@ -275,14 +266,14 @@ const Billing = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
-                    <Badge variant={subscription.subscribed && subscription.subscription_tier ? "default" : "secondary"}>
-                      {subscription.subscription_tier || 'Free'}
+                      <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
+                      <Badge variant={hasActivePaidPlan ? "default" : "secondary"}>
+                        {planName}
                     </Badge>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {subscription.subscribed && subscription.subscription_tier ? 'Active' : 'No active subscription'}
+                        {hasActivePaidPlan ? 'Active' : 'No active subscription'}
                     </div>
                     {subscription.subscription_end && (
                       <p className="text-xs text-muted-foreground">
@@ -290,7 +281,7 @@ const Billing = () => {
                       </p>
                     )}
                     <div className="flex flex-col gap-2 mt-4">
-                      {subscription.subscribed && subscription.subscription_tier ? (
+                        {hasActivePaidPlan ? (
                         <>
                           <Button className="w-full" onClick={handleManageSubscription}>
                             Change Plan
@@ -315,7 +306,7 @@ const Billing = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${(subscription.subscribed && subscription.subscription_tier) ? pricingTiers.find(t => t.name === subscription.subscription_tier)?.monthlyPrice || 0 : 0}
+                        {hasActivePaidPlan ? pricingTiers.find(t => t.id === normalizedPlanId)?.monthlyPrice || 0 : 0}
                     </div>
                     <p className="text-xs text-muted-foreground">Current month</p>
                   </CardContent>
@@ -328,8 +319,8 @@ const Billing = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {(subscription.subscribed && subscription.subscription_tier) ? 
-                        pricingTiers.find(t => t.name === subscription.subscription_tier)?.features.length || 0 
+                      {hasActivePaidPlan ? 
+                        pricingTiers.find(t => t.id === normalizedPlanId)?.features.length || 0 
                         : 0
                       }
                     </div>
@@ -338,18 +329,18 @@ const Billing = () => {
                 </Card>
               </div>
 
-              {(subscription.subscribed && subscription.subscription_tier) && (
+                {hasActivePaidPlan && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Plan Features</CardTitle>
                     <CardDescription>
-                      Your current {subscription.subscription_tier} plan includes:
+                        Your current {planName} plan includes:
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {pricingTiers
-                        .find(t => t.name === subscription.subscription_tier)
+                          .find(t => t.id === normalizedPlanId)
                         ?.features.map((feature, index) => (
                           <div key={index} className="flex items-center gap-2 text-sm">
                             <Check className="w-4 h-4 text-green-500" />
@@ -376,15 +367,6 @@ const Billing = () => {
           </Tabs>
         </div>
       </div>
-
-      {/* Checkout Modal */}
-      <CheckoutModal
-        isOpen={showCheckoutModal}
-        onClose={() => setShowCheckoutModal(false)}
-        selectedTier={selectedTierForCheckout}
-        selectedBilling={selectedBilling}
-        onSuccess={handleCheckoutSuccess}
-      />
 
       {/* Processing Overlay */}
       {isProcessing && (

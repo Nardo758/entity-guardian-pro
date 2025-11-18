@@ -29,7 +29,7 @@ export const validateEntityCreation = async (userId: string): Promise<Validation
     }
 
     const currentCount = entities?.length || 0;
-    const tier = subscription.subscription_tier || 'starter';
+      const tier = subscription.plan_id || 'starter';
     
     // Define tier limits (must match frontend)
     const tierLimits: Record<string, number> = {
@@ -62,7 +62,7 @@ export const validateEntityCreation = async (userId: string): Promise<Validation
 export const validateAPIAccess = async (userId: string): Promise<ValidationResponse> => {
   try {
     const { data: subscription } = await supabase.functions.invoke('check-subscription');
-    const tier = subscription?.subscription_tier || 'starter';
+      const tier = subscription?.plan_id || 'starter';
     
     // API access only available for Growth and above
     const allowedTiers = ['growth', 'professional', 'enterprise'];
@@ -85,7 +85,7 @@ export const validateAPIAccess = async (userId: string): Promise<ValidationRespo
 export const validateAdvancedAnalytics = async (userId: string): Promise<ValidationResponse> => {
   try {
     const { data: subscription } = await supabase.functions.invoke('check-subscription');
-    const tier = subscription?.subscription_tier || 'starter';
+      const tier = subscription?.plan_id || 'starter';
     
     const allowedTiers = ['professional', 'enterprise'];
     
@@ -107,7 +107,7 @@ export const validateAdvancedAnalytics = async (userId: string): Promise<Validat
 export const validateBulkOperations = async (userId: string): Promise<ValidationResponse> => {
   try {
     const { data: subscription } = await supabase.functions.invoke('check-subscription');
-    const tier = subscription?.subscription_tier || 'starter';
+      const tier = subscription?.plan_id || 'starter';
     
     const allowedTiers = ['growth', 'professional', 'enterprise'];
     
@@ -129,7 +129,7 @@ export const validateBulkOperations = async (userId: string): Promise<Validation
 export const validateCustomReports = async (userId: string): Promise<ValidationResponse> => {
   try {
     const { data: subscription } = await supabase.functions.invoke('check-subscription');
-    const tier = subscription?.subscription_tier || 'starter';
+      const tier = subscription?.plan_id || 'starter';
     
     const allowedTiers = ['growth', 'professional', 'enterprise'];
     

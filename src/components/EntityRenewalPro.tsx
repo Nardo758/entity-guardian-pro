@@ -21,6 +21,7 @@ import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { stateRequirements } from '@/lib/state-requirements';
 import { TeamSwitcher } from './TeamSwitcher';
 import NavigationMenu from './NavigationMenu';
+import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 
 const EntityRenewalPro = () => {
   const navigate = useNavigate();
@@ -38,6 +39,9 @@ const EntityRenewalPro = () => {
 
   // Use actual subscription data
   const { subscription } = useSubscription();
+  const planId = subscription.plan_id || 'free';
+  const planName = STRIPE_PRICING_TIERS[planId as keyof typeof STRIPE_PRICING_TIERS]?.name || 'Free';
+  const hasActivePlan = subscription.subscribed && planId !== 'free';
 
   const handleAddEntity = async (entityData: any) => {
     try {
@@ -173,13 +177,13 @@ const EntityRenewalPro = () => {
         </div>
 
         {/* Subscription Status Banner */}
-        {subscription.subscribed && subscription.subscription_tier && (
+        {hasActivePlan && (
           <div className="mb-8 bg-success-muted border border-success/20 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-success"></div>
                 <span className="font-medium text-success">
-                  {subscription.subscription_tier} Plan Active
+                  {planName} Plan Active
                 </span>
               </div>
               <div className="text-sm text-success">
@@ -206,7 +210,7 @@ const EntityRenewalPro = () => {
         )}
 
         {/* No Subscription Banner */}
-        {(!subscription.subscribed || !subscription.subscription_tier) && (
+        {!hasActivePlan && (
           <div className="mb-8 bg-warning-muted border border-warning/20 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useTierPermissions } from "@/hooks/useTierPermissions";
+import { STRIPE_PRICING_TIERS } from "@/lib/stripe";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -109,6 +110,10 @@ const Settings = () => {
     }
   };
 
+    const normalizedPlanId = subscription.plan_id || currentTier || 'free';
+    const planName = STRIPE_PRICING_TIERS[normalizedPlanId as keyof typeof STRIPE_PRICING_TIERS]?.name || 'Free';
+    const hasActivePaidPlan = subscription.subscribed && normalizedPlanId !== 'free';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
       <div className="container mx-auto px-4 py-8">
@@ -144,7 +149,7 @@ const Settings = () => {
                 <div className="text-center space-y-1">
                   <p className="font-semibold">{`${settingsProfile.first_name} ${settingsProfile.last_name}`.trim()}</p>
                   <p className="text-sm text-muted-foreground">{settingsProfile.email}</p>
-                  <Badge variant="secondary" className="mt-2 capitalize">{currentTier}</Badge>
+                    <Badge variant="secondary" className="mt-2 capitalize">{planName}</Badge>
                 </div>
               </CardContent>
             </Card>
@@ -339,45 +344,45 @@ const Settings = () => {
                     <CardTitle>Billing Information</CardTitle>
                     <CardDescription>Manage your subscription and payment methods</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    {subLoading ? (
-                      <div className="p-4 text-center text-muted-foreground">Loading subscription...</div>
-                    ) : (subscription.subscribed && subscription.subscription_tier) ? (
-                      <>
-                        <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-semibold text-success capitalize">{subscription.subscription_tier || currentTier} Plan</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {subscription.subscription_end 
-                                  ? `Next billing: ${new Date(subscription.subscription_end).toLocaleDateString()}`
-                                  : 'Active subscription'}
+                    <CardContent className="space-y-6">
+                      {subLoading ? (
+                        <div className="p-4 text-center text-muted-foreground">Loading subscription...</div>
+                      ) : hasActivePaidPlan ? (
+                        <>
+                          <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-semibold text-success capitalize">{planName} Plan</h3>
+                                <p className="text-sm text-muted-foreground">
+                                  {subscription.subscription_end 
+                                    ? `Next billing: ${new Date(subscription.subscription_end).toLocaleDateString()}`
+                                    : 'Active subscription'}
+                                </p>
+                              </div>
+                              <Badge className="bg-success text-white">Active</Badge>
+                            </div>
+                          </div>
+                          <Separator />
+                          <div className="space-y-4">
+                            <div className="flex flex-col gap-3">
+                              <Button onClick={openCustomerPortal} className="w-full">
+                                Manage Subscription
+                              </Button>
+                              <p className="text-xs text-muted-foreground text-center">
+                                Update payment method, view invoices, and manage your billing through Stripe
                               </p>
                             </div>
-                            <Badge className="bg-success text-white">Active</Badge>
                           </div>
+                        </>
+                      ) : (
+                        <div className="p-4 bg-muted/50 border rounded-lg text-center">
+                          <p className="text-sm text-muted-foreground mb-4">No active subscription</p>
+                          <Button onClick={() => navigate('/billing')} variant="default">
+                            View Plans
+                          </Button>
                         </div>
-                        <Separator />
-                        <div className="space-y-4">
-                          <div className="flex flex-col gap-3">
-                            <Button onClick={openCustomerPortal} className="w-full">
-                              Manage Subscription
-                            </Button>
-                            <p className="text-xs text-muted-foreground text-center">
-                              Update payment method, view invoices, and manage your billing through Stripe
-                            </p>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="p-4 bg-muted/50 border rounded-lg text-center">
-                        <p className="text-sm text-muted-foreground mb-4">No active subscription</p>
-                        <Button onClick={() => navigate('/billing')} variant="default">
-                          View Plans
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
+                      )}
+                    </CardContent>
                 </Card>
 
                 <UsageMetrics />

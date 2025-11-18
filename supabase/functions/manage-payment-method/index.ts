@@ -60,8 +60,8 @@ serve(async (req) => {
     }
 
     // Ensure we know the user's customer id
-    const { data: sub, error: subErr } = await supabase
-      .from("subscribers")
+      const { data: sub, error: subErr } = await supabase
+        .from("subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .maybeSingle();

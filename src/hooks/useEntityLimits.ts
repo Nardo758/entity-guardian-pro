@@ -29,8 +29,8 @@ export const useEntityLimits = () => {
     upgradeRequired: false,
   });
 
-  useEffect(() => {
-    const currentTier = subscription.subscription_tier || 'starter';
+    useEffect(() => {
+      const currentTier = subscription.plan_id || 'starter';
     const tierData = STRIPE_PRICING_TIERS[currentTier as keyof typeof STRIPE_PRICING_TIERS];
     
     if (!tierData) {
@@ -46,8 +46,8 @@ export const useEntityLimits = () => {
     const canAddMore = currentEntities < maxEntities;
 
     // Find next tier for upgrade suggestions
-    const tiers = Object.values(STRIPE_PRICING_TIERS);
-    const currentTierIndex = tiers.findIndex(tier => tier.id === currentTier);
+      const tiers = Object.values(STRIPE_PRICING_TIERS);
+      const currentTierIndex = tiers.findIndex(tier => tier.id === currentTier);
     const nextTier = currentTierIndex < tiers.length - 1 ? tiers[currentTierIndex + 1] : undefined;
 
     setLimitInfo({
@@ -89,8 +89,8 @@ export const useEntityLimits = () => {
 
   const checkCanAddEntity = (): boolean => {
     if (!limitInfo.canAddMore) {
-      toast.error(
-        `Cannot add more entities. You've reached the limit of ${limitInfo.maxEntities} entities for your ${subscription.subscription_tier || 'starter'} plan.`,
+        toast.error(
+          `Cannot add more entities. You've reached the limit of ${limitInfo.maxEntities} entities for your ${subscription.plan_id || 'starter'} plan.`,
         {
           action: {
             label: 'Upgrade Plan',

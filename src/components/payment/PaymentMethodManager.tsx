@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
+import { PaymentMethodUpdateDialog } from './PaymentMethodUpdateDialog';
 
 interface Invoice {
   id: string;
@@ -32,6 +33,7 @@ export const PaymentMethodManager = () => {
   const [methodToDelete, setMethodToDelete] = useState<{ id: string; last4: string } | null>(null);
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -212,16 +214,16 @@ export const PaymentMethodManager = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-3">
-          <Button onClick={openCustomerPortal} className="w-full" size="lg" variant="outline">
-            <CreditCard className="w-4 h-4 mr-2" />
-            Add Payment Method
-          </Button>
-          <Button onClick={openCustomerPortal} className="w-full" size="sm">
-            Manage in Stripe Portal
-            <ExternalLink className="w-4 h-4 ml-2" />
-          </Button>
-        </div>
+          <div className="flex flex-col gap-3">
+            <Button onClick={() => setShowUpdateDialog(true)} className="w-full" size="lg" variant="outline">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Update Payment Method
+            </Button>
+            <Button onClick={openCustomerPortal} className="w-full" size="sm">
+              Manage in Stripe Portal
+              <ExternalLink className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
 
         {/* Recent Transactions */}
         {recentInvoices.length > 0 && (
@@ -293,5 +295,11 @@ export const PaymentMethodManager = () => {
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+
+      <PaymentMethodUpdateDialog
+        open={showUpdateDialog}
+        onClose={() => setShowUpdateDialog(false)}
+        onUpdated={refetch}
+      />
   );
 };

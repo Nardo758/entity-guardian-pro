@@ -31,13 +31,14 @@ serve(async (req) => {
     end.setMonth(end.getMonth() + Number(months));
     const endIso = end.toISOString();
 
-    await supabase.from('subscribers').upsert({
+      await supabase.from('subscriptions').upsert({
       email,
       subscribed: true,
-      subscription_tier: tier === 'starter' ? 'Starter' : tier === 'growth' ? 'Growth' : tier === 'enterprise' ? 'Enterprise' : 'Professional',
+        plan_id: tier,
+        status: 'active',
       subscription_end: endIso,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' });
+      }, { onConflict: 'email' });
 
     return new Response(JSON.stringify({ ok: true, email, end: endIso }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
   } catch (error) {

@@ -64,9 +64,9 @@ serve(async (req) => {
     logStep("Validation request", { feature, action, userId: user.id });
 
     // Get user's subscription
-    const { data: subscription, error: subError } = await supabaseClient
-      .from('subscribers')
-      .select('subscription_tier, subscribed')
+      const { data: subscription, error: subError } = await supabaseClient
+        .from('subscriptions')
+        .select('plan_id, subscribed')
       .eq('user_id', user.id)
       .single();
 
@@ -75,7 +75,7 @@ serve(async (req) => {
       throw new Error('Failed to get subscription information');
     }
 
-    const tier = subscription?.subscription_tier || 'starter';
+      const tier = subscription?.plan_id || 'starter';
     const isSubscribed = subscription?.subscribed || false;
     
     logStep("User subscription info", { tier, isSubscribed });

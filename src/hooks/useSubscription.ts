@@ -7,31 +7,29 @@ import { stripePromise } from '@/lib/stripe';
 
 interface SubscriptionInfo {
   subscribed: boolean;
-  subscription_tier?: string;
+  plan_id?: string;
   subscription_end?: string;
-  subscription_status?: string;
+  status?: string;
   stripe_customer_id?: string;
   entities_limit?: number;
 }
 
-// Computed helper to check if user has an active paid subscription
 export const hasActiveSubscription = (subscription: SubscriptionInfo): boolean => {
-  return !!(
-    subscription.subscribed && 
-    subscription.subscription_tier && 
-    subscription.subscription_tier.toLowerCase() !== 'free'
-  );
+  if (!subscription.subscribed) return false;
+  const plan = subscription.plan_id?.toLowerCase();
+  const status = subscription.status?.toLowerCase();
+  return !!plan && plan !== 'free' && status === 'active';
 };
 
 export const useSubscription = () => {
-  const [subscription, setSubscription] = useState<SubscriptionInfo>({ subscribed: false });
+    const [subscription, setSubscription] = useState<SubscriptionInfo>({ subscribed: false, plan_id: 'free', status: 'inactive' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { user } = useAuth();
 
   const checkSubscription = useCallback(async () => {
     if (!user) {
-      setSubscription({ subscribed: false });
+        setSubscription({ subscribed: false, plan_id: 'free', status: 'inactive' });
       setLoading(false);
       setError(null);
       return;
@@ -44,13 +42,19 @@ export const useSubscription = () => {
       
       if (fetchError) throw fetchError;
       
-      setSubscription(data);
+        setSubscription({
+          subscribed: !!data?.subscribed,
+          plan_id: data?.plan_id ?? 'free',
+          subscription_end: data?.subscription_end ?? undefined,
+          status: data?.status ?? 'inactive',
+          stripe_customer_id: data?.stripe_customer_id ?? undefined,
+        });
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to check subscription status');
       setError(error);
       console.error('Error checking subscription:', err);
       toast.error(error.message);
-      setSubscription({ subscribed: false });
+        setSubscription({ subscribed: false, plan_id: 'free', status: 'inactive' });
     } finally {
       setLoading(false);
     }
@@ -137,19 +141,19 @@ export const useSubscription = () => {
     // Set up real-time subscription for subscription changes
     const channel = supabase
       .channel('subscription-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'subscribers',
-          filter: `user_id=eq.${user?.id}`,
-        },
-        () => {
-          console.log('Subscription changed, refreshing...');
-          checkSubscription();
-        }
-      )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'subscriptions',
+            filter: `user_id=eq.${user?.id}`,
+          },
+          () => {
+            console.log('Subscription changed, refreshing...');
+            checkSubscription();
+          }
+        )
       .subscribe();
 
     return () => {

@@ -9,6 +9,7 @@ import { Sidebar, SidebarContent, SidebarInset, SidebarProvider, SidebarTrigger,
 import { TeamSwitcher } from '@/components/TeamSwitcher';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useSubscription } from '@/hooks/useSubscription';
+import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,8 +18,11 @@ interface DashboardLayoutProps {
 const DashboardSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin } = useAdminAccess();
-  const { subscription } = useSubscription();
+    const { isAdmin } = useAdminAccess();
+    const { subscription } = useSubscription();
+    const planId = subscription.plan_id || 'free';
+    const planName = STRIPE_PRICING_TIERS[planId as keyof typeof STRIPE_PRICING_TIERS]?.name || 'Free';
+    const hasPaidPlan = subscription.subscribed && planId !== 'free';
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
 
@@ -127,43 +131,43 @@ const DashboardSidebar = () => {
         </nav>
 
         {/* Subscription Status */}
-        {!collapsed && (
-          <div className="p-4 border-t border-sidebar-border">
-            {subscription.subscribed && subscription.subscription_tier ? (
-              <div className="bg-success/10 border border-success/20 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-2 w-2 rounded-full bg-success"></div>
-                  <span className="text-sm font-medium text-success">
-                    {subscription.subscription_tier} Plan
-                  </span>
+          {!collapsed && (
+            <div className="p-4 border-t border-sidebar-border">
+              {hasPaidPlan ? (
+                <div className="bg-success/10 border border-success/20 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-2 w-2 rounded-full bg-success"></div>
+                    <span className="text-sm font-medium text-success">
+                      {planName} Plan
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => navigate('/billing')}
+                  >
+                    Manage Plan
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => navigate('/billing')}
-                >
-                  Manage Plan
-                </Button>
-              </div>
-            ) : (
-              <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-2 w-2 rounded-full bg-warning"></div>
-                  <span className="text-sm font-medium text-warning">Free Plan</span>
+              ) : (
+                <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-2 w-2 rounded-full bg-warning"></div>
+                    <span className="text-sm font-medium text-warning">Free Plan</span>
+                  </div>
+                  <p className="text-xs text-sidebar-foreground/60 mb-2">Limited to 3 entities</p>
+                  <Button
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => navigate('/billing')}
+                  >
+                    Upgrade Now
+                  </Button>
                 </div>
-                <p className="text-xs text-sidebar-foreground/60 mb-2">Limited to 3 entities</p>
-                <Button
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => navigate('/billing')}
-                >
-                  Upgrade Now
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
       </SidebarContent>
     </Sidebar>
 

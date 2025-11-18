@@ -94,7 +94,51 @@ serve(async (req) => {
   // Process the event
   let errorMessage: string | null = null;
 
-  try {
+    const getUserIdForCustomer = async (customerId?: string, fallbackUserId?: string) => {
+      if (fallbackUserId) return fallbackUserId;
+      if (!customerId) return undefined;
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('user_id')
+        .eq('stripe_customer_id', customerId)
+        .maybeSingle();
+      return data?.user_id ?? undefined;
+    };
+
+    const upsertSubscriptionFallback = async ({
+      customerId,
+      subscription,
+      priceId,
+      status,
+      userId,
+    }: {
+      customerId: string;
+      subscription: Stripe.Subscription;
+      priceId?: string;
+      status: string;
+      userId?: string;
+    }) => {
+      const lookupKey = subscription.items.data[0]?.price?.lookup_key;
+      const [, tier, billing] = lookupKey?.split(':') ?? [];
+      await supabase.from('subscriptions').upsert({
+        user_id: userId,
+        email: subscription.metadata?.email ?? subscription.customer_email ?? undefined,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscription.id,
+        stripe_price_id: priceId ?? subscription.items.data[0]?.price?.id,
+        plan_id: tier ?? subscription.metadata?.plan_id ?? 'free',
+        status,
+        subscribed: status === 'active',
+        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        subscription_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        billing_cycle: billing ?? (lookupKey?.includes('year') ? 'yearly' : 'monthly'),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'stripe_customer_id' });
+    };
+
+    try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
@@ -103,13 +147,14 @@ serve(async (req) => {
         const customerId = typeof session.customer === 'string' ? session.customer : undefined;
         const subscriptionId = typeof session.subscription === 'string' ? session.subscription : undefined;
         const paymentMethodId = typeof session.payment_method === 'string' ? session.payment_method : undefined;
+          const metadataUserId = session.metadata?.user_id || session.metadata?.userId || session.metadata?.userID;
 
         if (subscriptionId && customerId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId);
           const priceId = subscription.items.data[0]?.price?.id;
 
           try {
-            await supabase.rpc('update_subscriber_from_webhook', {
+              await supabase.rpc('update_subscription_from_webhook', {
               p_stripe_customer_id: customerId,
               p_stripe_subscription_id: subscriptionId,
               p_stripe_price_id: priceId,
@@ -120,33 +165,31 @@ serve(async (req) => {
             });
             log('Updated subscriber via database function');
           } catch (err) {
-            log("Database function not available, using fallback", { error: (err as Error).message });
-            // Fallback to direct insert
-            await supabase.from('subscribers').upsert({
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
-              subscribed: true,
-              subscription_status: subscription.status,
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              updated_at: new Date().toISOString(),
-            }, { onConflict: 'stripe_customer_id' });
+              log("Database function not available, using fallback", { error: (err as Error).message });
+              await upsertSubscriptionFallback({
+                customerId,
+                subscription,
+                priceId: priceId ?? undefined,
+                status: subscription.status,
+                userId: metadataUserId,
+              });
           }
 
           // Save payment method if available
           if (paymentMethodId) {
             try {
               const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
-              
-              // Find user_id from subscriber
-              const { data: subscriber } = await supabase
-                .from('subscribers')
-                .select('user_id')
-                .eq('stripe_customer_id', customerId)
-                .single();
 
-              if (subscriber?.user_id && paymentMethod.card) {
+                const userId = (await getUserIdForCustomer(customerId, metadataUserId));
+
+                if (userId && paymentMethod.card) {
+                  await supabase
+                    .from('payment_methods')
+                    .update({ is_default: false })
+                    .eq('user_id', userId);
+
                 await supabase.from('payment_methods').upsert({
-                  user_id: subscriber.user_id,
+                    user_id: userId,
                   stripe_payment_method_id: paymentMethod.id,
                   type: paymentMethod.type,
                   card_brand: paymentMethod.card.brand,
@@ -156,7 +199,7 @@ serve(async (req) => {
                   is_default: true,
                   updated_at: new Date().toISOString(),
                 }, { onConflict: 'stripe_payment_method_id' });
-                
+
                 log('Payment method saved', { paymentMethodId });
               }
             } catch (err) {
@@ -177,7 +220,7 @@ serve(async (req) => {
 
         if (customerId) {
           try {
-            await supabase.rpc('update_subscriber_from_webhook', {
+              await supabase.rpc('update_subscription_from_webhook', {
               p_stripe_customer_id: customerId,
               p_stripe_subscription_id: subscription.id,
               p_stripe_price_id: priceId,
@@ -189,15 +232,13 @@ serve(async (req) => {
             log('Updated subscriber via database function');
           } catch (err) {
             log("Database function not available, using fallback", { error: (err as Error).message });
-            await supabase.from('subscribers').upsert({
-              stripe_customer_id: customerId,
-              stripe_subscription_id: subscription.id,
-              subscribed: subscription.status === 'active',
-              subscription_status: subscription.status,
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              cancel_at_period_end: subscription.cancel_at_period_end,
-              updated_at: new Date().toISOString(),
-            }, { onConflict: 'stripe_customer_id' });
+              await upsertSubscriptionFallback({
+                customerId,
+                subscription,
+                priceId,
+                status: subscription.status,
+                userId: subscription.metadata?.user_id,
+              });
           }
         }
         break;
@@ -209,10 +250,10 @@ serve(async (req) => {
 
         const customerId = typeof subscription.customer === 'string' ? subscription.customer : undefined;
         if (customerId) {
-          await supabase.from('subscribers')
+            await supabase.from('subscriptions')
             .update({
               subscribed: false,
-              subscription_status: 'canceled',
+                status: 'canceled',
               canceled_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
@@ -229,8 +270,8 @@ serve(async (req) => {
         const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : undefined;
 
         // Find user_id from customer_id
-        const { data: subscriber } = await supabase
-          .from('subscribers')
+          const { data: subscription } = await supabase
+            .from('subscriptions')
           .select('user_id')
           .eq('stripe_customer_id', customerId)
           .single();
@@ -241,7 +282,7 @@ serve(async (req) => {
             stripe_invoice_id: invoice.id,
             stripe_customer_id: customerId,
             stripe_subscription_id: subscriptionId,
-            user_id: subscriber?.user_id,
+               user_id: subscription?.user_id,
             amount_due: invoice.amount_due,
             amount_paid: invoice.amount_paid,
             currency: invoice.currency,
@@ -259,7 +300,7 @@ serve(async (req) => {
 
         // Update subscriber status
         if (customerId) {
-          await supabase.from('subscribers')
+            await supabase.from('subscriptions')
             .update({
               subscribed: true,
               updated_at: new Date().toISOString(),
@@ -275,9 +316,9 @@ serve(async (req) => {
 
         const customerId = typeof invoice.customer === 'string' ? invoice.customer : undefined;
         if (customerId) {
-          await supabase.from('subscribers')
+            await supabase.from('subscriptions')
             .update({
-              subscription_status: 'past_due',
+                status: 'past_due',
               updated_at: new Date().toISOString(),
             })
             .eq('stripe_customer_id', customerId);
@@ -285,10 +326,37 @@ serve(async (req) => {
         break;
       }
 
+        case 'payment_method.attached': {
+          const paymentMethod = event.data.object as Stripe.PaymentMethod;
+          const customerId = typeof paymentMethod.customer === 'string' ? paymentMethod.customer : undefined;
+          const userId = await getUserIdForCustomer(customerId);
+          if (userId && paymentMethod.card) {
+            await supabase
+              .from('payment_methods')
+              .update({ is_default: false })
+              .eq('user_id', userId);
+
+            await supabase.from('payment_methods').upsert({
+              user_id: userId,
+              stripe_payment_method_id: paymentMethod.id,
+              type: paymentMethod.type,
+              card_brand: paymentMethod.card.brand,
+              card_last4: paymentMethod.card.last4,
+              card_exp_month: paymentMethod.card.exp_month,
+              card_exp_year: paymentMethod.card.exp_year,
+              is_default: true,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' });
+
+            log('Payment method attached event persisted', { paymentMethodId: paymentMethod.id });
+          }
+          break;
+        }
+
       default:
         log('Unhandled event type', { type: event.type });
     }
-  } catch (err) {
+    } catch (err) {
     errorMessage = (err as Error).message;
     log('Error processing event', { 
       error: errorMessage,

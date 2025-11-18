@@ -26,9 +26,9 @@ Deno.serve(async (req) => {
     console.log('Starting usage limit check for all users...');
 
     // Get all active subscribers
-    const { data: subscribers, error: subsError } = await supabase
-      .from('subscribers')
-      .select('user_id, entities_limit, subscription_tier')
+      const { data: subscribers, error: subsError } = await supabase
+        .from('subscriptions')
+        .select('user_id, entities_limit, plan_id')
       .eq('subscribed', true);
 
     if (subsError) {
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         const entitiesUsed = entitiesCount || 0;
         const entitiesLimit = subscriber.entities_limit || 10;
         const storageUsed = (documentsCount || 0) * 0.5;
-        const storageLimit = getStorageLimit(subscriber.subscription_tier);
+          const storageLimit = getStorageLimit(subscriber.plan_id);
 
         // Check entities threshold
         const entitiesPercentage = (entitiesUsed / entitiesLimit) * 100;
