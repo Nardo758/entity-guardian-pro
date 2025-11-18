@@ -433,6 +433,8 @@ export type Database = {
           created_at: string
           id: string
           is_default: boolean
+          setup_intent_id: string | null
+          setup_intent_status: string | null
           stripe_payment_method_id: string
           type: string
           updated_at: string
@@ -446,6 +448,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean
+          setup_intent_id?: string | null
+          setup_intent_status?: string | null
           stripe_payment_method_id: string
           type: string
           updated_at?: string
@@ -459,6 +463,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_default?: boolean
+          setup_intent_id?: string | null
+          setup_intent_status?: string | null
           stripe_payment_method_id?: string
           type?: string
           updated_at?: string
