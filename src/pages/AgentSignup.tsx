@@ -131,11 +131,16 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
         return;
       }
 
-      // Step 3: Assign agent role via edge function (uses service role to bypass RLS)
-      const { data: roleData, error: roleError } = await supabase.functions.invoke('assign-agent-role');
+      // Step 3: Assign registered_agent role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: authData.user.id,
+          role: 'registered_agent' as any // Type assertion until database types refresh
+        });
 
-      if (roleError || !roleData?.success) {
-        console.error('Role assignment error:', roleError || roleData);
+      if (roleError) {
+        console.error('Role assignment error:', roleError);
         toast.error('Account created but failed to assign agent role. Please contact support.');
         return;
       }
