@@ -1,5 +1,11 @@
 project_id = "wcuxqopfcgivypbiynjp"
 
+[functions.create-billing-setup-intent]
+verify_jwt = true
+
+[functions.update-payment-method]
+verify_jwt = true
+
 [functions.send-auth-email]
 verify_jwt = false
 
