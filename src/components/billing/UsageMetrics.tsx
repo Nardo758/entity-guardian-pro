@@ -74,9 +74,9 @@ export const UsageMetrics = () => {
   const fetchUsageData = async () => {
     try {
       // Get subscription info
-      const { data: subscription } = await supabase
-        .from('subscribers')
-        .select('entities_limit, subscription_tier')
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('entities_limit, plan_id')
         .eq('user_id', user?.id)
         .single();
 
@@ -93,12 +93,13 @@ export const UsageMetrics = () => {
         .eq('user_id', user?.id);
 
       // Set limits based on tier
-      const tier = subscription?.subscription_tier || 'free';
+        const tier = subscription?.plan_id || 'free';
       const limits = {
         free: { entities: 5, storage: 1, api: 100 },
-        starter: { entities: 10, storage: 5, api: 1000 },
-        pro: { entities: 50, storage: 25, api: 5000 },
-        premium: { entities: 200, storage: 100, api: 20000 },
+          starter: { entities: 10, storage: 5, api: 1000 },
+          growth: { entities: 20, storage: 15, api: 3000 },
+          professional: { entities: 50, storage: 50, api: 10000 },
+          enterprise: { entities: 150, storage: 200, api: 50000 },
       };
 
       const tierLimits = limits[tier as keyof typeof limits] || limits.starter;

@@ -48,17 +48,18 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
-    if (customers.data.length === 0) {
+      if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
-      await supabaseClient.from("subscribers").upsert({
+        await supabaseClient.from("subscriptions").upsert({
         email: user.email,
         user_id: user.id,
         stripe_customer_id: null,
-        subscribed: false,
-        subscription_tier: null,
-        subscription_end: null,
+          subscribed: false,
+          plan_id: 'free',
+          status: 'inactive',
+          subscription_end: null,
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
+        }, { onConflict: 'user_id' });
       return new Response(JSON.stringify({ subscribed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -74,7 +75,7 @@ serve(async (req) => {
       limit: 1,
     });
     const hasActiveSub = subscriptions.data.length > 0;
-    let subscriptionTier = null;
+      let subscriptionPlan = null;
     let subscriptionEnd = null;
 
     if (hasActiveSub) {
@@ -82,45 +83,45 @@ serve(async (req) => {
       subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
       logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
       // Determine subscription tier from price lookup_key
-      const price = subscription.items.data[0].price;
-      const lookupKey = price.lookup_key || null;
+        const price = subscription.items.data[0].price;
+        const lookupKey = price.lookup_key || null;
       if (lookupKey) {
         const [, tierId] = (lookupKey as string).split(":"); // erp:{tier}:{billing}
         switch (tierId) {
-          case 'starter': subscriptionTier = 'Starter'; break;
-          case 'growth': subscriptionTier = 'Growth'; break;
-          case 'professional': subscriptionTier = 'Professional'; break;
-          case 'enterprise': subscriptionTier = 'Enterprise'; break;
-          case 'unlimited': subscriptionTier = 'Unlimited'; break;
-          default: subscriptionTier = null;
+            case 'starter': subscriptionPlan = 'starter'; break;
+            case 'growth': subscriptionPlan = 'growth'; break;
+            case 'professional': subscriptionPlan = 'professional'; break;
+            case 'enterprise': subscriptionPlan = 'enterprise'; break;
+            case 'unlimited': subscriptionPlan = 'unlimited'; break;
+            default: subscriptionPlan = 'pro';
         }
       } else {
-        subscriptionTier = null;
+          subscriptionPlan = null;
       }
-      logStep("Determined subscription tier", { lookupKey, subscriptionTier });
+        logStep("Determined subscription tier", { lookupKey, subscriptionPlan });
     } else {
       logStep("No active subscription found");
     }
 
     const subscriptionStatus = hasActiveSub ? subscriptions.data[0].status : null;
     
-    await supabaseClient.from("subscribers").upsert({
+      await supabaseClient.from("subscriptions").upsert({
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
       subscribed: hasActiveSub,
-      subscription_tier: subscriptionTier,
+        plan_id: subscriptionPlan ?? 'free',
       subscription_end: subscriptionEnd,
-      subscription_status: subscriptionStatus,
+        status: subscriptionStatus ?? 'inactive',
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'email' });
+      }, { onConflict: 'user_id' });
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, subscriptionStatus });
+      logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionPlan, subscriptionStatus });
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      subscription_tier: subscriptionTier,
+        plan_id: subscriptionPlan ?? 'free',
       subscription_end: subscriptionEnd,
-      subscription_status: subscriptionStatus,
+        status: subscriptionStatus,
       stripe_customer_id: customerId
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

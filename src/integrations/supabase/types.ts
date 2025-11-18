@@ -702,7 +702,7 @@ export type Database = {
         }
         Relationships: []
       }
-      subscribers: {
+        subscriptions: {
         Row: {
           billing_cycle: string | null
           cancel_at_period_end: boolean | null
@@ -719,8 +719,8 @@ export type Database = {
           stripe_subscription_id: string | null
           subscribed: boolean | null
           subscription_end: string | null
-          subscription_status: string | null
-          subscription_tier: string | null
+            status: string | null
+            plan_id: string | null
           trial_end: string | null
           updated_at: string | null
           user_id: string | null
@@ -741,8 +741,8 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscribed?: boolean | null
           subscription_end?: string | null
-          subscription_status?: string | null
-          subscription_tier?: string | null
+            status?: string | null
+            plan_id?: string | null
           trial_end?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -763,8 +763,8 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscribed?: boolean | null
           subscription_end?: string | null
-          subscription_status?: string | null
-          subscription_tier?: string | null
+            status?: string | null
+            plan_id?: string | null
           trial_end?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -1147,7 +1147,7 @@ export type Database = {
           should_block: boolean
         }[]
       }
-      update_subscriber_from_webhook: {
+        update_subscription_from_webhook: {
         Args: {
           p_cancel_at_period_end?: boolean
           p_current_period_end: string
@@ -1159,6 +1159,18 @@ export type Database = {
         }
         Returns: string
       }
+        update_subscriber_from_webhook: {
+          Args: {
+            p_cancel_at_period_end?: boolean
+            p_current_period_end: string
+            p_current_period_start: string
+            p_stripe_customer_id: string
+            p_stripe_price_id: string
+            p_stripe_subscription_id: string
+            p_subscription_status: string
+          }
+          Returns: string
+        }
       user_has_team_permission: {
         Args: {
           required_role: Database["public"]["Enums"]["team_role"]
