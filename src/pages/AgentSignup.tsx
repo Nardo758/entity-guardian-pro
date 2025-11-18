@@ -131,21 +131,8 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
         return;
       }
 
-      // Step 3: Assign registered_agent role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: 'registered_agent' as any // Type assertion until database types refresh
-        });
-
-      if (roleError) {
-        console.error('Role assignment error:', roleError);
-        toast.error('Account created but failed to assign agent role. Please contact support.');
-        return;
-      }
-
-      // Step 4: Create agent profile (without pricing - to be set later in dashboard)
+      // Step 3: Create agent profile (without pricing - to be set later in dashboard)
+      // Note: Role is automatically assigned by database trigger based on user_type metadata
       await createAgentProfile({
         company_name: data.company_name,
         contact_email: data.contact_email,
