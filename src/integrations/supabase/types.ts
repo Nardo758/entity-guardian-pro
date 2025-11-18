@@ -83,6 +83,48 @@ export type Database = {
         }
         Relationships: []
       }
+      agents: {
+        Row: {
+          bio: string | null
+          company_name: string | null
+          contact_email: string | null
+          created_at: string
+          id: string
+          is_available: boolean
+          price_per_entity: number
+          states: string[]
+          updated_at: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_per_entity?: number
+          states?: string[]
+          updated_at?: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          price_per_entity?: number
+          states?: string[]
+          updated_at?: string
+          user_id?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       analytics_data: {
         Row: {
           created_at: string
