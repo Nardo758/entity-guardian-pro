@@ -2,8 +2,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-// Rate limiter utility
-const checkRateLimit = async (endpoint: string, userId?: string): Promise<{
+// Rate limiter utility with graceful degradation
+const checkRateLimit = async (endpoint: string, userId?: string, options?: { 
+  allowOnFailure?: boolean 
+}): Promise<{
   allowed: boolean;
   remaining?: number;
   resetTime?: string;
@@ -13,6 +15,12 @@ const checkRateLimit = async (endpoint: string, userId?: string): Promise<{
   try {
     // Use our self-hosted IP detection service
     const { data: ipData, error: ipError } = await supabase.functions.invoke('get-client-ip');
+    
+    // If IP detection fails but we allow graceful degradation, proceed with 'unknown'
+    if (ipError && options?.allowOnFailure) {
+      console.warn('IP detection failed, proceeding with unknown IP:', ipError);
+    }
+    
     const clientIP = ipData?.ip || 'unknown';
 
     const { data, error } = await supabase.functions.invoke('rate-limiter', {
@@ -25,7 +33,17 @@ const checkRateLimit = async (endpoint: string, userId?: string): Promise<{
 
     if (error) {
       console.error('Rate limiter error:', error);
-      // For critical auth operations, fail secure
+      
+      // For non-critical operations with graceful degradation enabled, allow with logging
+      if (options?.allowOnFailure) {
+        console.warn(`Rate limiter unavailable for ${endpoint}, allowing operation to proceed`);
+        return { 
+          allowed: true,
+          error: 'Rate limiter service temporarily unavailable (operation allowed)'
+        };
+      }
+      
+      // For critical operations, fail secure
       return { 
         allowed: false, 
         error: 'Security service temporarily unavailable. Please try again later.',
@@ -45,7 +63,16 @@ const checkRateLimit = async (endpoint: string, userId?: string): Promise<{
       };
     }
     
-    // For auth endpoints, deny on error
+    // If graceful degradation is enabled, allow with warning
+    if (options?.allowOnFailure) {
+      console.warn(`Rate limit check exception for ${endpoint}, allowing operation:`, error);
+      return { 
+        allowed: true,
+        error: 'Rate limit check failed (operation allowed)'
+      };
+    }
+    
+    // For critical operations, deny on error
     return { 
       allowed: false, 
       error: 'Security check failed. Please try again.',
@@ -421,8 +448,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    // Check rate limit first
-    const rateLimitResult = await checkRateLimit('auth');
+    // Check rate limit with graceful degradation for signups
+    // New user signups are less critical than admin operations, so we allow them to proceed
+    // if the rate limiter service is temporarily unavailable
+    const rateLimitResult = await checkRateLimit('auth', undefined, { allowOnFailure: true });
     
     if (!rateLimitResult.allowed) {
       return { 
