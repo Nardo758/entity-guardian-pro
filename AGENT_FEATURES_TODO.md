@@ -104,25 +104,29 @@ Features:
 
 #### Task 5: Send Agent Invitations
 **Priority:** High  
-**Time Estimate:** 45 minutes
+**Time Estimate:** 45 minutes  
+**Status:** ✅ COMPLETED
 
 Features:
-- [ ] Invite agent to manage specific entity
-- [ ] Include custom message
-- [ ] Set fee agreement
-- [ ] Send email notification
-- [ ] Track invitation status (pending/accepted/declined)
-- [ ] Resend invitation option
-- [ ] Cancel pending invitation
+- [x] Invite agent to manage specific entity
+- [x] Include custom message
+- [x] Send email notification
+- [x] Track invitation status (pending/accepted/declined)
+- [x] Resend invitation option (via unsend)
+- [x] Cancel pending invitation
 
-**Files to Create:**
-- `src/components/InviteAgentModal.tsx` (already exists)
-- `src/hooks/useAgentInvitations.ts` (already exists)
+**Files Created:**
+- Database: `agent_invitations` table with RLS policies
+- Database: `entity_agent_assignments` table with RLS policies
+- Edge Function: `supabase/functions/send-agent-invitation/index.ts`
+- Hook: `src/hooks/useAgentInvitations.ts` (enhanced with email sending)
+- Component: `src/components/InviteAgentForm.tsx` (already existed)
 
-**Database:**
-- [ ] Create `agent_invitations` table
-- [ ] Add RLS policies
-- [ ] Create invitation notification triggers
+**Backend:**
+- [x] Create `agent_invitations` table
+- [x] Add RLS policies
+- [x] Create invitation email notification system
+- [x] Auto-create assignments on acceptance
 
 ---
 

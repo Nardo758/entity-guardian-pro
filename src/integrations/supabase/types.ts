@@ -83,6 +83,72 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_invitations: {
+        Row: {
+          agent_email: string
+          agent_id: string | null
+          created_at: string
+          entity_id: string
+          entity_owner_id: string
+          id: string
+          message: string | null
+          responded_at: string | null
+          sent_at: string | null
+          status: string
+          token: string
+          unsent_at: string | null
+          updated_at: string
+          viewed_at: string | null
+        }
+        Insert: {
+          agent_email: string
+          agent_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_owner_id: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string
+          token: string
+          unsent_at?: string | null
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Update: {
+          agent_email?: string
+          agent_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_owner_id?: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          sent_at?: string | null
+          status?: string
+          token?: string
+          unsent_at?: string | null
+          updated_at?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_invitations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_invitations_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           bio: string | null
@@ -321,6 +387,70 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      entity_agent_assignments: {
+        Row: {
+          agent_id: string
+          agreed_fee: number
+          assigned_at: string
+          created_at: string
+          entity_id: string
+          entity_owner_id: string
+          id: string
+          invitation_id: string | null
+          status: string
+          terminated_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          agreed_fee?: number
+          assigned_at?: string
+          created_at?: string
+          entity_id: string
+          entity_owner_id: string
+          id?: string
+          invitation_id?: string | null
+          status?: string
+          terminated_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          agreed_fee?: number
+          assigned_at?: string
+          created_at?: string
+          entity_id?: string
+          entity_owner_id?: string
+          id?: string
+          invitation_id?: string | null
+          status?: string
+          terminated_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_agent_assignments_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_agent_assignments_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entity_agent_assignments_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "agent_invitations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ip_reputation: {
         Row: {
