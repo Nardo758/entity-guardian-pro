@@ -88,6 +88,26 @@ export const useAgentInvitations = () => {
 
       if (tokenError) throw tokenError;
 
+      // Get entity details
+      const { data: entity, error: entityError } = await supabase
+        .from('entities')
+        .select('name, user_id')
+        .eq('id', entityId)
+        .single();
+
+      if (entityError || !entity) throw new Error('Entity not found');
+
+      // Get owner profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const ownerName = profile 
+        ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || user.email
+        : user.email || 'Entity Owner';
+
       const { data, error } = await supabase
         .from('agent_invitations')
         .insert({
@@ -105,15 +125,44 @@ export const useAgentInvitations = () => {
 
       if (error) throw error;
 
+      // Send email notification via edge function
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-agent-invitation', {
+          body: {
+            invitationId: data.id,
+            agentEmail,
+            entityName: entity.name,
+            message,
+            ownerName,
+          },
+        });
+
+        if (emailError) {
+          console.error('Error sending invitation email:', emailError);
+          toast({
+            title: "Invitation Created",
+            description: "Invitation created but email notification failed. The agent can still see it in their dashboard.",
+          });
+        } else {
+          toast({
+            title: "Invitation Sent",
+            description: `Invitation email sent to ${agentEmail}`,
+          });
+        }
+      } catch (emailErr) {
+        console.error('Email error:', emailErr);
+        // Don't fail the whole operation if email fails
+        toast({
+          title: "Invitation Created",
+          description: "Invitation created successfully",
+        });
+      }
+
       setInvitations(prev => [data as AgentInvitation, ...prev]);
       
       // Refresh metrics
       fetchInvitations();
       
-      toast({
-        title: "Invitation Sent",
-        description: "Agent invitation sent successfully"
-      });
       return data;
     } catch (error) {
       console.error('Error sending invitation:', error);
@@ -130,30 +179,54 @@ export const useAgentInvitations = () => {
     if (!user) return;
 
     try {
+      // First get the invitation details
+      const { data: invitation, error: invError } = await supabase
+        .from('agent_invitations')
+        .select('*, entity:entities(id, name, user_id)')
+        .eq('token', token)
+        .single();
+
+      if (invError) throw invError;
+
+      // Get the agent profile for the current user
+      const { data: agentProfile, error: agentError } = await supabase
+        .from('agents')
+        .select('id, price_per_entity')
+        .eq('user_id', user.id)
+        .single();
+
+      if (agentError || !agentProfile) {
+        throw new Error('Agent profile not found. Please create your agent profile first.');
+      }
+
+      // Update invitation status
       const { data, error } = await supabase
         .from('agent_invitations')
         .update({ 
           status: response,
-        responded_at: new Date().toISOString()
+          responded_at: new Date().toISOString(),
+          agent_id: agentProfile.id
         })
         .eq('token', token)
         .select(`
           *,
-          entity:entities(id, name, type, state)
+          entity:entities(id, name, type, state, user_id)
         `)
         .single();
 
       if (error) throw error;
 
       // If accepted, create entity-agent assignment
-      if (response === 'accepted') {
+      if (response === 'accepted' && data.entity) {
         const { error: assignmentError } = await supabase
           .from('entity_agent_assignments')
           .insert({
             entity_id: data.entity_id,
-            agent_id: data.agent_id,
+            agent_id: agentProfile.id,
+            entity_owner_id: (data.entity as any).user_id,
+            invitation_id: data.id,
+            agreed_fee: agentProfile.price_per_entity,
             status: 'accepted',
-            responded_at: new Date().toISOString()
           });
 
         if (assignmentError) throw assignmentError;
@@ -173,11 +246,11 @@ export const useAgentInvitations = () => {
         description: `Invitation ${response} successfully`
       });
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error responding to invitation:', error);
       toast({
         title: "Error", 
-        description: "Failed to respond to invitation",
+        description: error.message || "Failed to respond to invitation",
         variant: "destructive"
       });
       throw error;
@@ -250,13 +323,18 @@ export const useAgentInvitations = () => {
   };
 
   const markInvitationViewed = async (token: string) => {
+    if (!token) return;
+
     try {
       const { error } = await supabase
         .from('agent_invitations')
         .update({ viewed_at: new Date().toISOString() })
-        .eq('token', token);
+        .eq('token', token)
+        .is('viewed_at', null);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error marking invitation as viewed:', error);
+      }
     } catch (error) {
       console.error('Error marking invitation as viewed:', error);
     }
