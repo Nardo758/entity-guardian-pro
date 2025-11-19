@@ -24,7 +24,7 @@ import {
 
 const SignOutConfirmation = () => {
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithOAuth } = useAuth();
   const { toast } = useToast();
   
   const [showSignInOptions, setShowSignInOptions] = useState(false);
@@ -104,7 +104,6 @@ const SignOutConfirmation = () => {
 
   const handleOAuthSignIn = async (provider: 'google' | 'microsoft') => {
     try {
-      const { signInWithOAuth } = useAuth();
       const { error } = await signInWithOAuth(provider);
       
       if (error) {
