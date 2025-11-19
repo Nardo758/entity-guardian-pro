@@ -26,12 +26,14 @@ import { InvoiceHistory } from "@/components/billing/InvoiceHistory";
 import { UsageMetrics } from "@/components/billing/UsageMetrics";
 import { SMSVerificationStatus } from "@/components/security/SMSVerificationStatus";
 import { DataExport } from "@/components/settings/DataExport";
+import { AgentProfileEditor } from "@/components/settings/AgentProfileEditor";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 import { useAdminMFA } from "@/hooks/useAdminMFA";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useTierPermissions } from "@/hooks/useTierPermissions";
+import { Briefcase } from "lucide-react";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -43,6 +45,10 @@ const Settings = () => {
   const [showMFASetup, setShowMFASetup] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
+  // Check if user is an agent
+  const isAgent = (authProfile as any)?.user_type === 'agent';
+  
   const [settingsProfile, setSettingsProfile] = useState({
     first_name: "",
     last_name: "",
@@ -153,7 +159,11 @@ const Settings = () => {
           {/* Main Settings Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="profile" className="w-full">
-              <TabsList className={`grid w-full ${hasAdminAccess ? 'grid-cols-6' : 'grid-cols-4'}`}>
+              <TabsList className={`grid w-full ${
+                hasAdminAccess ? 'grid-cols-6' : 
+                isAgent ? 'grid-cols-5' : 
+                'grid-cols-4'
+              }`}>
                 <TabsTrigger value="profile" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Profile
@@ -170,6 +180,12 @@ const Settings = () => {
                   <CreditCard className="h-4 w-4" />
                   Billing
                 </TabsTrigger>
+                {isAgent && (
+                  <TabsTrigger value="agent" className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    Agent Profile
+                  </TabsTrigger>
+                )}
                 {hasAdminAccess && (
                   <>
                     <TabsTrigger value="admin" className="flex items-center gap-2">
@@ -388,6 +404,12 @@ const Settings = () => {
 
                 <DataExport />
               </TabsContent>
+
+              {isAgent && (
+                <TabsContent value="agent" className="space-y-6">
+                  <AgentProfileEditor />
+                </TabsContent>
+              )}
 
               {hasAdminAccess && (
                 <>
