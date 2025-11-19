@@ -360,7 +360,7 @@ const Settings = () => {
                         <Separator />
                         <div className="space-y-4">
                           <div className="flex flex-col gap-3">
-                            <Button onClick={openCustomerPortal} className="w-full">
+                            <Button onClick={() => openCustomerPortal()} className="w-full">
                               Manage Subscription
                             </Button>
                             <p className="text-xs text-muted-foreground text-center">
