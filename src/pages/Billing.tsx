@@ -8,21 +8,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  CreditCard, 
-  Download, 
-  Plus, 
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  Users,
-  Server,
-  Database,
-  Phone,
-  Check,
-  Star,
-  RefreshCw,
-  ArrowLeft
+import {
+  CreditCard, Download, Plus, Calendar, DollarSign, TrendingUp,
+  Users, Server, Database, Phone, Check, Star, RefreshCw, ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -82,12 +70,12 @@ const Billing = () => {
     try {
       toast.loading('Creating checkout session...');
       const sessionId = await createCheckout(tier, selectedBilling);
-      
+
       if (!sessionId) {
         toast.error('Failed to create checkout session');
         return;
       }
-      
+
       toast.success('Redirecting to checkout...');
     } catch (error) {
       console.error('Checkout error:', error);
@@ -106,8 +94,8 @@ const Billing = () => {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => navigate('/dashboard')}
                 className="gap-2 text-muted-foreground hover:text-foreground"
@@ -121,8 +109,8 @@ const Billing = () => {
               </div>
             </div>
             <div className="flex gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => checkSubscription()}
                 disabled={loading}
                 className="gap-2"
@@ -141,7 +129,7 @@ const Billing = () => {
           {/* Progress Indicator */}
           {(isProcessing || currentStep !== 'select') && (
             <div className="mt-6">
-              <ProgressSteps 
+              <ProgressSteps
                 currentStep={currentStep === 'select' ? 1 : currentStep === 'payment' ? 2 : 3}
                 isProcessing={isProcessing}
               />
@@ -153,7 +141,7 @@ const Billing = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Error Display */}
         {error && (
-          <ErrorDisplay 
+          <ErrorDisplay
             error={error}
             onRetry={() => checkSubscription()}
             showSupport={true}
@@ -203,70 +191,70 @@ const Billing = () => {
                       ))}
                     </div>
                   ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {pricingTiers.map((tier) => (
-                      <Card key={tier.id} className={`relative ${tier.popular ? 'border-primary shadow-lg' : ''}`}>
-                        {tier.popular && (
-                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <Badge className="bg-primary text-primary-foreground">
-                              <Star className="w-3 h-3 mr-1" />
-                              Most Popular
-                            </Badge>
-                          </div>
-                        )}
-                        <CardHeader className="text-center pb-2">
-                          <CardTitle className="text-lg">{tier.name}</CardTitle>
-                          <CardDescription className="text-sm">{tier.description}</CardDescription>
-                          <div className="mt-4">
-                            <div className="text-3xl font-bold">
-                              ${selectedBilling === 'monthly' ? tier.monthlyPrice : tier.yearlyPrice}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {pricingTiers.map((tier) => (
+                        <Card key={tier.id} className={`relative ${tier.popular ? 'border-primary shadow-lg' : ''}`}>
+                          {tier.popular && (
+                            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                              <Badge className="bg-primary text-primary-foreground">
+                                <Star className="w-3 h-3 mr-1" />
+                                Most Popular
+                              </Badge>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              per {selectedBilling === 'monthly' ? 'month' : 'year'}
-                            </div>
-                            {selectedBilling === 'yearly' && (
-                              <div className="text-xs text-green-600 font-medium">
-                                Save ${(tier.monthlyPrice * 12) - tier.yearlyPrice} annually
+                          )}
+                          <CardHeader className="text-center pb-2">
+                            <CardTitle className="text-lg">{tier.name}</CardTitle>
+                            <CardDescription className="text-sm">{tier.description}</CardDescription>
+                            <div className="mt-4">
+                              <div className="text-3xl font-bold">
+                                ${selectedBilling === 'monthly' ? tier.monthlyPrice : tier.yearlyPrice}
                               </div>
-                            )}
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <div className="space-y-3">
-                             <div className="text-center">
-                               <div className="text-lg font-semibold">
-                                 {typeof tier.entities === 'number' ? `${tier.entities} entities` : tier.entities}
-                               </div>
-                               {tier.perEntityCost && (
-                                 <div className="text-sm text-muted-foreground">
-                                   {tier.perEntityCost}
-                                 </div>
-                               )}
-                             </div>
-                            <ul className="space-y-2 text-sm">
-                              {tier.features.map((feature, index) => (
-                                <li key={index} className="flex items-center">
-                                  <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
-                            <Button 
-                              className="w-full mt-4" 
-                              variant={tier.popular ? 'default' : 'outline'}
-                              onClick={() => handleUpgradeClick(tier.id)}
-                              disabled={loading}
-                            >
-                              {subscription.subscribed && subscription.subscription_tier === tier.name 
-                                ? 'Current Plan' 
-                                : 'Choose Plan'
-                              }
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                              <div className="text-sm text-muted-foreground">
+                                per {selectedBilling === 'monthly' ? 'month' : 'year'}
+                              </div>
+                              {selectedBilling === 'yearly' && (
+                                <div className="text-xs text-green-600 font-medium">
+                                  Save ${(tier.monthlyPrice * 12) - tier.yearlyPrice} annually
+                                </div>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="space-y-3">
+                              <div className="text-center">
+                                <div className="text-lg font-semibold">
+                                  {typeof tier.entities === 'number' ? `${tier.entities} entities` : tier.entities}
+                                </div>
+                                {tier.perEntityCost && (
+                                  <div className="text-sm text-muted-foreground">
+                                    {tier.perEntityCost}
+                                  </div>
+                                )}
+                              </div>
+                              <ul className="space-y-2 text-sm">
+                                {tier.features.map((feature, index) => (
+                                  <li key={index} className="flex items-center">
+                                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                                    {feature}
+                                  </li>
+                                ))}
+                              </ul>
+                              <Button
+                                className="w-full mt-4"
+                                variant={tier.popular ? 'default' : 'outline'}
+                                onClick={() => handleUpgradeClick(tier.id)}
+                                disabled={loading}
+                              >
+                                {subscription.subscribed && subscription.subscription_tier === tier.name
+                                  ? 'Current Plan'
+                                  : 'Choose Plan'
+                                }
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -296,9 +284,9 @@ const Billing = () => {
                           <Button className="w-full" onClick={handleManageSubscription}>
                             Change Plan
                           </Button>
-                            <Button className="w-full" variant="outline" onClick={handleManageSubscription}>
-                              Update Payment Method
-                            </Button>
+                          <Button className="w-full" variant="outline" onClick={handleManageSubscription}>
+                            Update Payment Method
+                          </Button>
                         </>
                       ) : (
                         <Button className="w-full" onClick={() => setActiveTab('plans')}>
@@ -329,8 +317,8 @@ const Billing = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {(subscription.subscribed && subscription.subscription_tier) ? 
-                        pricingTiers.find(t => t.name === subscription.subscription_tier)?.features.length || 0 
+                      {(subscription.subscribed && subscription.subscription_tier) ?
+                        pricingTiers.find(t => t.name === subscription.subscription_tier)?.features.length || 0
                         : 0
                       }
                     </div>

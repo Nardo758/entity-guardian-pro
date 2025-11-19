@@ -99,14 +99,22 @@ export const useSubscription = () => {
     }
   };
 
-  const openCustomerPortal = async () => {
+  interface OpenPortalOptions {
+    suppressToast?: boolean;
+  }
+
+  const openCustomerPortal = async (options?: OpenPortalOptions) => {
+    const shouldToast = !(options?.suppressToast);
+
     if (!user) {
       toast.error('Please log in to manage subscription');
       return;
     }
 
     try {
-      toast.loading('Opening billing portal...', { id: 'portal' });
+      if (shouldToast) {
+        toast.loading('Opening billing portal...', { id: 'portal' });
+      }
 
       // Ensure we have a fresh access token and pass the app origin explicitly
       const { data: sessionData } = await supabase.auth.getSession();
@@ -122,13 +130,19 @@ export const useSubscription = () => {
       if (error) throw error;
       if (!data?.url) throw new Error('No portal URL returned');
 
-      toast.dismiss('portal');
+      if (shouldToast) {
+        toast.dismiss('portal');
+      }
       // Use same-tab navigation to avoid popup blockers
       window.location.assign(data.url as string);
     } catch (error) {
       console.error('Error opening customer portal:', error);
       const message = error instanceof Error ? error.message : 'Failed to open customer portal';
-      toast.error(message, { id: 'portal' });
+      if (shouldToast) {
+        toast.error(message, { id: 'portal' });
+      } else {
+        toast.error(message);
+      }
     }
   };
   useEffect(() => {

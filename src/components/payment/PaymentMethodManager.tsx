@@ -4,7 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, ExternalLink, Shield, Trash2, ChevronDown, Calendar, Receipt } from 'lucide-react';
+import { CreditCard, ExternalLink, Shield, Trash2, ChevronDown, Calendar, Receipt, Loader2 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +32,7 @@ export const PaymentMethodManager = () => {
   const [methodToDelete, setMethodToDelete] = useState<{ id: string; last4: string } | null>(null);
   const [recentInvoices, setRecentInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -111,6 +112,16 @@ export const PaymentMethodManager = () => {
   const confirmRemove = () => {
     if (methodToDelete) {
       handleRemove(methodToDelete.id);
+    }
+  };
+
+  const handleOpenPortal = async () => {
+    if (portalLoading) return;
+    try {
+      setPortalLoading(true);
+      await openCustomerPortal({ suppressToast: true });
+    } finally {
+      setPortalLoading(false);
     }
   };
 
@@ -213,14 +224,29 @@ export const PaymentMethodManager = () => {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
-          <Button onClick={openCustomerPortal} className="w-full" size="lg" variant="outline">
-            <CreditCard className="w-4 h-4 mr-2" />
-            Add Payment Method
+          <Button
+            onClick={handleOpenPortal}
+            className="w-full"
+            size="lg"
+            variant="outline"
+            disabled={portalLoading}
+          >
+            {portalLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Opening billing portal…
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-4 h-4 mr-2" />
+                Add Payment Method
+              </>
+            )}
           </Button>
-          <Button onClick={openCustomerPortal} className="w-full" size="sm">
+          {/* <Button onClick={openCustomerPortal} className="w-full" size="sm">
             Manage in Stripe Portal
             <ExternalLink className="w-4 h-4 ml-2" />
-          </Button>
+          </Button> */}
         </div>
 
         {/* Recent Transactions */}
@@ -276,7 +302,7 @@ export const PaymentMethodManager = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Payment Method?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove the payment method ending in {methodToDelete?.last4}? 
+              Are you sure you want to remove the payment method ending in {methodToDelete?.last4}?
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
