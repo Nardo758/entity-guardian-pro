@@ -134,18 +134,18 @@ Features:
 
 #### Task 6: Agent Invitation Management
 **Priority:** High  
-**Time Estimate:** 30 minutes
+**Time Estimate:** 30 minutes  
+**Status:** ✅ COMPLETED
 
 Features:
-- [ ] View received invitations
-- [ ] Accept/decline invitations
-- [ ] View invitation details (entity, fees)
-- [ ] Notification badge for new invitations
-- [ ] Invitation history
+- [x] View received invitations
+- [x] Accept/decline invitations
+- [x] View invitation details (entity, fees)
+- [x] Notification badge for new invitations
+- [x] Invitation history
 
-**Files to Create:**
-- `src/components/AgentInvitationsList.tsx`
-- `src/components/AgentInvitationCard.tsx`
+**Files Created:**
+- `src/components/InvitationCard.tsx`
 - `src/pages/AgentInvitations.tsx`
 
 ---
@@ -288,13 +288,13 @@ Features:
 |-------|--------|-------|-----------|----------|
 | Phase 1: Foundation | ✅ Completed | 4 | 4 | 100% |
 | Phase 2: Profile Management | 🔜 Next | 2 | 0 | 0% |
-| Phase 3: Discovery | ⏳ Planned | 2 | 0 | 0% |
-| Phase 4: Invitations | ⏳ Planned | 3 | 0 | 0% |
+| Phase 3: Discovery | ✅ Completed | 2 | 2 | 100% |
+| Phase 4: Invitations | ✅ Completed | 3 | 3 | 100% |
 | Phase 5: Financials | ⏳ Planned | 2 | 0 | 0% |
 | Phase 6: Communications | ⏳ Planned | 2 | 0 | 0% |
 | Phase 7: Analytics | ⏳ Planned | 2 | 0 | 0% |
 
-**Total:** 17 tasks | 4 completed | 13 remaining
+**Total:** 17 tasks | 9 completed | 8 remaining
 
 ---
 
