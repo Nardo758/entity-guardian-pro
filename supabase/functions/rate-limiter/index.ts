@@ -52,7 +52,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { endpoint = 'default', userId, ipAddress } = await req.json();
+    const { endpoint = 'default', userId, ipAddress: rawIpAddress } = await req.json();
     
     if (!endpoint) {
       return new Response(
@@ -64,11 +64,25 @@ serve(async (req) => {
       );
     }
 
+    // Validate and sanitize IP address
+    // Reject invalid IP strings like "client", "unknown", etc.
+    const isValidIP = (ip: string): boolean => {
+      if (!ip || ip === 'unknown' || ip === 'client' || ip.length < 7) {
+        return false;
+      }
+      // Basic IPv4 or IPv6 validation
+      const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+      const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+      return ipv4Regex.test(ip) || ipv6Regex.test(ip) || ip.includes(':');
+    };
+
+    const ipAddress = rawIpAddress && isValidIP(rawIpAddress) ? rawIpAddress : null;
+
     // Build identifier for tracking
     const identifier = userId || ipAddress;
     if (!identifier) {
       return new Response(
-        JSON.stringify({ error: "Either userId or ipAddress is required" }),
+        JSON.stringify({ error: "Either userId or valid ipAddress is required" }),
         { 
           status: 400, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
