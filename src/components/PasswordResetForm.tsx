@@ -50,33 +50,38 @@ const PasswordResetForm: React.FC<PasswordResetFormProps> = ({ onBack }) => {
     setIsLoading(true);
 
     try {
-      // Check rate limit first
-      // Note: IP address will be extracted server-side from request headers for better security
-      const { data: rateLimitData, error: rateLimitError } = await supabase.functions.invoke('rate-limiter', {
-        body: {
-          endpoint: 'auth',
-          ipAddress: 'client' // Edge function will extract real IP from request headers
-        }
-      });
+      // Get client IP first
+      const { data: ipData } = await supabase.functions.invoke('get-client-ip');
+      const clientIP = ipData?.ip || null;
 
-      if (rateLimitError || !rateLimitData?.allowed) {
-        const retryAfter = rateLimitData?.retryAfter || 300;
-        const lockoutEndTime = Date.now() + (retryAfter * 1000);
-        setIsLocked(true);
-        setLockoutTime(lockoutEndTime);
-
-        toast({
-          title: "Too Many Attempts",
-          description: `Too many password reset requests. Please try again in ${retryAfter} seconds.`,
-          variant: "destructive",
+      // Check rate limit with proper IP
+      if (clientIP) {
+        const { data: rateLimitData, error: rateLimitError } = await supabase.functions.invoke('rate-limiter', {
+          body: {
+            endpoint: 'auth',
+            ipAddress: clientIP
+          }
         });
 
-        setTimeout(() => {
-          setIsLocked(false);
-          setLockoutTime(null);
-        }, retryAfter * 1000);
+        if (rateLimitError || !rateLimitData?.allowed) {
+          const retryAfter = rateLimitData?.retryAfter || 300;
+          const lockoutEndTime = Date.now() + (retryAfter * 1000);
+          setIsLocked(true);
+          setLockoutTime(lockoutEndTime);
 
-        return;
+          toast({
+            title: "Too Many Attempts",
+            description: `Too many password reset requests. Please try again in ${retryAfter} seconds.`,
+            variant: "destructive",
+          });
+
+          setTimeout(() => {
+            setIsLocked(false);
+            setLockoutTime(null);
+          }, retryAfter * 1000);
+
+          return;
+        }
       }
 
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
