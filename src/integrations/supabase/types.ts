@@ -891,6 +891,7 @@ export type Database = {
           email: string
           entities_limit: number | null
           id: string
+          is_trial_active: boolean | null
           stripe_customer_id: string | null
           stripe_price_id: string | null
           stripe_product_id: string | null
@@ -900,6 +901,7 @@ export type Database = {
           subscription_status: string | null
           subscription_tier: string | null
           trial_end: string | null
+          trial_start: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -913,6 +915,7 @@ export type Database = {
           email: string
           entities_limit?: number | null
           id?: string
+          is_trial_active?: boolean | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
@@ -922,6 +925,7 @@ export type Database = {
           subscription_status?: string | null
           subscription_tier?: string | null
           trial_end?: string | null
+          trial_start?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -935,6 +939,7 @@ export type Database = {
           email?: string
           entities_limit?: number | null
           id?: string
+          is_trial_active?: boolean | null
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           stripe_product_id?: string | null
@@ -944,6 +949,7 @@ export type Database = {
           subscription_status?: string | null
           subscription_tier?: string | null
           trial_end?: string | null
+          trial_start?: string | null
           updated_at?: string | null
           user_id?: string | null
         }

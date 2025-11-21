@@ -49,7 +49,8 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
-      logStep("No customer found, updating unsubscribed state");
+      logStep("No customer found, initializing trial");
+      const now = new Date().toISOString();
       await supabaseClient.from("subscribers").upsert({
         email: user.email,
         user_id: user.id,
@@ -57,9 +58,16 @@ serve(async (req) => {
         subscribed: false,
         subscription_tier: null,
         subscription_end: null,
-        updated_at: new Date().toISOString(),
+        trial_start: now,
+        is_trial_active: true,
+        updated_at: now,
       }, { onConflict: 'email' });
-      return new Response(JSON.stringify({ subscribed: false }), {
+      
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        trial_start: now,
+        is_trial_active: true 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -104,6 +112,17 @@ serve(async (req) => {
 
     const subscriptionStatus = hasActiveSub ? subscriptions.data[0].status : null;
     
+    // Fetch existing subscriber data to preserve trial information
+    const { data: existingSubscriber } = await supabaseClient
+      .from("subscribers")
+      .select("trial_start, is_trial_active")
+      .eq("email", user.email)
+      .single();
+    
+    // Initialize trial for new subscribers or preserve existing trial data
+    const trialStart = existingSubscriber?.trial_start || new Date().toISOString();
+    const isTrialActive = existingSubscriber?.is_trial_active ?? true;
+    
     await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
@@ -112,6 +131,8 @@ serve(async (req) => {
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
       subscription_status: subscriptionStatus,
+      trial_start: trialStart,
+      is_trial_active: hasActiveSub ? false : isTrialActive, // Disable trial if they have active subscription
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 
@@ -121,7 +142,9 @@ serve(async (req) => {
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
       subscription_status: subscriptionStatus,
-      stripe_customer_id: customerId
+      stripe_customer_id: customerId,
+      trial_start: trialStart,
+      is_trial_active: hasActiveSub ? false : isTrialActive
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

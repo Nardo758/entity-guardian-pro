@@ -9,7 +9,10 @@ import { ScheduleModal } from '@/components/ScheduleModal';
 import { NotificationBanner } from '@/components/NotificationBanner';
 import EnhancedNotificationBanner from '@/components/dashboard/EnhancedNotificationBanner';
 import { SecurityWarningBanner } from '@/components/SecurityWarningBanner';
+import { TrialStatusBanner } from '@/components/TrialStatusBanner';
+import { TrialExpiredModal } from '@/components/TrialExpiredModal';
 import { useEntities } from '@/hooks/useEntities';
+import { useTrial } from '@/hooks/useTrial';
 import { usePayments } from '@/hooks/usePayments';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -23,6 +26,7 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const ModernDashboard = () => {
   const { isAdmin } = useAdminAccess();
+  const { hasExpired, isTrialActive } = useTrial();
 
   const { entities, addEntity, deleteEntity, loading: entitiesLoading } = useEntities();
   const { payments } = usePayments();
@@ -34,6 +38,14 @@ const ModernDashboard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showScheduleView, setShowScheduleView] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false);
+
+  // Show trial expired modal when trial ends
+  React.useEffect(() => {
+    if (hasExpired && !isTrialActive) {
+      setShowTrialExpiredModal(true);
+    }
+  }, [hasExpired, isTrialActive]);
 
   const handleAddEntity = async (
     entityData: Omit<Entity, 'id' | 'user_id' | 'created_at' | 'updated_at'>
@@ -95,6 +107,9 @@ const ModernDashboard = () => {
 
       <div className="flex-1 overflow-auto">
         <div className="p-6 space-y-8">
+          {/* Trial Status Banner */}
+          <TrialStatusBanner />
+
           {/* Admin Security Alerts */}
           {isAdmin && (
             <div className="space-y-4">
@@ -170,6 +185,11 @@ const ModernDashboard = () => {
         isOpen={showScheduleView}
         onClose={() => setShowScheduleView(false)}
         entities={entities}
+      />
+
+      <TrialExpiredModal
+        isOpen={showTrialExpiredModal}
+        onClose={() => setShowTrialExpiredModal(false)}
       />
     </DashboardLayout>
   );
