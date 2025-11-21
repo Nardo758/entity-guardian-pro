@@ -236,7 +236,7 @@ const RoleSelection = () => {
           </Card>
 
           {/* Administrator Card */}
-          <Card className="relative border-2 hover:border-primary/50 transition-all duration-300 shadow-xl hover:shadow-2xl group">
+          {/* <Card className="relative border-2 hover:border-primary/50 transition-all duration-300 shadow-xl hover:shadow-2xl group">
             <CardHeader className="text-center pb-4">
               <div className="mx-auto w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                 <Shield className="h-7 w-7 text-white" />
@@ -281,7 +281,7 @@ const RoleSelection = () => {
                 )}
               </Button>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         {/* Footer */}
