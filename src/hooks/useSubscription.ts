@@ -12,6 +12,9 @@ interface SubscriptionInfo {
   subscription_status?: string;
   stripe_customer_id?: string;
   entities_limit?: number;
+  trial_start?: string;
+  trial_end?: string;
+  is_trial_active?: boolean;
 }
 
 // Computed helper to check if user has an active paid subscription

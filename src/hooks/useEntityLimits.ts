@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSubscription } from './useSubscription';
 import { useEntities } from './useEntities';
+import { useTrial } from './useTrial';
 import { STRIPE_PRICING_TIERS } from '@/lib/stripe';
 import { toast } from 'sonner';
 
@@ -19,6 +20,7 @@ interface EntityLimitInfo {
 export const useEntityLimits = () => {
   const { subscription } = useSubscription();
   const { entities } = useEntities();
+  const { hasExpired, isTrialActive } = useTrial();
   const [limitInfo, setLimitInfo] = useState<EntityLimitInfo>({
     currentEntities: 0,
     maxEntities: 4, // Default to starter tier
@@ -30,6 +32,21 @@ export const useEntityLimits = () => {
   });
 
   useEffect(() => {
+    // Check if user is in active trial - if so, no limits apply
+    if (subscription.is_trial_active === true) {
+      const currentEntities = entities.length;
+      setLimitInfo({
+        currentEntities,
+        maxEntities: 999, // Unlimited during trial
+        isNearLimit: false,
+        isAtLimit: false,
+        percentageUsed: 0,
+        canAddMore: true,
+        upgradeRequired: false,
+      });
+      return;
+    }
+
     const currentTier = subscription.subscription_tier || 'starter';
     const tierData = STRIPE_PRICING_TIERS[currentTier as keyof typeof STRIPE_PRICING_TIERS];
     
@@ -88,6 +105,22 @@ export const useEntityLimits = () => {
   }, [subscription, entities]);
 
   const checkCanAddEntity = (): boolean => {
+    // Check if trial has expired
+    if (hasExpired && !isTrialActive) {
+      toast.error(
+        'Your free trial has ended. Upgrade to continue adding entities.',
+        {
+          action: {
+            label: 'Upgrade Now',
+            onClick: () => {
+              window.location.href = '/billing?tab=plans';
+            },
+          },
+        }
+      );
+      return false;
+    }
+
     if (!limitInfo.canAddMore) {
       toast.error(
         `Cannot add more entities. You've reached the limit of ${limitInfo.maxEntities} entities for your ${subscription.subscription_tier || 'starter'} plan.`,

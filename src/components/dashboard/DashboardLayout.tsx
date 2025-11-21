@@ -1,14 +1,14 @@
-import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Building, LayoutDashboard, Plus, FileText, CreditCard, Calendar, Users,
-  Settings, Crown, Menu, ChevronLeft, ChevronRight
+  Settings, Crown, Menu, ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarInset, SidebarProvider, SidebarTrigger, SidebarRail, useSidebar } from '@/components/ui/sidebar';
 import { TeamSwitcher } from '@/components/TeamSwitcher';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useTrial } from '@/hooks/useTrial';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,6 +19,7 @@ const DashboardSidebar = () => {
   const location = useLocation();
   const { isAdmin } = useAdminAccess();
   const { subscription } = useSubscription();
+  const { isTrialActive, daysRemaining, hasExpired } = useTrial();
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
 
@@ -146,13 +147,46 @@ const DashboardSidebar = () => {
                   Manage Plan
                 </Button>
               </div>
+            ) : isTrialActive ? (
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-primary">Free Trial</span>
+                </div>
+                <p className="text-xs text-sidebar-foreground/60 mb-2">
+                  {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} remaining
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 mb-2">Unlimited entities during trial</p>
+                <Button
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => navigate('/billing')}
+                >
+                  Upgrade Now
+                </Button>
+              </div>
+            ) : hasExpired ? (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-destructive"></div>
+                  <span className="text-sm font-medium text-destructive">Trial Ended</span>
+                </div>
+                <p className="text-xs text-sidebar-foreground/60 mb-2">Upgrade to continue</p>
+                <Button
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => navigate('/billing')}
+                >
+                  Upgrade Now
+                </Button>
+              </div>
             ) : (
               <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-2 w-2 rounded-full bg-warning"></div>
                   <span className="text-sm font-medium text-warning">Free Plan</span>
                 </div>
-                <p className="text-xs text-sidebar-foreground/60 mb-2">Limited to 3 entities</p>
+                <p className="text-xs text-sidebar-foreground/60 mb-2">Up to 4 entities</p>
                 <Button
                   size="sm"
                   className="w-full text-xs"
