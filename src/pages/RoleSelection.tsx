@@ -138,7 +138,7 @@ const RoleSelection = () => {
         </div>
 
         {/* Role Selection Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
+        <div className="grid md:grid-cols-2 gap-6 mt-12 max-w-4xl mx-auto">
           {/* Entity Owner Card */}
           <Card className="relative border-2 hover:border-primary/50 transition-all duration-300 shadow-xl hover:shadow-2xl group">
             <CardHeader className="text-center pb-4">
