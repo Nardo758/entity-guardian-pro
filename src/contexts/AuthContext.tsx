@@ -285,7 +285,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (userId: string, retries = 3) => {
     try {
       // First ensure profile exists
-      const profileExists = await ensureProfileExists(userId, retries);
+      const profileExists = await ensureProfileExists(userId, undefined, retries);
       
       if (!profileExists) {
         console.warn('Could not ensure profile exists after retries');
