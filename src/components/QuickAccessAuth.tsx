@@ -93,7 +93,7 @@ const QuickAccessAuth: React.FC<QuickAccessAuthProps> = ({ onSuccess }) => {
           variant="outline"
           onClick={() => handleOAuthSignIn('google')}
           disabled={isLoading === 'google'}
-          className="flex items-center justify-center gap-2 p-4 h-auto hover:bg-secondary/50 transition-colors w-full max-w-sm"
+          className="flex items-center justify-center gap-2 p-4 h-auto hover:bg-secondary/50 hover:text-secondary-foreground transition-colors w-full max-w-sm"
         >
           <div className="w-5 h-5 flex items-center justify-center">
             <svg viewBox="0 0 24 24" className="w-5 h-5">
