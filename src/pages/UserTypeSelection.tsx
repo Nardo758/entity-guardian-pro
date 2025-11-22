@@ -1,9 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Building, UserCheck, ArrowRight, CheckCircle } from 'lucide-react';
 
 const UserTypeSelection = () => {
+  const currentStep = 1;
+  const totalSteps = 3;
+  const progressPercentage = (currentStep / totalSteps) * 100;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl space-y-8">
@@ -20,6 +25,15 @@ const UserTypeSelection = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Select the option that best describes your role to get started with the right features for you
           </p>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Step {currentStep} of {totalSteps}</span>
+            <span>{Math.round(progressPercentage)}% Complete</span>
+          </div>
+          <Progress value={progressPercentage} className="h-2" />
         </div>
 
         {/* User Type Cards */}

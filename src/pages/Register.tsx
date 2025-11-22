@@ -4,23 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { EyeIcon, EyeOffIcon, Building, Mail, Lock, User, Building2, ShieldAlert } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Building, Mail, User, Building2, ShieldAlert, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import QuickAccessAuth from "@/components/QuickAccessAuth";
-import PasswordStrengthIndicator from "@/components/ui/PasswordStrengthIndicator";
 
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp, user, loading } = useAuth();
+  const { user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentIP, setCurrentIP] = useState<string>('');
   const [resettingIP, setResettingIP] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
@@ -30,9 +26,6 @@ const Register = () => {
     email: "",
     company: "",
     companySize: "",
-    password: "",
-    confirmPassword: "",
-    agreeToTerms: false
   });
 
   useEffect(() => {
@@ -83,95 +76,43 @@ const Register = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
+    // Validation
+    if (!formData.firstName || !formData.lastName || !formData.email || 
+        !formData.company || !formData.companySize) {
       toast({
-        title: "Password mismatch",
-        description: "Please ensure both passwords match.",
+        title: "Missing information",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
       return;
     }
 
-    if (!formData.agreeToTerms) {
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
       toast({
-        title: "Terms required",
-        description: "Please agree to the Terms of Service to continue.",
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
         variant: "destructive"
       });
       return;
     }
 
-    if (formData.password.length < 8) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const { error } = await signUp(formData.email, formData.password, {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        company: formData.company,
-        company_size: formData.companySize,
-        user_type: 'entity_owner'
-      });
-
-      if (error) {
-        console.log('Registration error:', error);
-        
-        // Check for rate limiting
-        if ((error as any).retryAfter || error.message?.includes('rate limit') || error.message?.includes('too many')) {
-          setIsRateLimited(true);
-          toast({
-            title: "Rate limit exceeded",
-            description: error.message || "Too many registration attempts. Use the Reset IP Block button below or wait a few minutes.",
-            variant: "destructive"
-          });
-          return;
+    // Navigate to Step 3 (PaidRegister) with form data
+    toast({
+      title: "Information Saved!",
+      description: "Now let's choose your plan and create your password.",
+    });
+    
+    navigate("/paid-register", { 
+      state: { 
+        formData: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          company: formData.company,
+          companySize: formData.companySize,
         }
-        
-        // Check for common error types
-        if (error.message?.includes('already registered') || error.message?.includes('already exists') || error.message?.includes('User already registered')) {
-          toast({
-            title: "Account already exists",
-            description: "This email is already registered. Please sign in instead.",
-            variant: "destructive"
-          });
-        } else if (error.message?.includes('Email rate limit exceeded')) {
-          setIsRateLimited(true);
-          toast({
-            title: "Too many requests",
-            description: "Please wait a few minutes before trying again or use the Reset IP Block button.",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Registration failed",
-            description: error.message || "Failed to create account. Please try again.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        toast({
-          title: "Account Created!",
-          description: "Now let's set up your role.",
-        });
-        navigate("/role-selection");
-      }
-    } catch (error: any) {
-      toast({
-        title: "Registration failed",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
+      } 
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,6 +130,10 @@ const Register = () => {
     }));
   };
 
+  const currentStep = 2;
+  const totalSteps = 3;
+  const progressPercentage = (currentStep / totalSteps) * 100;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 flex items-center justify-center p-4">
       <div className="w-full max-w-lg space-y-8">
@@ -200,7 +145,7 @@ const Register = () => {
             </div>
           </Link>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            Join Entity Renewal Pro
+            Account Information
           </h1>
           <p className="text-muted-foreground mt-2">
             Create your <strong>Entity Owner</strong> account and start managing your business entities
@@ -208,6 +153,15 @@ const Register = () => {
           <p className="text-sm text-muted-foreground">
             Are you a Registered Agent? <Link to="/agent-signup" className="text-primary hover:underline font-medium">Sign up here instead</Link>
           </p>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Step {currentStep} of {totalSteps}</span>
+            <span>{Math.round(progressPercentage)}% Complete</span>
+          </div>
+          <Progress value={progressPercentage} className="h-2" />
         </div>
 
         {/* Registration Form */}
@@ -335,116 +289,33 @@ const Register = () => {
                 </Select>
               </div>
 
-              {/* Password Fields */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="At least 8 characters"
-                    className="pl-10 pr-10"
-                    required
-                    minLength={8}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <EyeIcon className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-                <PasswordStrengthIndicator password={formData.password} />
+              {/* Navigation Buttons */}
+              <div className="flex gap-4">
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/signup')}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Saving...
+                    </div>
+                  ) : (
+                    "Continue"
+                  )}
+                </Button>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    placeholder="Re-enter your password"
-                    className="pl-10 pr-10"
-                    required
-                    minLength={8}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <EyeIcon className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Terms Agreement */}
-              <div className="flex items-start space-x-2">
-                <input
-                  id="agreeToTerms"
-                  name="agreeToTerms"
-                  type="checkbox"
-                  checked={formData.agreeToTerms}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 mt-1 rounded border-gray-300 text-primary focus:ring-primary"
-                  required
-                />
-                <Label htmlFor="agreeToTerms" className="text-sm text-muted-foreground leading-relaxed">
-                  I agree to the{" "}
-                  <Link to="/terms" className="text-primary hover:text-primary/80 underline">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" className="text-primary hover:text-primary/80 underline">
-                    Privacy Policy
-                  </Link>
-                </Label>
-              </div>
-
-              {/* Create Account Button */}
-              <Button 
-                type="submit" 
-                className="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Creating account...
-                  </div>
-                ) : (
-                  "Create Account"
-                )}
-              </Button>
             </form>
-
-            {/* Social Registration using QuickAccessAuth */}
-            <QuickAccessAuth />
 
             {/* Sign In Link */}
             <div className="text-center space-y-2">
@@ -458,12 +329,12 @@ const Register = () => {
                 </Link>
               </p>
               <p className="text-xs text-muted-foreground">
-                Or{" "}
+                Signing up as a <strong>Registered Agent</strong>?{" "}
                 <Link 
-                  to="/paid-register" 
-                  className="font-medium text-primary hover:text-primary/80 transition-colors"
+                  to="/agent-signup" 
+                  className="text-primary hover:underline"
                 >
-                  Start Free Trial
+                  Click here
                 </Link>
               </p>
             </div>

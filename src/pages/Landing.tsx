@@ -356,7 +356,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                     <Link to="/login">Sign In</Link>
                   </Button>
                   <Button asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary">
-                    <Link to="/register">Get Started</Link>
+                    <Link to="/signup">Get Started</Link>
                   </Button>
                 </>
               )}
@@ -385,7 +385,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <Button size="lg" asChild className="bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-lg px-8">
-                <Link to="/paid-register">
+                <Link to="/signup">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
