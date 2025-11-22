@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ interface FormData {
 
 const PaidRegister = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -48,18 +49,21 @@ const PaidRegister = () => {
   const [selectedPlan, setSelectedPlan] = useState('professional');
   const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly'>('monthly');
   
+  // Get form data from Register page (Step 2) if available
+  const preFilledData = location.state?.formData || {};
+  
   const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    company: '',
-    companySize: '',
+    firstName: preFilledData.firstName || '',
+    lastName: preFilledData.lastName || '',
+    email: preFilledData.email || '',
+    company: preFilledData.company || '',
+    companySize: preFilledData.companySize || '',
     password: '',
     confirmPassword: '',
     agreeToTerms: false
   });
 
-  const totalSteps = 3;
+  const totalSteps = 2; // Only 2 steps in PaidRegister (Plan & Security, then Payment)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -77,19 +81,6 @@ const PaidRegister = () => {
   };
 
   const validateStep1 = () => {
-    if (!formData.firstName || !formData.lastName || !formData.email || 
-        !formData.company || !formData.companySize) {
-      toast.error('Please fill in all required fields');
-      return false;
-    }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      toast.error('Please enter a valid email address');
-      return false;
-    }
-    return true;
-  };
-
-  const validateStep2 = () => {
     if (!formData.password || !formData.confirmPassword) {
       toast.error('Please fill in all password fields');
       return false;
@@ -111,9 +102,8 @@ const PaidRegister = () => {
 
   const handleNext = async () => {
     if (currentStep === 1 && !validateStep1()) return;
-    if (currentStep === 2 && !validateStep2()) return;
     
-    if (currentStep === 2) {
+    if (currentStep === 1) {
       // Create payment intent
       setIsLoading(true);
       try {
@@ -150,8 +140,8 @@ const PaidRegister = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      // If on first step, navigate back to signup page
-      navigate('/signup');
+      // If on first step, navigate back to Register page (Account Information)
+      navigate('/register');
     }
   };
 
@@ -417,44 +407,37 @@ const PaidRegister = () => {
             </div>
           </Link>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            Join Entity Renewal Pro
+            🎉 14-Day Free Trial
           </h1>
           <p className="text-muted-foreground mt-2">
-            Get started with professional entity management
+            Full access to all features • No credit card required • Cancel anytime
           </p>
         </div>
 
-        {/* Progress */}
+        {/* Progress - showing as Step 3 of 3 */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Step {currentStep} of {totalSteps}</span>
-            <span>{Math.round((currentStep / totalSteps) * 100)}% Complete</span>
+            <span>Step 3 of 3</span>
+            <span>100% Complete</span>
           </div>
-          <Progress value={(currentStep / totalSteps) * 100} className="h-2" />
+          <Progress value={100} className="h-2" />
         </div>
 
         {/* Form */}
         <Card className="border-0 shadow-2xl bg-card/95 backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2">
-              {currentStep === 1 && <User className="w-5 h-5" />}
-              {currentStep === 2 && <Building className="w-5 h-5" />}
-              {currentStep === 3 && <CreditCard className="w-5 h-5" />}
-              {currentStep === 1 && "Account Information"}
-              {currentStep === 2 && "Plan & Security"}
-              {currentStep === 3 && "Payment"}
+              <Building className="w-5 h-5" />
+              Plan & Security
             </CardTitle>
             <CardDescription>
-              {currentStep === 1 && "Tell us about yourself and your business"}
-              {currentStep === 2 && "Choose your plan and secure your account"}
-              {currentStep === 3 && "Complete payment to activate your account"}
+              You're almost there! Choose your plan and secure your account.
             </CardDescription>
           </CardHeader>
           
           <CardContent>
-            {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
+            {currentStep === 1 && renderStep2()}
+            {currentStep === 2 && renderStep3()}
 
             {/* Navigation */}
             <div className="flex justify-between mt-8">
@@ -467,7 +450,7 @@ const PaidRegister = () => {
                 Back
               </Button>
 
-              {currentStep < 3 && (
+              {currentStep < 2 && (
                 <Button
                   onClick={handleNext}
                   disabled={isLoading}
@@ -480,7 +463,7 @@ const PaidRegister = () => {
                     </div>
                   ) : (
                     <>
-                      {currentStep === 2 ? 'Proceed to Payment' : 'Continue'}
+                      {currentStep === 1 ? 'Proceed to Payment' : 'Continue'}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </>
                   )}
