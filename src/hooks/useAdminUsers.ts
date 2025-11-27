@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminUser {
   id: string;
-  email: string;
+  user_id: string;
+  displayName: string;
   role: string;
 }
 
@@ -14,29 +15,36 @@ export const useAdminUsers = () => {
       // Get all users with admin role
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id')
+        .select('id, user_id, role')
         .eq('role', 'admin');
 
       if (rolesError) throw rolesError;
 
       if (!roles || roles.length === 0) return [];
 
-      // Get user details from auth.users
-      const { data, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) throw usersError;
-      
-      const users = data?.users || [];
+      // Get profile details for admin users
+      const adminUserIds = roles.map(r => r.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, company')
+        .in('user_id', adminUserIds);
 
-      const adminUserIds = new Set(roles.map(r => r.user_id));
+      if (profilesError) throw profilesError;
+
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
       
-      const adminUsers: AdminUser[] = users
-        .filter((user: any) => adminUserIds.has(user.id))
-        .map((user: any) => ({
-          id: user.id,
-          email: user.email || '',
-          role: 'admin' as const,
-        }));
+      const adminUsers: AdminUser[] = roles.map((role) => {
+        const profile = profileMap.get(role.user_id);
+        const displayName = profile 
+          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.company || 'Unknown'
+          : 'Unknown';
+        return {
+          id: role.id,
+          user_id: role.user_id,
+          displayName,
+          role: 'admin',
+        };
+      });
       
       return adminUsers;
     },

@@ -35,29 +35,35 @@ const AdminRoleManager: React.FC = () => {
   const fetchUserRoles = async () => {
     setLoading(true);
     try {
+      // Fetch roles with profile data joined
       const { data, error } = await supabase
         .from('user_roles')
-        .select('*')
+        .select(`
+          *,
+          profiles!user_roles_user_id_fkey(user_id, first_name, last_name, company)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Get user details from auth if available
-      const rolesWithEmails = await Promise.all((data || []).map(async (role: any) => {
-        try {
-          const { data: userData } = await supabase.auth.admin.listUsers();
-          const user = userData?.users?.find((u: any) => u.id === role.user_id);
-          return {
-            ...role,
-            email: user?.email || 'Unknown'
-          };
-        } catch {
-          return {
-            ...role,
-            email: 'Unknown'
-          };
-        }
-      }));
+      // Also fetch profiles to get email-like identifier
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, company');
+      
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+      
+      const rolesWithEmails = (data || []).map((role: any) => {
+        const profile = profileMap.get(role.user_id);
+        const displayName = profile 
+          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.company || 'Unknown'
+          : 'Unknown';
+        return {
+          ...role,
+          email: displayName,
+          profile
+        };
+      });
       
       setUserRoles(rolesWithEmails);
     } catch (error: any) {
@@ -75,18 +81,7 @@ const AdminRoleManager: React.FC = () => {
     if (!email.trim() || !selectedRole) {
       toast({
         title: "Validation Error",
-        description: "Please enter a valid email and select a role",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Enhanced email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address",
+        description: "Please enter a user name or company and select a role",
         variant: "destructive",
       });
       return;
@@ -101,7 +96,7 @@ const AdminRoleManager: React.FC = () => {
       // Log security event for unauthorized access attempt
       await supabase.rpc('log_security_event', {
         event_type: 'role_assignment_unauthorized_attempt',
-        event_data: { attempted_email: email.trim(), attempted_role: selectedRole }
+        event_data: { search_term: email.trim(), attempted_role: selectedRole }
       });
       return;
     }
@@ -111,43 +106,45 @@ const AdminRoleManager: React.FC = () => {
       // Get current user for security checks
       const currentUser = await supabase.auth.getUser();
       
-      // First, find the user by email using admin API
-      const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000
-      });
+      // Find user by searching profiles - use the email input as a search term
+      // for name, company, or we need to look up via user_id
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, company');
 
-      if (userError) {
-        console.error('Error fetching users:', userError);
+      if (profileError) {
+        console.error('Error fetching profiles:', profileError);
         toast({
           title: "Error",
-          description: "Failed to find user",
+          description: "Failed to search users",
           variant: "destructive",
-        });
-        await supabase.rpc('log_security_event', {
-          event_type: 'user_lookup_failed',
-          event_data: { error: userError.message, attempted_email: email.trim() }
         });
         return;
       }
 
-      const targetUser = userData.users.find((user: any) => user.email === email.trim());
+      // Search for user by name or company (since we can't access emails directly)
+      const searchTerm = email.trim().toLowerCase();
+      const targetProfile = profiles?.find((p: any) => {
+        const fullName = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase().trim();
+        const company = (p.company || '').toLowerCase();
+        return fullName.includes(searchTerm) || company.includes(searchTerm) || searchTerm.includes(fullName);
+      });
       
-      if (!targetUser) {
+      if (!targetProfile) {
         toast({
           title: "User Not Found",
-          description: "No user found with this email address",
+          description: "No user found matching that name/company. Enter the user's name or company name.",
           variant: "destructive",
         });
         await supabase.rpc('log_security_event', {
           event_type: 'user_not_found',
-          event_data: { attempted_email: email.trim() }
+          event_data: { search_term: email.trim() }
         });
         return;
       }
 
       // Security check: Prevent self-role assignment to non-admin users
-      if (targetUser.id === currentUser.data.user?.id && selectedRole !== 'admin') {
+      if (targetProfile.user_id === currentUser.data.user?.id && selectedRole !== 'admin') {
         toast({
           title: "Security Error",
           description: "Cannot modify your own role",
@@ -164,7 +161,7 @@ const AdminRoleManager: React.FC = () => {
       const { data: existingRole } = await supabase
         .from('user_roles')
         .select('id')
-        .eq('user_id', targetUser.id)
+        .eq('user_id', targetProfile.user_id)
         .eq('role', selectedRole)
         .single();
 
@@ -177,11 +174,11 @@ const AdminRoleManager: React.FC = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('user_roles')
         .insert([
           {
-            user_id: targetUser.id,
+            user_id: targetProfile.user_id,
             role: selectedRole,
             created_by: currentUser.data.user?.id,
           },
@@ -198,7 +195,7 @@ const AdminRoleManager: React.FC = () => {
           event_type: 'role_assignment_failed',
           event_data: { 
             error: error.message, 
-            target_user_id: targetUser.id,
+            target_user_id: targetProfile.user_id,
             attempted_role: selectedRole 
           }
         });
@@ -332,11 +329,11 @@ const AdminRoleManager: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">User Email</Label>
+              <Label htmlFor="email">User Name or Company</Label>
               <Input
                 id="email"
-                type="email"
-                placeholder="user@example.com"
+                type="text"
+                placeholder="Enter user name or company"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
