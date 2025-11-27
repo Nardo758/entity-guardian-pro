@@ -69,27 +69,27 @@ export const useSecureProfiles = () => {
       if (error) throw error;
 
       // Apply client-side masking for admin security
-      return profiles?.map(profile => {
-        const secureProfile: SecureProfile = {
-          id: profile.id,
-          user_id: profile.user_id,
-          first_name_masked: maskPII(profile.first_name, true),
-          last_name_masked: maskPII(profile.last_name, true),
-          phone_number_masked: maskPhoneNumber(profile.phone_number),
-          company: profile.company,
-          company_size: profile.company_size,
-          plan: profile.plan,
-          created_at: profile.created_at,
-          updated_at: profile.updated_at,
-          user_type: profile.user_type,
-          account_status: profile.account_status || 'active',
-          suspension_reason: profile.suspension_reason,
-          suspended_at: profile.suspended_at,
-          suspended_by: profile.suspended_by,
-        };
-        return secureProfile;
-      }) || [];
+      return profiles?.map(profile => ({
+        id: profile.id,
+        user_id: profile.user_id,
+        first_name_masked: maskPII(profile.first_name, true),
+        last_name_masked: maskPII(profile.last_name, true),
+        phone_number_masked: maskPhoneNumber(profile.phone_number),
+        company: profile.company,
+        company_size: profile.company_size,
+        plan: profile.plan,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        user_type: profile.user_type,
+        account_status: profile.account_status || 'active',
+        suspension_reason: profile.suspension_reason,
+        suspended_at: profile.suspended_at,
+        suspended_by: profile.suspended_by,
+      })) || [];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
+    refetchOnWindowFocus: false,
   });
 };
 

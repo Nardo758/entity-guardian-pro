@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { 
   Users, Shield, BarChart3, Settings, AlertTriangle, UserCog, Crown, 
   Database, TrendingUp, CreditCard, FileText, Activity, DollarSign,
@@ -29,12 +29,13 @@ import { exportToCSV, userExportColumns, agentExportColumns, entityExportColumns
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
-import { useSecureProfiles } from '@/hooks/useSecureProfiles';
+import { useSecureProfiles, SecureProfile } from '@/hooks/useSecureProfiles';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { MetricsGridSkeleton, TableSkeleton } from './admin/AdminSkeletons';
 
-const AdminDashboard = () => {
+const AdminDashboard = memo(() => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAdmin, isLoading: adminLoading } = useAdminAccess();
@@ -233,27 +234,33 @@ const AdminDashboard = () => {
     return null;
   }
 
-  // Filter data based on search
-  const filteredUsers = allUsers.filter(user => 
-    user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.company?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Memoized filtered data to prevent recalculation on every render
+  const filteredUsers = useMemo(() => 
+    allUsers.filter(user => 
+      user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.company?.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [allUsers, searchTerm]
   );
 
-  const filteredEntities = allEntities.filter(entity =>
-    entity.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entity.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entity.state?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredEntities = useMemo(() =>
+    allEntities.filter(entity =>
+      entity.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entity.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entity.state?.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [allEntities, searchTerm]
   );
 
-  const filteredPayments = allPayments.filter(payment =>
-    payment.stripe_invoice_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.stripe_customer_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.status?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPayments = useMemo(() =>
+    allPayments.filter(payment =>
+      payment.stripe_invoice_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.stripe_customer_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.status?.toLowerCase().includes(searchTerm.toLowerCase())
+    ), [allPayments, searchTerm]
   );
 
-  // Action handlers with toast feedback
-  const handleExport = (type: string) => {
+  // Memoized action handlers
+  const handleExport = useCallback((type: string) => {
     try {
       switch (type) {
         case 'users':
@@ -295,9 +302,9 @@ const AdminDashboard = () => {
       console.error('Export error:', error);
       toast.error('Failed to export data');
     }
-  };
+  }, [filteredUsers, allAgents, filteredEntities, filteredPayments]);
 
-  const handleToggleAgentAvailability = async (agentId: string, currentStatus: boolean) => {
+  const handleToggleAgentAvailability = useCallback(async (agentId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('agents')
@@ -315,63 +322,63 @@ const AdminDashboard = () => {
       console.error('Error toggling availability:', error);
       toast.error('Failed to update agent availability');
     }
-  };
+  }, []);
 
-  const handleRefreshAgents = async () => {
+  const handleRefreshAgents = useCallback(async () => {
     const { data } = await supabase.from('agents').select('*');
     setAllAgents(data || []);
     toast.success('Agents refreshed');
-  };
+  }, []);
 
-  const handleViewUser = (userId: string) => {
+  const handleViewUser = useCallback((userId: string) => {
     setSelectedUserId(userId);
     setUserModalOpen(true);
-  };
+  }, []);
 
-  const handleEditUser = (userId: string) => {
+  const handleEditUser = useCallback((userId: string) => {
     setSelectedUserId(userId);
     setUserModalOpen(true);
-  };
+  }, []);
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = useCallback((userId: string) => {
     // Open modal on account status tab for suspension
     setSelectedUserId(userId);
     setUserModalOpen(true);
-  };
+  }, []);
 
-  const handleRoleChange = () => {
+  const handleRoleChange = useCallback(() => {
     refetchProfiles();
     queryClient.invalidateQueries({ queryKey: ['secure-profiles'] });
-  };
+  }, [refetchProfiles, queryClient]);
 
-  const handleViewEntity = (entityId: string) => {
+  const handleViewEntity = useCallback((entityId: string) => {
     navigate(`/entities/${entityId}`);
-  };
+  }, [navigate]);
 
-  const handleEditEntity = (entityId: string) => {
+  const handleEditEntity = useCallback((entityId: string) => {
     const entity = allEntities.find((e: any) => e.id === entityId);
     if (entity) {
       setEditingEntity(entity);
       setEntityEditModalOpen(true);
     }
-  };
+  }, [allEntities]);
 
-  const handleRefreshEntities = async () => {
+  const handleRefreshEntities = useCallback(async () => {
     const { data } = await supabase
       .from('entities')
       .select('*, profiles(user_id, company, user_type)')
       .order('created_at', { ascending: false });
     setAllEntities(data || []);
     toast.success('Entities refreshed');
-  };
+  }, []);
 
-  const handleProcessRefund = () => {
+  const handleProcessRefund = useCallback(() => {
     setRefundModalOpen(true);
-  };
+  }, []);
 
-  const handleComplianceReport = () => {
+  const handleComplianceReport = useCallback(() => {
     setComplianceReportModalOpen(true);
-  };
+  }, []);
 
   return (
     <DashboardLayout>
@@ -414,64 +421,66 @@ const AdminDashboard = () => {
           </Card>
 
           {/* System Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : systemStats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground">Registered users</p>
-              </CardContent>
-            </Card>
+          {loading ? (
+            <MetricsGridSkeleton />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats.totalUsers}</div>
+                  <p className="text-xs text-muted-foreground">Registered users</p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Entities</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : systemStats.totalEntities}</div>
-                <p className="text-xs text-muted-foreground">All entities</p>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Entities</CardTitle>
+                  <Database className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats.totalEntities}</div>
+                  <p className="text-xs text-muted-foreground">All entities</p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
-                <Crown className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{loading ? '...' : systemStats.activeSubscriptions}</div>
-                <p className="text-xs text-muted-foreground">Paying customers</p>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
+                  <Crown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{systemStats.activeSubscriptions}</div>
+                  <p className="text-xs text-muted-foreground">Paying customers</p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">${loading ? '...' : systemStats.totalRevenue.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">All time</p>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${systemStats.totalRevenue.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">All time</p>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                <Activity className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-success">
-                  {loading ? '...' : systemStats.systemHealth}
-                </div>
-                <p className="text-xs text-muted-foreground">All systems</p>
-              </CardContent>
-            </Card>
-          </div>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">System Health</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-success">{systemStats.systemHealth}</div>
+                  <p className="text-xs text-muted-foreground">All systems</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* Admin Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -583,10 +592,7 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   {loading ? (
-                    <div className="flex items-center justify-center p-8">
-                      <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                      Loading users...
-                    </div>
+                    <TableSkeleton rows={5} columns={7} />
                   ) : (
                     <Table>
                       <TableHeader>
@@ -684,10 +690,7 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   {loading ? (
-                    <div className="flex items-center justify-center p-8">
-                      <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                      Loading entities...
-                    </div>
+                    <TableSkeleton rows={5} columns={7} />
                   ) : (
                     <Table>
                       <TableHeader>
@@ -758,10 +761,7 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   {loading ? (
-                    <div className="flex items-center justify-center p-8">
-                      <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-                      Loading payments...
-                    </div>
+                    <TableSkeleton rows={5} columns={7} />
                   ) : (
                     <Table>
                       <TableHeader>
@@ -1356,6 +1356,6 @@ const AdminDashboard = () => {
       />
     </DashboardLayout>
   );
-};
+});
 
 export default AdminDashboard;
