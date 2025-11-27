@@ -21,6 +21,9 @@ import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { UserManagementModal } from './admin/UserManagementModal';
 import { AgentDetailModal } from './admin/AgentDetailModal';
 import { AgentEditModal } from './admin/AgentEditModal';
+import { AdminEntityEditModal } from './admin/AdminEntityEditModal';
+import { RefundModal } from './admin/RefundModal';
+import { ComplianceReportModal } from './admin/ComplianceReportModal';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { exportToCSV, userExportColumns, agentExportColumns, entityExportColumns, invoiceExportColumns } from '@/lib/csvExport';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -51,6 +54,16 @@ const AdminDashboard = () => {
   // Agent edit modal state
   const [editingAgent, setEditingAgent] = useState<any>(null);
   const [agentEditModalOpen, setAgentEditModalOpen] = useState(false);
+  
+  // Entity edit modal state
+  const [editingEntity, setEditingEntity] = useState<any>(null);
+  const [entityEditModalOpen, setEntityEditModalOpen] = useState(false);
+  
+  // Refund modal state
+  const [refundModalOpen, setRefundModalOpen] = useState(false);
+  
+  // Compliance report modal state
+  const [complianceReportModalOpen, setComplianceReportModalOpen] = useState(false);
   
   // System data states
   const [systemStats, setSystemStats] = useState({
@@ -336,15 +349,28 @@ const AdminDashboard = () => {
   };
 
   const handleEditEntity = (entityId: string) => {
-    toast.info('Edit entity', { description: 'Entity editing feature coming soon.' });
+    const entity = allEntities.find((e: any) => e.id === entityId);
+    if (entity) {
+      setEditingEntity(entity);
+      setEntityEditModalOpen(true);
+    }
+  };
+
+  const handleRefreshEntities = async () => {
+    const { data } = await supabase
+      .from('entities')
+      .select('*, profiles(user_id, company, user_type)')
+      .order('created_at', { ascending: false });
+    setAllEntities(data || []);
+    toast.success('Entities refreshed');
   };
 
   const handleProcessRefund = () => {
-    toast.info('Process Refund', { description: 'Refund processing will be available via Stripe dashboard.' });
+    setRefundModalOpen(true);
   };
 
   const handleComplianceReport = () => {
-    toast.info('Generating compliance report...', { description: 'This feature is coming soon.' });
+    setComplianceReportModalOpen(true);
   };
 
   return (
@@ -867,8 +893,12 @@ const AdminDashboard = () => {
 
             <TabsContent value="analytics" className="space-y-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Business Intelligence</CardTitle>
+                  <Button variant="outline" size="sm" onClick={handleComplianceReport}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Compliance Report
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1296,6 +1326,33 @@ const AdminDashboard = () => {
         onOpenChange={setAgentEditModalOpen}
         agent={editingAgent}
         onSave={handleRefreshAgents}
+      />
+      
+      {/* Entity Edit Modal */}
+      <AdminEntityEditModal
+        entity={editingEntity}
+        isOpen={entityEditModalOpen}
+        onClose={() => {
+          setEntityEditModalOpen(false);
+          setEditingEntity(null);
+        }}
+        onSave={handleRefreshEntities}
+      />
+      
+      {/* Refund Modal */}
+      <RefundModal
+        isOpen={refundModalOpen}
+        onClose={() => setRefundModalOpen(false)}
+        invoices={allPayments}
+      />
+      
+      {/* Compliance Report Modal */}
+      <ComplianceReportModal
+        isOpen={complianceReportModalOpen}
+        onClose={() => setComplianceReportModalOpen(false)}
+        entities={allEntities}
+        users={allUsers}
+        agents={allAgents}
       />
     </DashboardLayout>
   );
