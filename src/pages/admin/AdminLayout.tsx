@@ -6,6 +6,7 @@ import {
   Shield, 
   LayoutDashboard, 
   Users, 
+  Building2,
   BarChart3, 
   FileText, 
   Globe, 
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin/users', label: 'Users', icon: Users },
+  { path: '/admin/entities', label: 'Entities', icon: Building2 },
   { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/admin/audit', label: 'Audit Log', icon: FileText },
   { path: '/admin/ip-reputation', label: 'IP Reputation', icon: Globe },
