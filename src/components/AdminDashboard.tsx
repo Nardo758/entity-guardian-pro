@@ -23,6 +23,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
 import { useSecureProfiles } from '@/hooks/useSecureProfiles';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -71,9 +72,9 @@ const AdminDashboard = () => {
           `)
           .order('created_at', { ascending: false });
         
-        // Fetch all payments
-        const { data: payments } = await supabase
-          .from('payments')
+        // Fetch invoices from stripe_invoices table
+        const { data: invoices } = await supabase
+          .from('stripe_invoices')
           .select('*')
           .order('created_at', { ascending: false });
         
@@ -95,10 +96,10 @@ const AdminDashboard = () => {
         
         setAllUsers(secureProfiles || []);
         setAllEntities(entities || []);
-        setAllPayments(payments || []);
+        setAllPayments(invoices || []);
         
-        // Calculate system statistics
-        const totalRevenue = payments?.reduce((sum, p) => p.status === 'paid' ? sum + p.amount : sum, 0) || 0;
+        // Calculate system statistics from invoices
+        const totalRevenue = invoices?.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0) || 0;
         
         setSystemStats({
           totalUsers: secureProfiles?.length || 0,
@@ -151,10 +152,43 @@ const AdminDashboard = () => {
   );
 
   const filteredPayments = allPayments.filter(payment =>
-    payment.entity_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    payment.type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.stripe_invoice_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    payment.stripe_customer_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     payment.status?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Action handlers with toast feedback
+  const handleExport = (type: string) => {
+    toast.info(`Exporting ${type}...`, { description: 'This feature is coming soon.' });
+  };
+
+  const handleViewUser = (userId: string) => {
+    toast.info('View user details', { description: `User ID: ${userId}` });
+  };
+
+  const handleEditUser = (userId: string) => {
+    toast.info('Edit user', { description: 'User editing feature coming soon.' });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    toast.warning('Delete user', { description: 'User deletion requires additional confirmation.' });
+  };
+
+  const handleViewEntity = (entityId: string) => {
+    navigate(`/entities/${entityId}`);
+  };
+
+  const handleEditEntity = (entityId: string) => {
+    toast.info('Edit entity', { description: 'Entity editing feature coming soon.' });
+  };
+
+  const handleProcessRefund = () => {
+    toast.info('Process Refund', { description: 'Refund processing will be available via Stripe dashboard.' });
+  };
+
+  const handleComplianceReport = () => {
+    toast.info('Generating compliance report...', { description: 'This feature is coming soon.' });
+  };
 
   return (
     <DashboardLayout>
@@ -303,7 +337,7 @@ const AdminDashboard = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setActiveTab('security')}
+                          onClick={() => setActiveTab('monitoring')}
                           className="w-full justify-start"
                         >
                           <Shield className="h-4 w-4 mr-2" />
@@ -357,7 +391,7 @@ const AdminDashboard = () => {
                         className="pl-8"
                       />
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleExport('users')}>
                       <Download className="h-4 w-4 mr-2" />
                       Export
                     </Button>
@@ -407,13 +441,13 @@ const AdminDashboard = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" onClick={() => handleViewUser(user.user_id)}>
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" onClick={() => handleEditUser(user.user_id)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-destructive">
+                                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteUser(user.user_id)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -443,11 +477,11 @@ const AdminDashboard = () => {
                         className="pl-8"
                       />
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleExport('entities')}>
                       <Download className="h-4 w-4 mr-2" />
                       Export
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={handleComplianceReport}>
                       <FileText className="h-4 w-4 mr-2" />
                       Compliance Report
                     </Button>
@@ -489,10 +523,10 @@ const AdminDashboard = () => {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" onClick={() => handleViewEntity(entity.id)}>
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" size="sm" onClick={() => handleEditEntity(entity.id)}>
                                   <Edit className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -511,11 +545,11 @@ const AdminDashboard = () => {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Financial Administration</CardTitle>
                   <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleExport('financial')}>
                       <Download className="h-4 w-4 mr-2" />
                       Financial Report
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={handleProcessRefund}>
                       <CreditCard className="h-4 w-4 mr-2" />
                       Process Refund
                     </Button>
@@ -531,41 +565,59 @@ const AdminDashboard = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Entity</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Amount</TableHead>
+                          <TableHead>Invoice ID</TableHead>
+                          <TableHead>Customer</TableHead>
+                          <TableHead>Amount Due</TableHead>
+                          <TableHead>Amount Paid</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Payment Method</TableHead>
                           <TableHead>Date</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredPayments.map((payment) => (
-                          <TableRow key={payment.id}>
-                            <TableCell className="font-medium">{payment.entity_name}</TableCell>
-                            <TableCell>{payment.type}</TableCell>
-                            <TableCell>${(payment.amount / 100).toFixed(2)}</TableCell>
+                        {filteredPayments.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                              No invoices found
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredPayments.map((invoice) => (
+                          <TableRow key={invoice.id}>
+                            <TableCell className="font-medium font-mono text-xs">
+                              {invoice.stripe_invoice_id?.slice(0, 20)}...
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {invoice.stripe_customer_id?.slice(0, 15)}...
+                            </TableCell>
+                            <TableCell>${(invoice.amount_due / 100).toFixed(2)}</TableCell>
+                            <TableCell>${(invoice.amount_paid / 100).toFixed(2)}</TableCell>
                             <TableCell>
                               <Badge variant={
-                                payment.status === 'paid' ? 'default' : 
-                                payment.status === 'pending' ? 'secondary' : 'destructive'
+                                invoice.status === 'paid' ? 'default' : 
+                                invoice.status === 'open' ? 'secondary' : 'destructive'
                               }>
-                                {payment.status}
+                                {invoice.status}
                               </Badge>
                             </TableCell>
-                            <TableCell>{payment.payment_method || 'N/A'}</TableCell>
                             <TableCell>
-                              {new Date(payment.created_at).toLocaleDateString()}
+                              {new Date(invoice.created_at).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm">
-                                  <RefreshCw className="h-4 w-4" />
-                                </Button>
+                                {invoice.hosted_invoice_url && (
+                                  <Button variant="ghost" size="sm" asChild>
+                                    <a href={invoice.hosted_invoice_url} target="_blank" rel="noopener noreferrer">
+                                      <Eye className="h-4 w-4" />
+                                    </a>
+                                  </Button>
+                                )}
+                                {invoice.invoice_pdf && (
+                                  <Button variant="ghost" size="sm" asChild>
+                                    <a href={invoice.invoice_pdf} target="_blank" rel="noopener noreferrer">
+                                      <Download className="h-4 w-4" />
+                                    </a>
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
