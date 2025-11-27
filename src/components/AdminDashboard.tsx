@@ -53,10 +53,12 @@ const AdminDashboard = () => {
   const [financialAnalytics, setFinancialAnalytics] = useState<any>(null);
   const [agentAnalytics, setAgentAnalytics] = useState<any>(null);
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allAgents, setAllAgents] = useState<any[]>([]);
   const { data: secureProfiles, isLoading: profilesLoading, refetch: refetchProfiles } = useSecureProfiles();
   const [allEntities, setAllEntities] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [agentSearchTerm, setAgentSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Fetch system-wide data
@@ -146,6 +148,8 @@ const AdminDashboard = () => {
             terminated: assignments.filter((a: any) => a.status === 'terminated').length,
           }
         });
+        
+        setAllAgents(agents);
         
         // Calculate admin subscriber statistics securely
         let activeSubscriptions = 0;
@@ -1052,6 +1056,127 @@ const AdminDashboard = () => {
                       <p>No agent state coverage data available</p>
                       <p className="text-sm">Agents will appear here once they register and specify their service states</p>
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Registered Agents</CardTitle>
+                  <div className="flex items-center space-x-2">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search agents..."
+                        value={agentSearchTerm}
+                        onChange={(e) => setAgentSearchTerm(e.target.value)}
+                        className="pl-8 w-[200px]"
+                      />
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleExport('agents')}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {loading ? (
+                    <div className="flex items-center justify-center p-8">
+                      <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+                      Loading agents...
+                    </div>
+                  ) : allAgents.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No registered agents yet</p>
+                      <p className="text-sm">Agents will appear here once they complete registration</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Company</TableHead>
+                          <TableHead>Contact Email</TableHead>
+                          <TableHead>States Covered</TableHead>
+                          <TableHead>Price/Entity</TableHead>
+                          <TableHead>Experience</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Registered</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {allAgents
+                          .filter(agent => 
+                            agent.company_name?.toLowerCase().includes(agentSearchTerm.toLowerCase()) ||
+                            agent.contact_email?.toLowerCase().includes(agentSearchTerm.toLowerCase()) ||
+                            agent.states?.some((s: string) => s.toLowerCase().includes(agentSearchTerm.toLowerCase()))
+                          )
+                          .map((agent) => (
+                          <TableRow key={agent.id}>
+                            <TableCell className="font-medium">
+                              {agent.company_name || 'N/A'}
+                              {agent.bio && (
+                                <p className="text-xs text-muted-foreground truncate max-w-[150px]">{agent.bio}</p>
+                              )}
+                            </TableCell>
+                            <TableCell>{agent.contact_email || 'N/A'}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                {(agent.states || []).slice(0, 3).map((state: string) => (
+                                  <Badge key={state} variant="outline" className="text-xs">
+                                    {state}
+                                  </Badge>
+                                ))}
+                                {(agent.states || []).length > 3 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    +{agent.states.length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>${agent.price_per_entity?.toFixed(2) || '0.00'}</TableCell>
+                            <TableCell>
+                              {agent.years_experience ? `${agent.years_experience} yrs` : 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={agent.is_available ? 'default' : 'secondary'}>
+                                {agent.is_available ? 'Available' : 'Unavailable'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {new Date(agent.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    toast.info('Agent Details', { 
+                                      description: `${agent.company_name || 'Unknown'} - ${agent.contact_email || 'No email'}`
+                                    });
+                                  }}
+                                  title="View Details"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    toast.info('Edit Agent', { description: 'Agent editing feature coming soon.' });
+                                  }}
+                                  title="Edit Agent"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   )}
                 </CardContent>
               </Card>
