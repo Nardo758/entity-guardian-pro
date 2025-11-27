@@ -18,6 +18,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
     const { installApp, isInstallable, isInstalled, isSupported, canInstall, getBrowserInstructions } = usePWA();
     const { toast } = useToast();
     const { user, profile, loading, signOut } = useAuth();
+    const [authTimeout, setAuthTimeout] = React.useState(false);
+
+    // Fallback timeout to show auth buttons if loading takes too long
+    React.useEffect(() => {
+      const timer = setTimeout(() => {
+        if (loading) {
+          setAuthTimeout(true);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
+    }, [loading]);
 
     // Redirect authenticated users to their dashboard
     React.useEffect(() => {
@@ -343,7 +354,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
             </div>
 
             <div className="flex items-center space-x-4">
-              {loading ? (
+              {loading && !authTimeout ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 animate-pulse bg-muted rounded-full" />
                   <div className="w-16 h-4 animate-pulse bg-muted rounded" />
