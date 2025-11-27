@@ -1148,6 +1148,7 @@ export type Database = {
           total_actions: number
         }[]
       }
+      get_auth_user_email: { Args: never; Returns: string }
       get_business_intelligence: {
         Args: never
         Returns: {
