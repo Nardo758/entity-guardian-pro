@@ -646,6 +646,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           avatar_url: string | null
           company: string | null
           company_size: string | null
@@ -655,11 +656,15 @@ export type Database = {
           last_name: string | null
           phone_number: string | null
           plan: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspension_reason: string | null
           updated_at: string
           user_id: string
           user_type: string | null
         }
         Insert: {
+          account_status?: string | null
           avatar_url?: string | null
           company?: string | null
           company_size?: string | null
@@ -669,11 +674,15 @@ export type Database = {
           last_name?: string | null
           phone_number?: string | null
           plan?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           updated_at?: string
           user_id: string
           user_type?: string | null
         }
         Update: {
+          account_status?: string | null
           avatar_url?: string | null
           company?: string | null
           company_size?: string | null
@@ -683,6 +692,9 @@ export type Database = {
           last_name?: string | null
           phone_number?: string | null
           plan?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspension_reason?: string | null
           updated_at?: string
           user_id?: string
           user_type?: string | null

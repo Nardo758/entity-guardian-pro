@@ -17,6 +17,7 @@ import { TeamSwitcher } from './TeamSwitcher';
 import AdminRoleManager from './AdminRoleManager';
 import SecurityAuditLog from './SecurityAuditLog';
 import { SecurityWarningBanner } from './SecurityWarningBanner';
+import { UserManagementModal } from './admin/UserManagementModal';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -24,14 +25,20 @@ import { useTeams } from '@/hooks/useTeams';
 import { useSecureProfiles } from '@/hooks/useSecureProfiles';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { isAdmin, isLoading: adminLoading } = useAdminAccess();
   const { subscription } = useSubscription();
   const { notifications } = useNotifications();
   const { currentTeam } = useTeams();
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // User management modal state
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [userModalOpen, setUserModalOpen] = useState(false);
   
   // System data states
   const [systemStats, setSystemStats] = useState({
@@ -42,7 +49,7 @@ const AdminDashboard = () => {
     systemHealth: 'healthy'
   });
   const [allUsers, setAllUsers] = useState<any[]>([]);
-  const { data: secureProfiles, isLoading: profilesLoading } = useSecureProfiles();
+  const { data: secureProfiles, isLoading: profilesLoading, refetch: refetchProfiles } = useSecureProfiles();
   const [allEntities, setAllEntities] = useState([]);
   const [allPayments, setAllPayments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -163,15 +170,24 @@ const AdminDashboard = () => {
   };
 
   const handleViewUser = (userId: string) => {
-    toast.info('View user details', { description: `User ID: ${userId}` });
+    setSelectedUserId(userId);
+    setUserModalOpen(true);
   };
 
   const handleEditUser = (userId: string) => {
-    toast.info('Edit user', { description: 'User editing feature coming soon.' });
+    setSelectedUserId(userId);
+    setUserModalOpen(true);
   };
 
   const handleDeleteUser = (userId: string) => {
-    toast.warning('Delete user', { description: 'User deletion requires additional confirmation.' });
+    // Open modal on account status tab for suspension
+    setSelectedUserId(userId);
+    setUserModalOpen(true);
+  };
+
+  const handleRoleChange = () => {
+    refetchProfiles();
+    queryClient.invalidateQueries({ queryKey: ['secure-profiles'] });
   };
 
   const handleViewEntity = (entityId: string) => {
@@ -408,23 +424,23 @@ const AdminDashboard = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
                           <TableHead>Company</TableHead>
                           <TableHead>Plan</TableHead>
                           <TableHead>User Type</TableHead>
+                          <TableHead>Status</TableHead>
                           <TableHead>Created</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredUsers.map((user) => (
-                          <TableRow key={user.id}>
+                          <TableRow key={user.id} className={user.account_status === 'suspended' ? 'opacity-60' : ''}>
                             <TableCell>
                               <div className="font-medium">
                                 {user.first_name_masked || 'N/A'} {user.last_name_masked || ''}
                               </div>
+                              <div className="text-xs text-muted-foreground">{user.user_id?.slice(0, 8)}...</div>
                             </TableCell>
-                            <TableCell>{user.user_id}</TableCell>
                             <TableCell>{user.company || 'N/A'}</TableCell>
                             <TableCell>
                               <Badge variant={user.plan === 'unlimited' ? 'default' : 'secondary'}>
@@ -437,18 +453,29 @@ const AdminDashboard = () => {
                               </Badge>
                             </TableCell>
                             <TableCell>
+                              <Badge variant={user.account_status === 'suspended' ? 'destructive' : 'default'}>
+                                {user.account_status || 'active'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
                               {new Date(user.created_at).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="sm" onClick={() => handleViewUser(user.user_id)}>
-                                  <Eye className="h-4 w-4" />
+                              <div className="flex items-center space-x-1">
+                                <Button variant="ghost" size="sm" onClick={() => handleViewUser(user.user_id)} title="Manage User">
+                                  <UserCog className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" onClick={() => handleEditUser(user.user_id)}>
+                                <Button variant="ghost" size="sm" onClick={() => handleEditUser(user.user_id)} title="Edit Profile">
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteUser(user.user_id)}>
-                                  <Trash2 className="h-4 w-4" />
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className={user.account_status === 'suspended' ? 'text-green-600' : 'text-destructive'}
+                                  onClick={() => handleDeleteUser(user.user_id)}
+                                  title={user.account_status === 'suspended' ? 'Reactivate Account' : 'Suspend Account'}
+                                >
+                                  {user.account_status === 'suspended' ? <RefreshCw className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                                 </Button>
                               </div>
                             </TableCell>
@@ -779,6 +806,16 @@ const AdminDashboard = () => {
           </Tabs>
         </div>
       </div>
+      
+      {/* User Management Modal */}
+      {selectedUserId && (
+        <UserManagementModal
+          open={userModalOpen}
+          onOpenChange={setUserModalOpen}
+          userId={selectedUserId}
+          onRoleChange={handleRoleChange}
+        />
+      )}
     </DashboardLayout>
   );
 };

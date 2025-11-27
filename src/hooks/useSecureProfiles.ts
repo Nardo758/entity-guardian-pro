@@ -17,7 +17,6 @@ export interface SecureProfile {
   suspended_at?: string;
   suspended_by?: string;
   phone_number_masked?: string;
-  phone_verified?: boolean;
 }
 
 // Client-side PII masking function
@@ -63,8 +62,7 @@ export const useSecureProfiles = () => {
           suspension_reason,
           suspended_at,
           suspended_by,
-          phone_number,
-          phone_verified
+          phone_number
         `)
         .order('created_at', { ascending: false });
 
@@ -84,11 +82,10 @@ export const useSecureProfiles = () => {
           created_at: profile.created_at,
           updated_at: profile.updated_at,
           user_type: profile.user_type,
-          account_status: profile.account_status,
+          account_status: profile.account_status || 'active',
           suspension_reason: profile.suspension_reason,
           suspended_at: profile.suspended_at,
           suspended_by: profile.suspended_by,
-          phone_verified: profile.phone_verified,
         };
         return secureProfile;
       }) || [];
@@ -124,11 +121,10 @@ export const useUserProfileSecure = (userId: string) => {
         created_at: profile.created_at,
         updated_at: profile.updated_at,
         user_type: profile.user_type,
-        account_status: profile.account_status,
+        account_status: profile.account_status || 'active',
         suspension_reason: profile.suspension_reason,
         suspended_at: profile.suspended_at,
         suspended_by: profile.suspended_by,
-        phone_verified: profile.phone_verified,
       };
       
       return secureProfile;
