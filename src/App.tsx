@@ -56,8 +56,12 @@ const App = () => {
                   {adminRoutes.map((route) => (
                     route.children ? (
                       <Route key={route.path} path={route.path} element={route.element}>
-                        {route.children.map((child: { path: string; element: React.ReactNode }) => (
-                          <Route key={child.path} path={child.path} element={child.element} />
+                        {route.children.map((child: { path?: string; element: React.ReactNode; index?: boolean }, idx: number) => (
+                          child.index ? (
+                            <Route key="index" index element={child.element} />
+                          ) : (
+                            <Route key={child.path || idx} path={child.path} element={child.element} />
+                          )
                         ))}
                       </Route>
                     ) : (

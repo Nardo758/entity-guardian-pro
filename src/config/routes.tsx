@@ -179,7 +179,6 @@ export const protectedRoutes = [
 
 // Dedicated Admin Panel routes (completely separate authentication)
 export const adminRoutes = [
-  { path: '/admin', element: <Navigate to="/admin/login" replace /> },
   { 
     path: '/admin/login', 
     element: (
@@ -212,6 +211,7 @@ export const adminRoutes = [
       </AdminAuthProvider>
     ),
     children: [
+      { index: true, element: <Navigate to="/admin/login" replace /> },
       { path: 'dashboard', element: <React.Suspense fallback={null}><AdminPanelDashboard /></React.Suspense> },
       { path: 'users', element: <React.Suspense fallback={null}><AdminPanelUsers /></React.Suspense> },
       { path: 'analytics', element: <React.Suspense fallback={null}><AdminPanelAnalytics /></React.Suspense> },
