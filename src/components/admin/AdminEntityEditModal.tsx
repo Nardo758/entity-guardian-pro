@@ -119,7 +119,7 @@ export const AdminEntityEditModal: React.FC<AdminEntityEditModalProps> = ({
                 value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -136,7 +136,7 @@ export const AdminEntityEditModal: React.FC<AdminEntityEditModalProps> = ({
                 value={formData.state}
                 onValueChange={(value) => setFormData({ ...formData, state: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="state">
                   <SelectValue placeholder="Select state" />
                 </SelectTrigger>
                 <SelectContent>
@@ -155,7 +155,7 @@ export const AdminEntityEditModal: React.FC<AdminEntityEditModalProps> = ({
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>

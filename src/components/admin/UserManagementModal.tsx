@@ -331,7 +331,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   value={formData.company_size}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, company_size: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="company_size">
                     <SelectValue placeholder="Select size" />
                   </SelectTrigger>
                   <SelectContent>
@@ -350,7 +350,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                   value={formData.plan}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, plan: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="plan">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -368,7 +368,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 value={formData.user_type}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, user_type: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger id="user_type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

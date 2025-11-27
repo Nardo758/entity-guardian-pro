@@ -81,7 +81,7 @@ export const ReportConfigForm: React.FC<ReportConfigFormProps> = ({
               value={formData.schedule_type}
               onValueChange={(value: any) => setFormData({ ...formData, schedule_type: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger id="schedule_type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -111,7 +111,7 @@ export const ReportConfigForm: React.FC<ReportConfigFormProps> = ({
               value={formData.schedule_day?.toString() || '1'}
               onValueChange={(value) => setFormData({ ...formData, schedule_day: parseInt(value) })}
             >
-              <SelectTrigger>
+              <SelectTrigger id="schedule_day">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
