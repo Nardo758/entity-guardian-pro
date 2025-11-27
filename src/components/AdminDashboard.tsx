@@ -49,6 +49,9 @@ const AdminDashboard = () => {
 
   // Fetch system-wide data
   useEffect(() => {
+    // Wait for secure profiles to load before fetching
+    if (profilesLoading) return;
+    
     const fetchSystemData = async () => {
       if (!isAdmin) {
         navigate('/dashboard');
@@ -57,9 +60,6 @@ const AdminDashboard = () => {
 
       try {
         setLoading(true);
-        
-        // Use secure profiles from the hook - wait for them to load
-        if (!secureProfiles) return;
         
         // Fetch all entities with limited profile exposure
         const { data: entities } = await supabase
@@ -116,7 +116,7 @@ const AdminDashboard = () => {
     };
 
     fetchSystemData();
-  }, [isAdmin, navigate]);
+  }, [isAdmin, navigate, profilesLoading, secureProfiles]);
 
   // Redirect non-admin users
   if (!isAdmin) {
