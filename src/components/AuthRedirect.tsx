@@ -13,28 +13,28 @@ const AuthRedirect: React.FC<AuthRedirectProps> = ({ children }) => {
   useEffect(() => {
     if (!loading && user && profile) {
       const currentPath = window.location.pathname;
-      console.log('AuthRedirect - Current path:', currentPath, 'User type:', profile.user_type, 'Is admin:', profile.is_admin);
       
       // Check if user has a role assigned
       if (!profile.user_type) {
-        console.log('No user type, redirecting to role selection');
         navigate('/role-selection', { replace: true });
         return;
       }
 
-      // Redirect based on user type - avoid infinite redirects by checking current path
-      if (profile.user_type === 'registered_agent' && currentPath !== '/agent-dashboard') {
-        console.log('Redirecting registered agent to dashboard');
+      // Only redirect if user is on a generic page, not already on a valid dashboard
+      const validDashboards = ['/dashboard', '/admin-dashboard', '/agent-dashboard'];
+      if (validDashboards.includes(currentPath)) {
+        // Already on a valid dashboard, don't redirect
+        return;
+      }
+
+      // Redirect based on user type for non-dashboard pages
+      if (profile.user_type === 'registered_agent') {
         navigate('/agent-dashboard', { replace: true });
-      } else if (profile.is_admin && currentPath !== '/admin-dashboard') {
-        console.log('Redirecting admin to dashboard');
+      } else if (profile.is_admin || profile.roles?.includes('admin')) {
         navigate('/admin-dashboard', { replace: true });
-      } else if (profile.user_type === 'entity_owner' && currentPath !== '/dashboard') {
-        console.log('Redirecting entity owner to dashboard');
+      } else if (profile.user_type === 'entity_owner') {
         navigate('/dashboard', { replace: true });
       }
-    } else if (!loading && user && !profile) {
-      console.log('User exists but no profile loaded yet');
     }
   }, [user, profile, loading, navigate]);
 
