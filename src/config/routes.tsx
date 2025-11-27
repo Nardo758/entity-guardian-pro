@@ -183,7 +183,7 @@ export const adminRoutes = [
     path: '/admin/login', 
     element: (
       <AdminAuthProvider>
-        <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-slate-950">Loading...</div>}>
+        <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>}>
           <AdminLogin />
         </React.Suspense>
       </AdminAuthProvider>
@@ -193,7 +193,7 @@ export const adminRoutes = [
     path: '/admin/setup', 
     element: (
       <AdminAuthProvider>
-        <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-slate-950">Loading...</div>}>
+        <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>}>
           <AdminSetup />
         </React.Suspense>
       </AdminAuthProvider>
@@ -204,7 +204,7 @@ export const adminRoutes = [
     element: (
       <AdminAuthProvider>
         <AdminAuthGuard>
-          <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-slate-950">Loading...</div>}>
+          <React.Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>}>
             <AdminLayout />
           </React.Suspense>
         </AdminAuthGuard>

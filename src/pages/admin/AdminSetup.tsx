@@ -121,11 +121,11 @@ const AdminSetup: React.FC = () => {
   // Loading state
   if (checkStatus === 'loading' || checkStatus === 'redirecting') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-900 border-slate-800">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mb-4"></div>
-            <p className="text-slate-400 text-sm">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+            <p className="text-muted-foreground text-sm">
               {checkStatus === 'redirecting' ? 'Redirecting to login...' : 'Checking admin setup status...'}
             </p>
           </CardContent>
@@ -137,26 +137,26 @@ const AdminSetup: React.FC = () => {
   // Error state
   if (checkStatus === 'error') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-900 border-slate-800">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center p-8">
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+            <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Connection Error</h2>
-            <p className="text-slate-400 text-center mb-6 text-sm">
+            <h2 className="text-xl font-bold text-foreground mb-2">Connection Error</h2>
+            <p className="text-muted-foreground text-center mb-6 text-sm">
               {checkError}
             </p>
             <Button
               onClick={checkSetup}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+              className="bg-gradient-to-r from-primary to-primary-dark hover:opacity-90"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
             <a
               href="/"
-              className="mt-4 text-sm text-slate-500 hover:text-slate-400 transition-colors"
+              className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               ← Return to main site
             </a>
@@ -168,14 +168,14 @@ const AdminSetup: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-900 border-slate-800">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center p-8">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-              <Check className="h-8 w-8 text-green-500" />
+            <div className="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mb-4">
+              <Check className="h-8 w-8 text-success" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Admin Account Created</h2>
-            <p className="text-slate-400 text-center">
+            <h2 className="text-xl font-bold text-foreground mb-2">Admin Account Created</h2>
+            <p className="text-muted-foreground text-center">
               Redirecting to login...
             </p>
           </CardContent>
@@ -185,23 +185,23 @@ const AdminSetup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
-        <Alert className="bg-blue-950/50 border-blue-800 text-blue-200">
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
+        <Alert className="bg-info-muted border-info/30">
+          <Shield className="h-4 w-4 text-info" />
+          <AlertDescription className="text-foreground">
             No admin accounts exist. Create the first administrator account to get started.
           </AlertDescription>
         </Alert>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
-              <Shield className="h-8 w-8 text-white" />
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center">
+              <Shield className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-white">Admin Setup</CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardTitle className="text-2xl font-bold text-foreground">Admin Setup</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 Create the first administrator account
               </CardDescription>
             </div>
@@ -210,14 +210,14 @@ const AdminSetup: React.FC = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <Alert variant="destructive" className="bg-red-950/50 border-red-800">
+                <Alert variant="destructive" className="bg-destructive-muted border-destructive/30">
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription className="text-red-200">{error}</AlertDescription>
+                  <AlertDescription className="text-destructive">{error}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="displayName" className="text-slate-300">Display Name</Label>
+                <Label htmlFor="displayName">Display Name</Label>
                 <Input
                   id="displayName"
                   type="text"
@@ -226,12 +226,11 @@ const AdminSetup: React.FC = () => {
                   placeholder="Administrator"
                   required
                   disabled={isLoading}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -240,12 +239,11 @@ const AdminSetup: React.FC = () => {
                   placeholder="admin@example.com"
                   required
                   disabled={isLoading}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300">Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -254,12 +252,11 @@ const AdminSetup: React.FC = () => {
                   placeholder="••••••••••••"
                   required
                   disabled={isLoading}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-slate-300">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -268,13 +265,12 @@ const AdminSetup: React.FC = () => {
                   placeholder="••••••••••••"
                   required
                   disabled={isLoading}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500"
                 />
               </div>
 
               {/* Password Requirements */}
-              <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
-                <p className="text-sm font-medium text-slate-300 mb-2">Password Requirements:</p>
+              <div className="bg-muted rounded-lg p-4 space-y-2">
+                <p className="text-sm font-medium text-foreground mb-2">Password Requirements:</p>
                 {[
                   { check: passwordChecks.length, label: 'At least 12 characters' },
                   { check: passwordChecks.uppercase, label: 'One uppercase letter' },
@@ -285,11 +281,11 @@ const AdminSetup: React.FC = () => {
                 ].map(({ check, label }) => (
                   <div key={label} className="flex items-center gap-2 text-sm">
                     {check ? (
-                      <Check className="h-4 w-4 text-green-500" />
+                      <Check className="h-4 w-4 text-success" />
                     ) : (
-                      <X className="h-4 w-4 text-slate-500" />
+                      <X className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className={check ? 'text-green-400' : 'text-slate-500'}>{label}</span>
+                    <span className={check ? 'text-success' : 'text-muted-foreground'}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -297,11 +293,11 @@ const AdminSetup: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isLoading || !isPasswordValid}
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-primary to-primary-dark hover:opacity-90 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
                     Creating Account...
                   </>
                 ) : (

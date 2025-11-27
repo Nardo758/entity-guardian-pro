@@ -99,11 +99,11 @@ const AdminLogin: React.FC = () => {
   // Loading state
   if (checkStatus === 'loading' || checkStatus === 'redirecting' || authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-900 border-slate-800">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mb-4"></div>
-            <p className="text-slate-400 text-sm">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+            <p className="text-muted-foreground text-sm">
               {checkStatus === 'redirecting' 
                 ? 'Redirecting to setup...' 
                 : authLoading 
@@ -119,26 +119,26 @@ const AdminLogin: React.FC = () => {
   // Error state
   if (checkStatus === 'error') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-900 border-slate-800">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center p-8">
-            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+            <div className="w-16 h-16 bg-destructive/20 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Connection Error</h2>
-            <p className="text-slate-400 text-center mb-6 text-sm">
+            <h2 className="text-xl font-bold text-foreground mb-2">Connection Error</h2>
+            <p className="text-muted-foreground text-center mb-6 text-sm">
               {checkError}
             </p>
             <Button
               onClick={checkSetup}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+              className="bg-gradient-to-r from-primary to-primary-dark hover:opacity-90"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Try Again
             </Button>
             <a
               href="/"
-              className="mt-4 text-sm text-slate-500 hover:text-slate-400 transition-colors"
+              className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               ← Return to main site
             </a>
@@ -149,24 +149,24 @@ const AdminLogin: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Warning Banner */}
-        <Alert className="bg-amber-950/50 border-amber-800 text-amber-200">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
+        <Alert className="bg-warning-muted border-warning/30 text-warning-foreground">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <AlertDescription className="text-foreground">
             This is a restricted administrative area. Unauthorized access attempts are logged and monitored.
           </AlertDescription>
         </Alert>
 
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center">
-              <Shield className="h-8 w-8 text-white" />
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center">
+              <Shield className="h-8 w-8 text-primary-foreground" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-white">Admin Portal</CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardTitle className="text-2xl font-bold text-foreground">Admin Portal</CardTitle>
+              <CardDescription className="text-muted-foreground">
                 Sign in to access the administration panel
               </CardDescription>
             </div>
@@ -175,13 +175,13 @@ const AdminLogin: React.FC = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <Alert variant="destructive" className="bg-red-950/50 border-red-800">
-                  <AlertDescription className="text-red-200">{error}</AlertDescription>
+                <Alert variant="destructive" className="bg-destructive-muted border-destructive/30">
+                  <AlertDescription className="text-destructive">{error}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-300">Email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -190,12 +190,11 @@ const AdminLogin: React.FC = () => {
                   placeholder="admin@example.com"
                   required
                   disabled={isLoading}
-                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300">Password</Label>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -205,12 +204,12 @@ const AdminLogin: React.FC = () => {
                     placeholder="••••••••••••"
                     required
                     disabled={isLoading}
-                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500 pr-10"
+                    className="pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -220,11 +219,11 @@ const AdminLogin: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+                className="w-full bg-gradient-to-r from-primary to-primary-dark hover:opacity-90"
               >
                 {isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
                     Authenticating...
                   </>
                 ) : (
@@ -236,8 +235,8 @@ const AdminLogin: React.FC = () => {
               </Button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-slate-800">
-              <p className="text-xs text-slate-500 text-center">
+            <div className="mt-6 pt-6 border-t">
+              <p className="text-xs text-muted-foreground text-center">
                 Sessions expire after 4 hours. MFA may be required for certain actions.
               </p>
             </div>
@@ -248,7 +247,7 @@ const AdminLogin: React.FC = () => {
         <div className="text-center">
           <a
             href="/"
-            className="text-sm text-slate-500 hover:text-slate-400 transition-colors"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             ← Return to main site
           </a>
