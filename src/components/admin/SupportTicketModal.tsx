@@ -8,9 +8,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Send, CheckCircle, Clock, User, Shield } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle, Clock, User, Shield, UserCheck } from 'lucide-react';
 import { format } from 'date-fns';
-import { SupportTicket, TicketMessage } from '@/hooks/useAdminSupportTickets';
+import { SupportTicket, TicketMessage, AdminUser } from '@/hooks/useAdminSupportTickets';
 
 interface SupportTicketModalProps {
   ticket: SupportTicket | null;
@@ -20,6 +20,7 @@ interface SupportTicketModalProps {
   onSendMessage: (data: { ticketId: string; message: string; isInternal: boolean }) => void;
   onResolveTicket: (data: { ticketId: string; resolutionNotes: string }) => void;
   fetchMessages: (ticketId: string) => Promise<TicketMessage[]>;
+  adminUsers: AdminUser[];
   isUpdating: boolean;
   isSending: boolean;
   isResolving: boolean;
@@ -47,6 +48,7 @@ export const SupportTicketModal: React.FC<SupportTicketModalProps> = ({
   onSendMessage,
   onResolveTicket,
   fetchMessages,
+  adminUsers,
   isUpdating,
   isSending,
   isResolving,
@@ -94,6 +96,12 @@ export const SupportTicketModal: React.FC<SupportTicketModalProps> = ({
     onUpdateTicket({ ticketId: ticket.id, updates: { priority } });
   };
 
+  const handleAssigneeChange = (assigneeId: string) => {
+    if (!ticket) return;
+    const assigned_to = assigneeId === 'unassigned' ? null : assigneeId;
+    onUpdateTicket({ ticketId: ticket.id, updates: { assigned_to } });
+  };
+
   if (!ticket) return null;
 
   return (
@@ -108,7 +116,7 @@ export const SupportTicketModal: React.FC<SupportTicketModalProps> = ({
 
         <div className="grid grid-cols-3 gap-6 flex-1 overflow-hidden">
           {/* Left column - Ticket details */}
-          <div className="col-span-1 space-y-4">
+          <div className="col-span-1 space-y-4 overflow-y-auto">
             <div>
               <Label className="text-muted-foreground text-xs">Subject</Label>
               <p className="font-medium">{ticket.subject}</p>
@@ -122,6 +130,35 @@ export const SupportTicketModal: React.FC<SupportTicketModalProps> = ({
             <div>
               <Label className="text-muted-foreground text-xs">Category</Label>
               <p className="capitalize">{ticket.category}</p>
+            </div>
+
+            <div>
+              <Label className="text-muted-foreground text-xs">Assigned To</Label>
+              <Select 
+                value={ticket.assigned_to || 'unassigned'} 
+                onValueChange={handleAssigneeChange} 
+                disabled={isUpdating}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">
+                    <span className="text-muted-foreground">Unassigned</span>
+                  </SelectItem>
+                  {adminUsers.map((admin) => (
+                    <SelectItem key={admin.id} value={admin.id}>
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-3 w-3" />
+                        <span>{admin.display_name}</span>
+                        <Badge variant="secondary" className="text-xs ml-1">
+                          {admin.ticket_count}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
