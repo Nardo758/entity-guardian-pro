@@ -41,6 +41,74 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_accounts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          display_name: string
+          email: string
+          failed_attempts: number | null
+          id: string
+          ip_whitelist: unknown[] | null
+          is_active: boolean | null
+          last_login_at: string | null
+          last_login_ip: unknown
+          locked_until: string | null
+          mfa_backup_codes: string[] | null
+          mfa_enabled: boolean
+          mfa_secret: string | null
+          password_hash: string
+          permissions: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          display_name: string
+          email: string
+          failed_attempts?: number | null
+          id?: string
+          ip_whitelist?: unknown[] | null
+          is_active?: boolean | null
+          last_login_at?: string | null
+          last_login_ip?: unknown
+          locked_until?: string | null
+          mfa_backup_codes?: string[] | null
+          mfa_enabled?: boolean
+          mfa_secret?: string | null
+          password_hash: string
+          permissions?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          display_name?: string
+          email?: string
+          failed_attempts?: number | null
+          id?: string
+          ip_whitelist?: unknown[] | null
+          is_active?: boolean | null
+          last_login_at?: string | null
+          last_login_ip?: unknown
+          locked_until?: string | null
+          mfa_backup_codes?: string[] | null
+          mfa_enabled?: boolean
+          mfa_secret?: string | null
+          password_hash?: string
+          permissions?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_accounts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_audit_log: {
         Row: {
           action_category: string
@@ -82,6 +150,47 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: []
+      }
+      admin_sessions: {
+        Row: {
+          admin_id: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown
+          is_valid: boolean | null
+          session_token: string
+          user_agent: string | null
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          is_valid?: boolean | null
+          session_token: string
+          user_agent?: string | null
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          is_valid?: boolean | null
+          session_token?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       agent_invitations: {
         Row: {
@@ -1086,6 +1195,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_setup_required: { Args: never; Returns: boolean }
       calculate_ip_reputation: {
         Args: {
           p_failed_auth?: number
@@ -1104,6 +1214,15 @@ export type Database = {
         Returns: boolean
       }
       cleanup_ip_reputation: { Args: never; Returns: number }
+      create_admin_session: {
+        Args: {
+          p_admin_id: string
+          p_ip: unknown
+          p_token: string
+          p_user_agent: string
+        }
+        Returns: string
+      }
       generate_agent_invitation_token: { Args: never; Returns: string }
       generate_invitation_token: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
@@ -1262,6 +1381,7 @@ export type Database = {
             }
             Returns: boolean
           }
+      invalidate_admin_session: { Args: { p_token: string }; Returns: boolean }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_invited_agent: {
         Args: { invitation_id: string; user_uuid: string }
@@ -1285,6 +1405,17 @@ export type Database = {
           target_user_id?: string
         }
         Returns: undefined
+      }
+      log_admin_panel_action: {
+        Args: {
+          p_action_category: string
+          p_action_type: string
+          p_admin_id: string
+          p_description: string
+          p_metadata?: Json
+          p_severity?: string
+        }
+        Returns: string
       }
       log_failed_admin_login: {
         Args: { p_email: string; p_ip_address?: string; p_reason?: string }
@@ -1326,6 +1457,13 @@ export type Database = {
       owns_invited_agent: {
         Args: { invitation_id: string; user_uuid: string }
         Returns: boolean
+      }
+      record_admin_login_failure: {
+        Args: { p_email: string; p_ip: unknown }
+        Returns: {
+          is_locked: boolean
+          locked_until: string
+        }[]
       }
       should_mask_profile_data: {
         Args: { target_user_id: string }
@@ -1372,6 +1510,16 @@ export type Database = {
       }
       user_is_admin: { Args: { user_uuid: string }; Returns: boolean }
       validate_admin_action: { Args: { action_name: string }; Returns: boolean }
+      validate_admin_session: {
+        Args: { p_token: string }
+        Returns: {
+          admin_id: string
+          display_name: string
+          email: string
+          is_valid: boolean
+          permissions: Json
+        }[]
+      }
       validate_payment_method_access: {
         Args: { method_user_id: string }
         Returns: boolean

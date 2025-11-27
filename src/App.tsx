@@ -8,7 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CheckoutProvider } from "@/contexts/CheckoutContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
-import { publicRoutes, authRoutes, protectedRoutes, fallbackRoute } from "@/config/routes";
+import { publicRoutes, authRoutes, protectedRoutes, adminRoutes, fallbackRoute } from "@/config/routes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +50,19 @@ const App = () => {
                   {/* Protected routes with consistent error boundaries */}
                   {protectedRoutes.map((route) => (
                     <Route key={route.path} path={route.path} element={route.element} />
+                  ))}
+                  
+                  {/* Admin panel routes (separate authentication) */}
+                  {adminRoutes.map((route) => (
+                    route.children ? (
+                      <Route key={route.path} path={route.path} element={route.element}>
+                        {route.children.map((child: { path: string; element: React.ReactNode }) => (
+                          <Route key={child.path} path={child.path} element={child.element} />
+                        ))}
+                      </Route>
+                    ) : (
+                      <Route key={route.path} path={route.path} element={route.element} />
+                    )
                   ))}
                   
                   {/* Catch-all route */}
