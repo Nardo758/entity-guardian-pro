@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, Shield, BarChart3, Settings, AlertTriangle, UserCog, Crown, 
   Database, TrendingUp, CreditCard, FileText, Activity, DollarSign,
-  Trash2, Edit, Eye, Download, RefreshCw, Search, Filter, ScrollText
+  Trash2, Edit, Eye, Download, RefreshCw, Search, Filter, ScrollText, Briefcase, UserCheck, Mail
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -51,6 +51,7 @@ const AdminDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState<any>(null);
   const [entityAnalytics, setEntityAnalytics] = useState<any>(null);
   const [financialAnalytics, setFinancialAnalytics] = useState<any>(null);
+  const [agentAnalytics, setAgentAnalytics] = useState<any>(null);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const { data: secureProfiles, isLoading: profilesLoading, refetch: refetchProfiles } = useSecureProfiles();
   const [allEntities, setAllEntities] = useState([]);
@@ -104,6 +105,47 @@ const AdminDashboard = () => {
         if (financialAnalyticsRes.data && financialAnalyticsRes.data.length > 0) {
           setFinancialAnalytics(financialAnalyticsRes.data[0]);
         }
+        
+        // Fetch agent analytics
+        const [agentsRes, invitationsRes, assignmentsRes] = await Promise.all([
+          supabase.from('agents').select('*'),
+          supabase.from('agent_invitations').select('status'),
+          supabase.from('entity_agent_assignments').select('status')
+        ]);
+        
+        const agents = agentsRes.data || [];
+        const invitations = invitationsRes.data || [];
+        const assignments = assignmentsRes.data || [];
+        
+        // Calculate agent metrics
+        const stateCoverage: Record<string, number> = {};
+        agents.forEach((agent: any) => {
+          (agent.states || []).forEach((state: string) => {
+            stateCoverage[state] = (stateCoverage[state] || 0) + 1;
+          });
+        });
+        
+        setAgentAnalytics({
+          totalAgents: agents.length,
+          availableAgents: agents.filter((a: any) => a.is_available).length,
+          unavailableAgents: agents.filter((a: any) => !a.is_available).length,
+          avgPrice: agents.length > 0 ? agents.reduce((sum: number, a: any) => sum + (a.price_per_entity || 0), 0) / agents.length : 0,
+          avgExperience: agents.filter((a: any) => a.years_experience).length > 0 
+            ? agents.filter((a: any) => a.years_experience).reduce((sum: number, a: any) => sum + a.years_experience, 0) / agents.filter((a: any) => a.years_experience).length 
+            : 0,
+          stateCoverage,
+          invitations: {
+            total: invitations.length,
+            pending: invitations.filter((i: any) => i.status === 'pending').length,
+            accepted: invitations.filter((i: any) => i.status === 'accepted').length,
+            declined: invitations.filter((i: any) => i.status === 'declined').length,
+          },
+          assignments: {
+            total: assignments.length,
+            active: assignments.filter((a: any) => a.status === 'accepted').length,
+            terminated: assignments.filter((a: any) => a.status === 'terminated').length,
+          }
+        });
         
         // Calculate admin subscriber statistics securely
         let activeSubscriptions = 0;
@@ -325,10 +367,11 @@ const AdminDashboard = () => {
 
           {/* Admin Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="users">User Management</TabsTrigger>
               <TabsTrigger value="entities">Entity Oversight</TabsTrigger>
+              <TabsTrigger value="agents">Agent Analytics</TabsTrigger>
               <TabsTrigger value="financial">Financial Admin</TabsTrigger>
               <TabsTrigger value="monitoring">System Monitor</TabsTrigger>
               <TabsTrigger value="analytics">Business Intel</TabsTrigger>
@@ -859,6 +902,157 @@ const AdminDashboard = () => {
                       )}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="agents" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{agentAnalytics?.totalAgents || 0}</div>
+                    <p className="text-xs text-muted-foreground">Registered agents</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Available Agents</CardTitle>
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-success">{agentAnalytics?.availableAgents || 0}</div>
+                    <p className="text-xs text-muted-foreground">Ready to take clients</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg Price/Entity</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">${agentAnalytics?.avgPrice?.toFixed(2) || '0.00'}</div>
+                    <p className="text-xs text-muted-foreground">Per entity fee</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg Experience</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{agentAnalytics?.avgExperience?.toFixed(1) || '0'} yrs</div>
+                    <p className="text-xs text-muted-foreground">Years of experience</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Mail className="h-5 w-5" />
+                      Invitation Statistics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Total Invitations</span>
+                        <Badge variant="outline">{agentAnalytics?.invitations?.total || 0}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Pending</span>
+                        <Badge variant="secondary">{agentAnalytics?.invitations?.pending || 0}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Accepted</span>
+                        <Badge variant="default">{agentAnalytics?.invitations?.accepted || 0}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Declined</span>
+                        <Badge variant="destructive">{agentAnalytics?.invitations?.declined || 0}</Badge>
+                      </div>
+                      {agentAnalytics?.invitations?.total > 0 && (
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Acceptance Rate</span>
+                            <span className="text-sm font-bold">
+                              {((agentAnalytics?.invitations?.accepted / agentAnalytics?.invitations?.total) * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCheck className="h-5 w-5" />
+                      Assignment Statistics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Total Assignments</span>
+                        <Badge variant="outline">{agentAnalytics?.assignments?.total || 0}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Active</span>
+                        <Badge variant="default">{agentAnalytics?.assignments?.active || 0}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Terminated</span>
+                        <Badge variant="destructive">{agentAnalytics?.assignments?.terminated || 0}</Badge>
+                      </div>
+                      {agentAnalytics?.totalAgents > 0 && agentAnalytics?.assignments?.total > 0 && (
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">Avg Entities/Agent</span>
+                            <span className="text-sm font-bold">
+                              {(agentAnalytics?.assignments?.active / agentAnalytics?.totalAgents).toFixed(1)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Agent State Coverage</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {agentAnalytics?.stateCoverage && Object.keys(agentAnalytics.stateCoverage).length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                      {Object.entries(agentAnalytics.stateCoverage)
+                        .sort(([,a], [,b]) => (b as number) - (a as number))
+                        .slice(0, 12)
+                        .map(([state, count]) => (
+                          <div key={state} className="text-center p-3 border border-border rounded-lg">
+                            <div className="text-xl font-bold">{count as number}</div>
+                            <div className="text-sm text-muted-foreground">{state}</div>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No agent state coverage data available</p>
+                      <p className="text-sm">Agents will appear here once they register and specify their service states</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
