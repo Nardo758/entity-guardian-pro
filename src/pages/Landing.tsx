@@ -30,25 +30,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
       return () => clearTimeout(timer);
     }, [loading]);
 
-    // Redirect authenticated users to their dashboard
-    React.useEffect(() => {
-      if (!loading && user && profile) {
-        // Check if user has a role assigned
-        if (!profile.user_type) {
-          navigate('/role-selection', { replace: true });
-          return;
-        }
-
-        // Redirect based on user type
-        if (profile.user_type === 'registered_agent') {
-          navigate('/agent-dashboard', { replace: true });
-        } else if (profile.is_admin || profile.roles?.includes('admin')) {
-          navigate('/admin-dashboard', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
-      }
-    }, [user, profile, loading, navigate]);
+    // Note: We intentionally don't auto-redirect authenticated users from the landing page
+    // This allows users to view the landing page even when logged in (e.g., to see pricing)
+    // They can navigate to their dashboard using the user menu or nav links
 
     const handleDesktopDownload = async () => {
       if (isInstalled) {
