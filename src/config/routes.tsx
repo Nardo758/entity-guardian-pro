@@ -57,6 +57,7 @@ const AdminPanelDashboard = React.lazy(() => import('@/pages/admin/Dashboard'));
 const AdminPanelUsers = React.lazy(() => import('@/pages/admin/Users'));
 const AdminPanelEntities = React.lazy(() => import('@/pages/admin/Entities'));
 const AdminPanelBilling = React.lazy(() => import('@/pages/admin/Billing'));
+const AdminPanelSupport = React.lazy(() => import('@/pages/admin/Support'));
 const AdminPanelAnalytics = React.lazy(() => import('@/pages/admin/Analytics'));
 const AdminPanelAuditLog = React.lazy(() => import('@/pages/admin/AuditLog'));
 const AdminPanelIPReputation = React.lazy(() => import('@/pages/admin/IPReputation'));
@@ -218,6 +219,7 @@ export const adminRoutes = [
       { path: 'users', element: <React.Suspense fallback={null}><AdminPanelUsers /></React.Suspense> },
       { path: 'entities', element: <React.Suspense fallback={null}><AdminPanelEntities /></React.Suspense> },
       { path: 'billing', element: <React.Suspense fallback={null}><AdminPanelBilling /></React.Suspense> },
+      { path: 'support', element: <React.Suspense fallback={null}><AdminPanelSupport /></React.Suspense> },
       { path: 'analytics', element: <React.Suspense fallback={null}><AdminPanelAnalytics /></React.Suspense> },
       { path: 'audit', element: <React.Suspense fallback={null}><AdminPanelAuditLog /></React.Suspense> },
       { path: 'ip-reputation', element: <React.Suspense fallback={null}><AdminPanelIPReputation /></React.Suspense> },
