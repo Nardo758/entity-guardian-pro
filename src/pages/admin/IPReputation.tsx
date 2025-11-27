@@ -41,70 +41,70 @@ const IPReputation: React.FC = () => {
   const getRiskBadge = (level: string) => {
     switch (level) {
       case 'critical':
-        return <Badge variant="destructive" className="bg-red-500/20 text-red-400">Critical</Badge>;
+        return <Badge variant="destructive" className="bg-destructive/20 text-destructive">Critical</Badge>;
       case 'high':
-        return <Badge className="bg-orange-500/20 text-orange-400">High</Badge>;
+        return <Badge className="bg-orange-500/20 text-orange-500">High</Badge>;
       case 'medium':
-        return <Badge className="bg-amber-500/20 text-amber-400">Medium</Badge>;
+        return <Badge className="bg-warning/20 text-warning">Medium</Badge>;
       default:
-        return <Badge className="bg-green-500/20 text-green-400">Low</Badge>;
+        return <Badge className="bg-success/20 text-success">Low</Badge>;
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-amber-500';
+    if (score >= 80) return 'text-success';
+    if (score >= 60) return 'text-warning';
     if (score >= 40) return 'text-orange-500';
-    return 'text-red-500';
+    return 'text-destructive';
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">IP Reputation</h1>
-        <p className="text-slate-400">Monitor and manage IP address reputation scores</p>
+        <h1 className="text-2xl font-bold text-foreground">IP Reputation</h1>
+        <p className="text-muted-foreground">Monitor and manage IP address reputation scores</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <Shield className="h-6 w-6 text-green-500" />
+              <div className="p-3 bg-success/10 rounded-lg">
+                <Shield className="h-6 w-6 text-success" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">Low Risk IPs</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-muted-foreground">Low Risk IPs</p>
+                <p className="text-2xl font-bold text-foreground">
                   {entries.filter(e => e.risk_level === 'low').length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-500/10 rounded-lg">
-                <AlertTriangle className="h-6 w-6 text-amber-500" />
+              <div className="p-3 bg-warning/10 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">Medium/High Risk</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-muted-foreground">Medium/High Risk</p>
+                <p className="text-2xl font-bold text-foreground">
                   {entries.filter(e => ['medium', 'high'].includes(e.risk_level)).length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-slate-900 border-slate-800">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-red-500/10 rounded-lg">
-                <Globe className="h-6 w-6 text-red-500" />
+              <div className="p-3 bg-destructive/10 rounded-lg">
+                <Globe className="h-6 w-6 text-destructive" />
               </div>
               <div>
-                <p className="text-sm text-slate-400">Blocked IPs</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-muted-foreground">Blocked IPs</p>
+                <p className="text-2xl font-bold text-foreground">
                   {entries.filter(e => e.blocked_until && new Date(e.blocked_until) > new Date()).length}
                 </p>
               </div>
@@ -113,47 +113,47 @@ const IPReputation: React.FC = () => {
         </Card>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Globe className="h-5 w-5 text-amber-500" />
+          <CardTitle className="text-foreground flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
             IP Addresses
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-muted-foreground">
             All tracked IP addresses and their reputation scores
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : entries.length === 0 ? (
-            <p className="text-slate-500 text-center py-8">No IP reputation data found</p>
+            <p className="text-muted-foreground text-center py-8">No IP reputation data found</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-700">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">IP Address</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Score</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Risk Level</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Failed Auth</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Rate Violations</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-400">Last Seen</th>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">IP Address</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Score</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Risk Level</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Failed Auth</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Rate Violations</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Last Seen</th>
                   </tr>
                 </thead>
                 <tbody>
                   {entries.map((entry) => (
-                    <tr key={entry.id} className="border-b border-slate-800 last:border-0">
-                      <td className="py-3 px-4 text-white font-mono text-sm">{entry.ip_address}</td>
+                    <tr key={entry.id} className="border-b last:border-0">
+                      <td className="py-3 px-4 text-foreground font-mono text-sm">{entry.ip_address}</td>
                       <td className={`py-3 px-4 font-bold ${getScoreColor(entry.reputation_score)}`}>
                         {entry.reputation_score}
                       </td>
                       <td className="py-3 px-4">{getRiskBadge(entry.risk_level)}</td>
-                      <td className="py-3 px-4 text-slate-400">{entry.failed_auth_attempts || 0}</td>
-                      <td className="py-3 px-4 text-slate-400">{entry.rate_limit_violations || 0}</td>
-                      <td className="py-3 px-4 text-slate-500 text-sm">
+                      <td className="py-3 px-4 text-muted-foreground">{entry.failed_auth_attempts || 0}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{entry.rate_limit_violations || 0}</td>
+                      <td className="py-3 px-4 text-muted-foreground text-sm">
                         {format(new Date(entry.last_seen_at), 'PP')}
                       </td>
                     </tr>

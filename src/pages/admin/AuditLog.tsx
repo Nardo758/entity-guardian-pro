@@ -50,21 +50,21 @@ const AuditLog: React.FC = () => {
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return <Badge variant="destructive" className="bg-red-500/20 text-red-400 border-red-500/30">Critical</Badge>;
+        return <Badge variant="destructive" className="bg-destructive/20 text-destructive border-destructive/30">Critical</Badge>;
       case 'warning':
-        return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Warning</Badge>;
+        return <Badge className="bg-warning/20 text-warning border-warning/30">Warning</Badge>;
       case 'info':
       default:
-        return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Info</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/30">Info</Badge>;
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
+        return <AlertCircle className="h-4 w-4 text-destructive" />;
       case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+        return <AlertTriangle className="h-4 w-4 text-warning" />;
       default:
         return <Info className="h-4 w-4 text-blue-500" />;
     }
@@ -73,29 +73,29 @@ const AuditLog: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Audit Log</h1>
-        <p className="text-slate-400">Track all administrative actions and security events</p>
+        <h1 className="text-2xl font-bold text-foreground">Audit Log</h1>
+        <p className="text-muted-foreground">Track all administrative actions and security events</p>
       </div>
 
-      <Card className="bg-slate-900 border-slate-800">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white flex items-center gap-2">
-                <FileText className="h-5 w-5 text-amber-500" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
                 Activity Log
               </CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardDescription className="text-muted-foreground">
                 Recent administrative actions
               </CardDescription>
             </div>
             <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search logs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                className="pl-9"
               />
             </div>
           </div>
@@ -103,28 +103,28 @@ const AuditLog: React.FC = () => {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : filteredLogs.length === 0 ? (
-            <p className="text-slate-500 text-center py-8">No audit logs found</p>
+            <p className="text-muted-foreground text-center py-8">No audit logs found</p>
           ) : (
             <div className="space-y-3">
               {filteredLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-start gap-4 p-4 rounded-lg bg-slate-800/50 border border-slate-700"
+                  className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border"
                 >
                   <div className="mt-1">{getSeverityIcon(log.severity)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-white">{log.action_type}</span>
+                      <span className="font-medium text-foreground">{log.action_type}</span>
                       {getSeverityBadge(log.severity)}
-                      <Badge variant="outline" className="text-slate-400 border-slate-600">
+                      <Badge variant="outline" className="text-muted-foreground">
                         {log.action_category}
                       </Badge>
                     </div>
-                    <p className="text-sm text-slate-400">{log.description}</p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-sm text-muted-foreground">{log.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       {format(new Date(log.created_at), 'PPpp')}
                     </p>
                   </div>
