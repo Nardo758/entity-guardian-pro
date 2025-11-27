@@ -14,7 +14,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ const navItems = [
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/entities', label: 'Entities', icon: Building2 },
   { path: '/admin/billing', label: 'Billing', icon: CreditCard },
+  { path: '/admin/support', label: 'Support', icon: MessageSquare },
   { path: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/admin/audit', label: 'Audit Log', icon: FileText },
   { path: '/admin/ip-reputation', label: 'IP Reputation', icon: Globe },
