@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -124,6 +124,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Ref to prevent concurrent profile fetches (fixes race condition)
+  const profileFetchingRef = useRef<string | null>(null);
+  const isMountedRef = useRef(true);
 
   // Handle Supabase token hash fragments and OAuth errors with enhanced error handling
   useEffect(() => {
@@ -282,10 +286,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  const fetchProfile = async (userId: string, retries = 3) => {
+  const fetchProfile = useCallback(async (userId: string, retries = 3) => {
+    // Prevent concurrent fetches for the same user (race condition fix)
+    if (profileFetchingRef.current === userId) {
+      console.log('Profile fetch already in progress for user:', userId);
+      return;
+    }
+    
+    profileFetchingRef.current = userId;
+    
     try {
       // First ensure profile exists
       const profileExists = await ensureProfileExists(userId, undefined, retries);
+      
+      if (!isMountedRef.current) return;
       
       if (!profileExists) {
         console.warn('Could not ensure profile exists after retries');
@@ -314,6 +328,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('user_id', userId)
         .maybeSingle();
 
+      if (!isMountedRef.current) return;
+
       if (profileError) {
         console.warn('Could not fetch profile:', profileError);
         // Set minimal profile so app doesn't break
@@ -340,6 +356,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('role')
         .eq('user_id', userId);
 
+      if (!isMountedRef.current) return;
+
       if (rolesError) {
         console.warn('Could not fetch roles:', rolesError);
       }
@@ -354,6 +372,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       console.warn('Error fetching profile:', error);
+      if (!isMountedRef.current) return;
       // Set minimal profile as fallback
       setProfile({
         id: userId,
@@ -369,19 +388,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         roles: [],
         is_admin: false
       });
+    } finally {
+      profileFetchingRef.current = null;
     }
-  };
+  }, []);
 
   // Email is sourced from auth.user; profiles table doesn't store email
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user.id);
     }
-  };
+  }, [user, fetchProfile]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     const checkSubscriptionStatus = async () => {
+      if (!isMountedRef.current) return;
       try {
         await supabase.functions.invoke('check-subscription');
       } catch (error) {
@@ -389,9 +413,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Set up auth state listener
+    // Set up auth state listener FIRST (prevents race conditions)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!isMountedRef.current) return;
+        
         // Handle session errors by clearing stale data
         if (event === 'TOKEN_REFRESHED' && !session) {
           console.warn('Token refresh failed, clearing session');
@@ -402,19 +428,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        // Synchronous state updates only in callback (prevents deadlock)
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Defer profile fetching to prevent deadlocks
+          // Defer profile fetching with setTimeout to prevent deadlocks
+          const userId = session.user.id;
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            if (isMountedRef.current) {
+              fetchProfile(userId);
+            }
           }, 0);
           
           // Check subscription status on successful sign-in or token refresh
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             setTimeout(() => {
-              checkSubscriptionStatus();
+              if (isMountedRef.current) {
+                checkSubscriptionStatus();
+              }
             }, 100);
           }
         } else {
@@ -425,27 +457,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // Check for existing session
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMountedRef.current) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        const userId = session.user.id;
         setTimeout(() => {
-          fetchProfile(session.user.id);
+          if (isMountedRef.current) {
+            fetchProfile(userId);
+          }
         }, 0);
         
         // Check subscription status for existing session
         setTimeout(() => {
-          checkSubscriptionStatus();
+          if (isMountedRef.current) {
+            checkSubscriptionStatus();
+          }
         }, 100);
       }
       
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      isMountedRef.current = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile]);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     // Check rate limit with graceful degradation for signups
