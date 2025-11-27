@@ -48,6 +48,9 @@ const AdminDashboard = () => {
     totalRevenue: 0,
     systemHealth: 'healthy'
   });
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [entityAnalytics, setEntityAnalytics] = useState<any>(null);
+  const [financialAnalytics, setFinancialAnalytics] = useState<any>(null);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const { data: secureProfiles, isLoading: profilesLoading, refetch: refetchProfiles } = useSecureProfiles();
   const [allEntities, setAllEntities] = useState([]);
@@ -85,16 +88,30 @@ const AdminDashboard = () => {
           .select('*')
           .order('created_at', { ascending: false });
         
+        // Fetch real analytics data from database functions
+        const [userAnalyticsRes, entityAnalyticsRes, financialAnalyticsRes] = await Promise.all([
+          supabase.rpc('get_user_analytics'),
+          supabase.rpc('get_entity_analytics'),
+          supabase.rpc('get_financial_analytics')
+        ]);
+        
+        if (userAnalyticsRes.data && userAnalyticsRes.data.length > 0) {
+          setAnalyticsData(userAnalyticsRes.data[0]);
+        }
+        if (entityAnalyticsRes.data && entityAnalyticsRes.data.length > 0) {
+          setEntityAnalytics(entityAnalyticsRes.data[0]);
+        }
+        if (financialAnalyticsRes.data && financialAnalyticsRes.data.length > 0) {
+          setFinancialAnalytics(financialAnalyticsRes.data[0]);
+        }
+        
         // Calculate admin subscriber statistics securely
         let activeSubscriptions = 0;
         try {
-          // Use secure admin analytics function instead of direct subscriber access
-          const { data: systemStats } = await supabase
-            .rpc('get_admin_system_stats');
+          const { data: systemStats } = await supabase.rpc('get_admin_system_stats');
           
           if (systemStats && systemStats.length > 0) {
-            // System stats already includes subscriber counts
-            activeSubscriptions = systemStats[0].total_users || 0; // Approximation
+            activeSubscriptions = systemStats[0].total_users || 0;
           }
         } catch (error) {
           console.error('Error fetching system stats:', error);
@@ -112,7 +129,7 @@ const AdminDashboard = () => {
           totalUsers: secureProfiles?.length || 0,
           totalEntities: entities?.length || 0,
           activeSubscriptions,
-          totalRevenue: totalRevenue / 100, // Convert from cents
+          totalRevenue: totalRevenue / 100,
           systemHealth: 'healthy'
         });
         
@@ -544,9 +561,15 @@ const AdminDashboard = () => {
                             <TableCell>
                               {entity.profiles?.company || 'N/A'}
                             </TableCell>
-                            <TableCell>{entity.formation_date}</TableCell>
+                            <TableCell>{entity.formation_date || 'N/A'}</TableCell>
                             <TableCell>
-                              <Badge variant="default">Active</Badge>
+                              <Badge variant={
+                                entity.status === 'active' ? 'default' :
+                                entity.status === 'pending' ? 'secondary' :
+                                entity.status === 'dissolved' ? 'destructive' : 'outline'
+                              }>
+                                {entity.status || 'active'}
+                              </Badge>
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
@@ -728,16 +751,20 @@ const AdminDashboard = () => {
                       <h4 className="font-medium mb-2">Customer Metrics</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-sm">Monthly Signups</span>
-                          <span className="font-medium">+{Math.floor(systemStats.totalUsers * 0.1)}</span>
+                          <span className="text-sm">Total Users</span>
+                          <span className="font-medium">{analyticsData?.total_users || systemStats.totalUsers}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">30-Day Growth</span>
+                          <span className="font-medium text-green-600">+{analyticsData?.user_growth_30d || 0}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Retention Rate</span>
-                          <span className="font-medium">94%</span>
+                          <span className="font-medium">{analyticsData?.user_retention_rate?.toFixed(1) || '0'}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm">Churn Rate</span>
-                          <span className="font-medium">6%</span>
+                          <span className="text-sm">Trial→Paid Conversion</span>
+                          <span className="font-medium">{analyticsData?.trial_to_paid_conversion?.toFixed(1) || '0'}%</span>
                         </div>
                       </div>
                     </div>
@@ -746,34 +773,44 @@ const AdminDashboard = () => {
                       <h4 className="font-medium mb-2">Revenue Analytics</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-sm">Monthly Revenue</span>
-                          <span className="font-medium">${(systemStats.totalRevenue * 0.1).toFixed(0)}</span>
+                          <span className="text-sm">Total Revenue</span>
+                          <span className="font-medium">${financialAnalytics?.total_revenue?.toFixed(2) || systemStats.totalRevenue.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm">Avg. Revenue per User</span>
-                          <span className="font-medium">${systemStats.totalUsers > 0 ? (systemStats.totalRevenue / systemStats.totalUsers).toFixed(2) : '0'}</span>
+                          <span className="text-sm">MRR</span>
+                          <span className="font-medium">${financialAnalytics?.mrr?.toFixed(2) || '0'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">ARPU</span>
+                          <span className="font-medium">${financialAnalytics?.arpu?.toFixed(2) || '0'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm">Growth Rate</span>
-                          <span className="font-medium text-success">+12%</span>
+                          <span className={`font-medium ${(financialAnalytics?.revenue_growth_rate || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {(financialAnalytics?.revenue_growth_rate || 0) >= 0 ? '+' : ''}{financialAnalytics?.revenue_growth_rate?.toFixed(1) || '0'}%
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="p-4 border border-border rounded-lg">
-                      <h4 className="font-medium mb-2">Popular Entity Types</h4>
+                      <h4 className="font-medium mb-2">Entity Analytics</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-sm">LLC</span>
-                          <span className="font-medium">65%</span>
+                          <span className="text-sm">Total Entities</span>
+                          <span className="font-medium">{entityAnalytics?.total_entities || systemStats.totalEntities}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm">Corporation</span>
-                          <span className="font-medium">25%</span>
+                          <span className="text-sm">30-Day Creations</span>
+                          <span className="font-medium text-green-600">+{entityAnalytics?.entity_creation_rate_30d || 0}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm">Partnership</span>
-                          <span className="font-medium">10%</span>
+                          <span className="text-sm">Avg per Customer</span>
+                          <span className="font-medium">{entityAnalytics?.avg_entities_per_customer?.toFixed(1) || '0'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm">Most Popular Type</span>
+                          <span className="font-medium">{entityAnalytics?.most_popular_entity_type || 'LLC'}</span>
                         </div>
                       </div>
                     </div>
@@ -782,22 +819,44 @@ const AdminDashboard = () => {
                   <div className="mt-6 p-4 border border-border rounded-lg">
                     <h4 className="font-medium mb-4">State Distribution</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">35%</div>
-                        <div className="text-sm text-muted-foreground">Delaware</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">18%</div>
-                        <div className="text-sm text-muted-foreground">Nevada</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">15%</div>
-                        <div className="text-sm text-muted-foreground">Wyoming</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">32%</div>
-                        <div className="text-sm text-muted-foreground">Other</div>
-                      </div>
+                      {entityAnalytics?.entities_by_state ? (
+                        Object.entries(entityAnalytics.entities_by_state)
+                          .sort(([,a], [,b]) => (b as number) - (a as number))
+                          .slice(0, 4)
+                          .map(([state, count]) => (
+                            <div key={state} className="text-center">
+                              <div className="text-2xl font-bold">{count as number}</div>
+                              <div className="text-sm text-muted-foreground">{state}</div>
+                            </div>
+                          ))
+                      ) : (
+                        <>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">-</div>
+                            <div className="text-sm text-muted-foreground">No data</div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 border border-border rounded-lg">
+                    <h4 className="font-medium mb-4">Entity Types Distribution</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {entityAnalytics?.entities_by_type ? (
+                        Object.entries(entityAnalytics.entities_by_type)
+                          .sort(([,a], [,b]) => (b as number) - (a as number))
+                          .map(([type, count]) => (
+                            <div key={type} className="text-center">
+                              <div className="text-2xl font-bold">{count as number}</div>
+                              <div className="text-sm text-muted-foreground">{type}</div>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="text-center col-span-4 text-muted-foreground">
+                          No entity type data available
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
