@@ -4,8 +4,11 @@ import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useAdminAccess = () => {
-  const { profile, user } = useAuth();
+  const { profile, user, loading: authLoading } = useAuth();
   const { monitorAdminAccess, monitorUnauthorizedAccess } = useSecurityMonitor();
+  
+  // Profile is still loading if auth is loading OR if user exists but profile hasn't loaded yet
+  const isLoading = authLoading || (!!user && profile === null);
   
   // Only check explicit admin roles, not subscription plans
   const isAdmin = profile?.roles?.includes('admin') || false;
@@ -68,6 +71,7 @@ export const useAdminAccess = () => {
 
   return {
     isAdmin,
+    isLoading, // NEW: Expose loading state
     hasUnlimitedPlan: profile?.plan === 'unlimited',
     hasAdminAccess,
     checkPermission,

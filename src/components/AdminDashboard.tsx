@@ -22,13 +22,11 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
 import { useSecureProfiles } from '@/hooks/useSecureProfiles';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { loading: authLoading } = useAuth();
-  const { isAdmin } = useAdminAccess();
+  const { isAdmin, isLoading: adminLoading } = useAdminAccess();
   const { subscription } = useSubscription();
   const { notifications } = useNotifications();
   const { currentTeam } = useTeams();
@@ -52,7 +50,7 @@ const AdminDashboard = () => {
   // Fetch system-wide data
   useEffect(() => {
     // Wait for auth and secure profiles to load before fetching
-    if (authLoading || profilesLoading) return;
+    if (adminLoading || profilesLoading) return;
     
     // Redirect non-admin users after auth has loaded
     if (!isAdmin) {
@@ -118,10 +116,10 @@ const AdminDashboard = () => {
     };
 
     fetchSystemData();
-  }, [isAdmin, navigate, authLoading, profilesLoading, secureProfiles]);
+  }, [isAdmin, navigate, adminLoading, profilesLoading, secureProfiles]);
 
   // Show loading while auth is being determined
-  if (authLoading || profilesLoading) {
+  if (adminLoading || profilesLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
