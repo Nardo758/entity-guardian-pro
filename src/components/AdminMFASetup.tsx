@@ -64,6 +64,29 @@ export const AdminMFASetup: React.FC<AdminMFASetupProps> = ({ onComplete }) => {
   const setupTOTP = async () => {
     setLoading(true);
     try {
+      // First, check for existing factors and unenroll unverified ones
+      const { data: factorsData } = await supabase.auth.mfa.listFactors();
+      
+      if (factorsData?.totp && factorsData.totp.length > 0) {
+        // Find and unenroll any existing unverified factors
+        for (const factor of factorsData.totp) {
+          if (factor.status === 'unverified') {
+            await supabase.auth.mfa.unenroll({ factorId: factor.id });
+          }
+        }
+        
+        // Check if there's a verified factor
+        const verifiedFactor = factorsData.totp.find(f => f.status === 'verified');
+        if (verifiedFactor) {
+          toast({
+            title: "MFA Already Enabled",
+            description: "You already have MFA set up. Go to Settings to manage your MFA.",
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
         friendlyName: 'Admin Authenticator App'
