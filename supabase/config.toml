@@ -1,5 +1,8 @@
 project_id = "wcuxqopfcgivypbiynjp"
 
+[functions.admin-auth]
+verify_jwt = false
+
 [functions.create-billing-setup-intent]
 verify_jwt = true
 
