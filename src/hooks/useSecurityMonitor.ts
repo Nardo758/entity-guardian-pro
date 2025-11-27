@@ -143,14 +143,19 @@ export const useSecurityMonitor = () => {
     });
   };
 
-  // Start monitoring user activity
+  // Start monitoring user activity with proper cleanup
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsMonitoring(false);
+      return;
+    }
 
+    let isMounted = true;
     setIsMonitoring(true);
 
     // Monitor page visibility changes
     const handleVisibilityChange = () => {
+      if (!isMounted) return;
       if (document.hidden) {
         logSecurityEvent({
           type: 'suspicious_activity',
@@ -166,6 +171,7 @@ export const useSecurityMonitor = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      isMounted = false;
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       setIsMonitoring(false);
     };
