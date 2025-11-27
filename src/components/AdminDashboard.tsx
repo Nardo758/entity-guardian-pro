@@ -18,6 +18,7 @@ import AdminRoleManager from './AdminRoleManager';
 import SecurityAuditLog from './SecurityAuditLog';
 import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { UserManagementModal } from './admin/UserManagementModal';
+import { AgentDetailModal } from './admin/AgentDetailModal';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -39,6 +40,10 @@ const AdminDashboard = () => {
   // User management modal state
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
+  
+  // Agent detail modal state
+  const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [agentModalOpen, setAgentModalOpen] = useState(false);
   
   // System data states
   const [systemStats, setSystemStats] = useState({
@@ -1153,9 +1158,8 @@ const AdminDashboard = () => {
                                   variant="ghost" 
                                   size="sm" 
                                   onClick={() => {
-                                    toast.info('Agent Details', { 
-                                      description: `${agent.company_name || 'Unknown'} - ${agent.contact_email || 'No email'}`
-                                    });
+                                    setSelectedAgent(agent);
+                                    setAgentModalOpen(true);
                                   }}
                                   title="View Details"
                                 >
@@ -1194,6 +1198,13 @@ const AdminDashboard = () => {
           onRoleChange={handleRoleChange}
         />
       )}
+      
+      {/* Agent Detail Modal */}
+      <AgentDetailModal
+        open={agentModalOpen}
+        onOpenChange={setAgentModalOpen}
+        agent={selectedAgent}
+      />
     </DashboardLayout>
   );
 };
