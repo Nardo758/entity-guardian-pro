@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,9 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-react';
+import { Shield, AlertTriangle, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react';
 
 const ADMIN_AUTH_URL = 'https://wcuxqopfcgivypbiynjp.supabase.co/functions/v1/admin-auth';
+const CHECK_TIMEOUT_MS = 10000; // 10 second timeout
+
+type CheckStatus = 'loading' | 'error' | 'ready' | 'redirecting';
 
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -20,36 +23,60 @@ const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [setupRequired, setSetupRequired] = useState<boolean | null>(null);
+  const [checkStatus, setCheckStatus] = useState<CheckStatus>('loading');
+  const [checkError, setCheckError] = useState<string | null>(null);
 
-  // Check if setup is required
-  useEffect(() => {
-    const checkSetup = async () => {
-      try {
-        const response = await fetch(`${ADMIN_AUTH_URL}?action=check-setup`);
-        const data = await response.json();
-        setSetupRequired(data.setupRequired);
-      } catch (err) {
-        console.error('Failed to check setup status:', err);
+  // Check if setup is required with timeout
+  const checkSetup = useCallback(async () => {
+    setCheckStatus('loading');
+    setCheckError(null);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(`${ADMIN_AUTH_URL}?action=check-setup`, {
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
       }
-    };
+      
+      const data = await response.json();
+      
+      if (data.setupRequired) {
+        setCheckStatus('redirecting');
+        navigate('/admin/setup', { replace: true });
+      } else {
+        setCheckStatus('ready');
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error('Failed to check setup status:', err);
+      
+      if (err instanceof Error && err.name === 'AbortError') {
+        setCheckError('Connection timed out. The server may be unavailable.');
+      } else {
+        setCheckError('Failed to connect to the admin service. Please try again.');
+      }
+      setCheckStatus('error');
+    }
+  }, [navigate]);
+
+  useEffect(() => {
     checkSetup();
-  }, []);
+  }, [checkSetup]);
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
+    if (isAuthenticated && !authLoading && checkStatus === 'ready') {
       const from = location.state?.from?.pathname || '/admin/dashboard';
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate, location]);
-
-  // Redirect to setup if no admin exists
-  useEffect(() => {
-    if (setupRequired === true) {
-      navigate('/admin/setup', { replace: true });
-    }
-  }, [setupRequired, navigate]);
+  }, [isAuthenticated, authLoading, navigate, location, checkStatus]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,10 +96,54 @@ const AdminLogin: React.FC = () => {
     }
   };
 
-  if (authLoading || setupRequired === null) {
+  // Loading state
+  if (checkStatus === 'loading' || checkStatus === 'redirecting' || authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-slate-900 border-slate-800">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mb-4"></div>
+            <p className="text-slate-400 text-sm">
+              {checkStatus === 'redirecting' 
+                ? 'Redirecting to setup...' 
+                : authLoading 
+                  ? 'Verifying session...'
+                  : 'Connecting to admin service...'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Error state
+  if (checkStatus === 'error') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-slate-900 border-slate-800">
+          <CardContent className="flex flex-col items-center justify-center p-8">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="h-8 w-8 text-red-500" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Connection Error</h2>
+            <p className="text-slate-400 text-center mb-6 text-sm">
+              {checkError}
+            </p>
+            <Button
+              onClick={checkSetup}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+            <a
+              href="/"
+              className="mt-4 text-sm text-slate-500 hover:text-slate-400 transition-colors"
+            >
+              ← Return to main site
+            </a>
+          </CardContent>
+        </Card>
       </div>
     );
   }
