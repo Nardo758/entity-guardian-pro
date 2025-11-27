@@ -3,6 +3,9 @@ project_id = "wcuxqopfcgivypbiynjp"
 [functions.admin-auth]
 verify_jwt = false
 
+[functions.send-support-notification]
+verify_jwt = true
+
 [functions.create-billing-setup-intent]
 verify_jwt = true
 

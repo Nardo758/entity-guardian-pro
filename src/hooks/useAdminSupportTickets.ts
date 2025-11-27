@@ -154,6 +154,19 @@ export const useAdminSupportTickets = () => {
         .single();
 
       if (error) throw error;
+
+      // Send email notification if not an internal note
+      if (!isInternal) {
+        try {
+          await supabase.functions.invoke('send-support-notification', {
+            body: { ticketId, message, isResolution: false },
+          });
+        } catch (emailError) {
+          console.error('Failed to send email notification:', emailError);
+          // Don't fail the mutation if email fails
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -182,6 +195,17 @@ export const useAdminSupportTickets = () => {
         .single();
 
       if (error) throw error;
+
+      // Send resolution email notification
+      try {
+        await supabase.functions.invoke('send-support-notification', {
+          body: { ticketId, message: resolutionNotes, isResolution: true },
+        });
+      } catch (emailError) {
+        console.error('Failed to send resolution email:', emailError);
+        // Don't fail the mutation if email fails
+      }
+
       return data;
     },
     onSuccess: () => {
