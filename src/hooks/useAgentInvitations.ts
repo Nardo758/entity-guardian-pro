@@ -341,29 +341,10 @@ export const useAgentInvitations = () => {
   };
 
   useEffect(() => {
+    // Only fetch once per user change, don't set up real-time subscriptions
+    // to prevent rapid re-renders on RLS errors
     fetchInvitations();
-    
-    // Set up real-time subscription for invitations
-    const channel = supabase
-      .channel('agent-invitations-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'agent_invitations',
-          filter: `entity_owner_id=eq.${user?.id}`
-        },
-        () => {
-          fetchInvitations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+  }, [user?.id]);
 
   return {
     invitations,

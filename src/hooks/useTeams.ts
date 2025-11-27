@@ -270,41 +270,12 @@ export const useTeams = () => {
   };
 
   useEffect(() => {
+    // Only fetch once per user change, don't set up real-time subscriptions
+    // as the tables might not exist yet
     fetchTeams();
-    fetchInvitations();
-
-    // Set up real-time subscription for team changes
-    const teamsChannel = supabase
-      .channel('team-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'team_memberships',
-          filter: `user_id=eq.${user?.id}`,
-        },
-        () => {
-          fetchTeams();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'team_invitations',
-        },
-        () => {
-          fetchInvitations();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(teamsChannel);
-    };
-  }, [user]);
+    // Don't fetch invitations - team_invitations table may not exist
+    // fetchInvitations();
+  }, [user?.id]);
 
   return {
     teams,

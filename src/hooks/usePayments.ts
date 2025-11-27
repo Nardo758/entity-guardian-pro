@@ -82,29 +82,10 @@ export const usePayments = () => {
   };
 
   useEffect(() => {
+    // Only fetch once per user change, don't set up real-time subscriptions
+    // as the payments table might not exist yet
     fetchPayments();
-
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('payments-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'payments',
-          filter: `user_id=eq.${user?.id}`,
-        },
-        () => {
-          fetchPayments();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+  }, [user?.id]);
 
   return {
     payments,
