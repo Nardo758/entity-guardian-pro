@@ -143,17 +143,17 @@ export const ReportConfigForm: React.FC<ReportConfigFormProps> = ({
               <p className="text-sm text-muted-foreground">No admin users available</p>
             ) : (
               adminUsers.map(user => (
-                <div key={user.id} className="flex items-center space-x-2">
+                <div key={user.user_id} className="flex items-center space-x-2">
                   <Checkbox
-                    id={`recipient-${user.id}`}
-                    checked={formData.recipient_user_ids.includes(user.id)}
-                    onCheckedChange={() => toggleRecipient(user.id)}
+                    id={`recipient-${user.user_id}`}
+                    checked={formData.recipient_user_ids.includes(user.user_id)}
+                    onCheckedChange={() => toggleRecipient(user.user_id)}
                   />
                   <Label
-                    htmlFor={`recipient-${user.id}`}
+                    htmlFor={`recipient-${user.user_id}`}
                     className="flex-1 cursor-pointer font-normal"
                   >
-                    {user.email}
+                    {user.displayName}
                   </Label>
                 </div>
               ))
