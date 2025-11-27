@@ -23,21 +23,28 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      // Stricter unused variable checking
-      "@typescript-eslint/no-unused-vars": ["warn", { 
+      // Stricter unused variable checking - error level
+      "@typescript-eslint/no-unused-vars": ["error", { 
         argsIgnorePattern: "^_",
         varsIgnorePattern: "^_",
         caughtErrorsIgnorePattern: "^_"
       }],
-      // Stricter type checking
+      // Stricter type checking - warn for now due to existing codebase
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/prefer-const": "error",
       "@typescript-eslint/no-require-imports": "error",
+      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-unused-expressions": "error",
       // React hooks
       "react-hooks/exhaustive-deps": "warn",
-      // Additional quality rules
+      "react-hooks/rules-of-hooks": "error",
+      // Quality enforcement
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "prefer-const": "error",
+      "no-var": "error",
+      "eqeqeq": ["error", "always", { null: "ignore" }],
+      "no-duplicate-imports": "error",
+      "no-self-compare": "error",
+      "no-template-curly-in-string": "warn",
     },
   }
 );
