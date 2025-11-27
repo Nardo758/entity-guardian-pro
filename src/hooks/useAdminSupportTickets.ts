@@ -19,6 +19,7 @@ export interface SupportTicket {
   updated_at: string;
   user_email?: string;
   user_name?: string;
+  assigned_admin_name?: string;
 }
 
 export interface TicketMessage {
@@ -31,15 +32,56 @@ export interface TicketMessage {
   created_at: string;
 }
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  display_name: string;
+  ticket_count: number;
+}
+
 export const useAdminSupportTickets = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Fetch admin users for assignment
+  const { data: adminUsers = [] } = useQuery({
+    queryKey: ['admin-users-for-assignment'],
+    queryFn: async () => {
+      // Get admin accounts
+      const { data: admins, error } = await supabase
+        .from('admin_accounts')
+        .select('id, email, display_name')
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      // Get ticket counts per admin
+      const { data: ticketCounts } = await supabase
+        .from('support_tickets')
+        .select('assigned_to')
+        .not('assigned_to', 'is', null)
+        .in('status', ['open', 'in_progress']);
+
+      const countMap = new Map<string, number>();
+      ticketCounts?.forEach(t => {
+        if (t.assigned_to) {
+          countMap.set(t.assigned_to, (countMap.get(t.assigned_to) || 0) + 1);
+        }
+      });
+
+      return (admins || []).map(admin => ({
+        ...admin,
+        ticket_count: countMap.get(admin.id) || 0,
+      })) as AdminUser[];
+    },
+  });
+
   const { data: tickets = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['admin-support-tickets', statusFilter, priorityFilter, searchTerm],
+    queryKey: ['admin-support-tickets', statusFilter, priorityFilter, assigneeFilter, searchTerm],
     queryFn: async () => {
       let query = supabase
         .from('support_tickets')
@@ -54,6 +96,14 @@ export const useAdminSupportTickets = () => {
         query = query.eq('priority', priorityFilter);
       }
 
+      if (assigneeFilter !== 'all') {
+        if (assigneeFilter === 'unassigned') {
+          query = query.is('assigned_to', null);
+        } else {
+          query = query.eq('assigned_to', assigneeFilter);
+        }
+      }
+
       if (searchTerm) {
         query = query.or(`subject.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
       }
@@ -61,7 +111,7 @@ export const useAdminSupportTickets = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Fetch user info for each ticket
+      // Fetch user info and admin assignment info for each ticket
       const ticketsWithUsers = await Promise.all(
         (data || []).map(async (ticket) => {
           const { data: profile } = await supabase
@@ -70,9 +120,21 @@ export const useAdminSupportTickets = () => {
             .eq('user_id', ticket.user_id)
             .single();
 
+          // Get assigned admin name
+          let assigned_admin_name = null;
+          if (ticket.assigned_to) {
+            const { data: admin } = await supabase
+              .from('admin_accounts')
+              .select('display_name')
+              .eq('id', ticket.assigned_to)
+              .single();
+            assigned_admin_name = admin?.display_name || null;
+          }
+
           return {
             ...ticket,
             user_name: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Unknown',
+            assigned_admin_name,
           };
         })
       );
@@ -221,6 +283,7 @@ export const useAdminSupportTickets = () => {
   return {
     tickets,
     ticketStats,
+    adminUsers,
     isLoading,
     error,
     refetch,
@@ -228,6 +291,8 @@ export const useAdminSupportTickets = () => {
     setStatusFilter,
     priorityFilter,
     setPriorityFilter,
+    assigneeFilter,
+    setAssigneeFilter,
     searchTerm,
     setSearchTerm,
     fetchTicketMessages,

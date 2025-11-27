@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MessageSquare, Search, AlertCircle, Clock, CheckCircle, Inbox, RefreshCw } from 'lucide-react';
+import { MessageSquare, Search, AlertCircle, Clock, CheckCircle, Inbox, RefreshCw, UserCheck, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAdminSupportTickets, SupportTicket } from '@/hooks/useAdminSupportTickets';
 import { SupportTicketModal } from '@/components/admin/SupportTicketModal';
@@ -28,12 +28,15 @@ const AdminSupport: React.FC = () => {
   const {
     tickets,
     ticketStats,
+    adminUsers,
     isLoading,
     refetch,
     statusFilter,
     setStatusFilter,
     priorityFilter,
     setPriorityFilter,
+    assigneeFilter,
+    setAssigneeFilter,
     searchTerm,
     setSearchTerm,
     fetchTicketMessages,
@@ -147,6 +150,34 @@ const AdminSupport: React.FC = () => {
         </Card>
       </div>
 
+      {/* Admin Workload */}
+      {adminUsers.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Admin Workload
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {adminUsers.map((admin) => (
+                <div
+                  key={admin.id}
+                  className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg"
+                >
+                  <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">{admin.display_name}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {admin.ticket_count} active
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
@@ -184,6 +215,20 @@ const AdminSupport: React.FC = () => {
                 <SelectItem value="urgent">Urgent</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by assignee" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Assignees</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {adminUsers.map((admin) => (
+                  <SelectItem key={admin.id} value={admin.id}>
+                    {admin.display_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -207,7 +252,7 @@ const AdminSupport: React.FC = () => {
                 <TableRow>
                   <TableHead>Subject</TableHead>
                   <TableHead>User</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Assigned To</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Created</TableHead>
@@ -226,7 +271,16 @@ const AdminSupport: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell>{ticket.user_name || 'Unknown'}</TableCell>
-                    <TableCell className="capitalize">{ticket.category}</TableCell>
+                    <TableCell>
+                      {ticket.assigned_admin_name ? (
+                        <div className="flex items-center gap-1">
+                          <UserCheck className="h-3 w-3 text-green-500" />
+                          <span className="text-sm">{ticket.assigned_admin_name}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Unassigned</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColors[ticket.status]}>
                         {ticket.status.replace('_', ' ')}
@@ -265,6 +319,7 @@ const AdminSupport: React.FC = () => {
         onSendMessage={sendMessage}
         onResolveTicket={resolveTicket}
         fetchMessages={fetchTicketMessages}
+        adminUsers={adminUsers}
         isUpdating={isUpdating}
         isSending={isSending}
         isResolving={isResolving}
