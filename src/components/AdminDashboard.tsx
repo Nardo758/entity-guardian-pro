@@ -22,10 +22,12 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
 import { useSecureProfiles } from '@/hooks/useSecureProfiles';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { loading: authLoading } = useAuth();
   const { isAdmin } = useAdminAccess();
   const { subscription } = useSubscription();
   const { notifications } = useNotifications();
@@ -49,15 +51,16 @@ const AdminDashboard = () => {
 
   // Fetch system-wide data
   useEffect(() => {
-    // Wait for secure profiles to load before fetching
-    if (profilesLoading) return;
+    // Wait for auth and secure profiles to load before fetching
+    if (authLoading || profilesLoading) return;
+    
+    // Redirect non-admin users after auth has loaded
+    if (!isAdmin) {
+      navigate('/dashboard');
+      return;
+    }
     
     const fetchSystemData = async () => {
-      if (!isAdmin) {
-        navigate('/dashboard');
-        return;
-      }
-
       try {
         setLoading(true);
         
@@ -89,7 +92,6 @@ const AdminDashboard = () => {
           }
         } catch (error) {
           console.error('Error fetching system stats:', error);
-          // Don't show toast error here as it's already handled in the main try-catch
         }
 
         
@@ -116,7 +118,21 @@ const AdminDashboard = () => {
     };
 
     fetchSystemData();
-  }, [isAdmin, navigate, profilesLoading, secureProfiles]);
+  }, [isAdmin, navigate, authLoading, profilesLoading, secureProfiles]);
+
+  // Show loading while auth is being determined
+  if (authLoading || profilesLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto text-primary" />
+            <p className="text-muted-foreground">Loading admin dashboard...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Redirect non-admin users
   if (!isAdmin) {
