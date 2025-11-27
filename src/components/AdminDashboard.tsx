@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from './dashboard/DashboardLayout';
 import { UserAccount } from './UserAccount';
@@ -19,7 +20,9 @@ import SecurityAuditLog from './SecurityAuditLog';
 import { SecurityWarningBanner } from './SecurityWarningBanner';
 import { UserManagementModal } from './admin/UserManagementModal';
 import { AgentDetailModal } from './admin/AgentDetailModal';
+import { AgentEditModal } from './admin/AgentEditModal';
 import { useAdminAccess } from '@/hooks/useAdminAccess';
+import { exportToCSV, userExportColumns, agentExportColumns, entityExportColumns, invoiceExportColumns } from '@/lib/csvExport';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useTeams } from '@/hooks/useTeams';
@@ -44,6 +47,10 @@ const AdminDashboard = () => {
   // Agent detail modal state
   const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [agentModalOpen, setAgentModalOpen] = useState(false);
+  
+  // Agent edit modal state
+  const [editingAgent, setEditingAgent] = useState<any>(null);
+  const [agentEditModalOpen, setAgentEditModalOpen] = useState(false);
   
   // System data states
   const [systemStats, setSystemStats] = useState({
@@ -234,7 +241,73 @@ const AdminDashboard = () => {
 
   // Action handlers with toast feedback
   const handleExport = (type: string) => {
-    toast.info(`Exporting ${type}...`, { description: 'This feature is coming soon.' });
+    try {
+      switch (type) {
+        case 'users':
+          if (filteredUsers.length === 0) {
+            toast.error('No users to export');
+            return;
+          }
+          exportToCSV(filteredUsers, 'users_export', userExportColumns);
+          toast.success(`Exported ${filteredUsers.length} users`);
+          break;
+        case 'agents':
+          if (allAgents.length === 0) {
+            toast.error('No agents to export');
+            return;
+          }
+          exportToCSV(allAgents, 'agents_export', agentExportColumns);
+          toast.success(`Exported ${allAgents.length} agents`);
+          break;
+        case 'entities':
+          if (filteredEntities.length === 0) {
+            toast.error('No entities to export');
+            return;
+          }
+          exportToCSV(filteredEntities, 'entities_export', entityExportColumns);
+          toast.success(`Exported ${filteredEntities.length} entities`);
+          break;
+        case 'financial':
+          if (filteredPayments.length === 0) {
+            toast.error('No invoices to export');
+            return;
+          }
+          exportToCSV(filteredPayments, 'invoices_export', invoiceExportColumns);
+          toast.success(`Exported ${filteredPayments.length} invoices`);
+          break;
+        default:
+          toast.info('Export not available for this type');
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export data');
+    }
+  };
+
+  const handleToggleAgentAvailability = async (agentId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('agents')
+        .update({ is_available: !currentStatus, updated_at: new Date().toISOString() })
+        .eq('id', agentId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setAllAgents(prev => prev.map(a => 
+        a.id === agentId ? { ...a, is_available: !currentStatus } : a
+      ));
+      toast.success(`Agent ${!currentStatus ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.error('Error toggling availability:', error);
+      toast.error('Failed to update agent availability');
+    }
+  };
+
+  const handleRefreshAgents = async () => {
+    const { data } = await supabase.from('agents').select('*');
+    setAllAgents(data || []);
+    toast.success('Agents refreshed');
   };
 
   const handleViewUser = (userId: string) => {
@@ -1082,6 +1155,9 @@ const AdminDashboard = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Export
                     </Button>
+                    <Button variant="outline" size="sm" onClick={handleRefreshAgents}>
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1145,9 +1221,16 @@ const AdminDashboard = () => {
                               {agent.years_experience ? `${agent.years_experience} yrs` : 'N/A'}
                             </TableCell>
                             <TableCell>
-                              <Badge variant={agent.is_available ? 'default' : 'secondary'}>
-                                {agent.is_available ? 'Available' : 'Unavailable'}
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Switch
+                                  checked={agent.is_available}
+                                  onCheckedChange={() => handleToggleAgentAvailability(agent.id, agent.is_available)}
+                                  className="data-[state=checked]:bg-green-500"
+                                />
+                                <span className={`text-xs ${agent.is_available ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                  {agent.is_available ? 'On' : 'Off'}
+                                </span>
+                              </div>
                             </TableCell>
                             <TableCell>
                               {new Date(agent.created_at).toLocaleDateString()}
@@ -1169,7 +1252,8 @@ const AdminDashboard = () => {
                                   variant="ghost" 
                                   size="sm" 
                                   onClick={() => {
-                                    toast.info('Edit Agent', { description: 'Agent editing feature coming soon.' });
+                                    setEditingAgent(agent);
+                                    setAgentEditModalOpen(true);
                                   }}
                                   title="Edit Agent"
                                 >
@@ -1204,6 +1288,14 @@ const AdminDashboard = () => {
         open={agentModalOpen}
         onOpenChange={setAgentModalOpen}
         agent={selectedAgent}
+      />
+      
+      {/* Agent Edit Modal */}
+      <AgentEditModal
+        open={agentEditModalOpen}
+        onOpenChange={setAgentEditModalOpen}
+        agent={editingAgent}
+        onSave={handleRefreshAgents}
       />
     </DashboardLayout>
   );
