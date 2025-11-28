@@ -51,9 +51,15 @@ serve(async (req) => {
     }
 
     const creatingAdminId = sessionData[0].admin_id;
-    const { action, email, display_name, password, permissions } = await req.json();
+    console.log("[CREATE-ADMIN] Creating admin ID:", creatingAdminId);
+    
+    const body = await req.json();
+    console.log("[CREATE-ADMIN] Request body:", JSON.stringify(body));
+    
+    const { action, email, display_name, password, permissions } = body;
 
     if (!email || !display_name) {
+      console.log("[CREATE-ADMIN] Missing email or display_name");
       return new Response(
         JSON.stringify({ error: "Email and display name are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -61,13 +67,17 @@ serve(async (req) => {
     }
 
     // Check if admin already exists
-    const { data: existingAdmin } = await supabase
+    console.log("[CREATE-ADMIN] Checking for existing admin with email:", email);
+    const { data: existingAdmin, error: existingError } = await supabase
       .from("admin_accounts")
       .select("id")
       .eq("email", email.toLowerCase())
       .single();
 
+    console.log("[CREATE-ADMIN] Existing admin check:", { existingAdmin, existingError: existingError?.message });
+
     if (existingAdmin) {
+      console.log("[CREATE-ADMIN] Admin already exists");
       return new Response(
         JSON.stringify({ error: "An admin with this email already exists" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -75,6 +85,8 @@ serve(async (req) => {
     }
 
     if (action === "invite") {
+      console.log("[CREATE-ADMIN] Processing invite action");
+      
       // Generate a temporary password for invitation
       const tempPassword = crypto.randomUUID().slice(0, 16);
       const encoder = new TextEncoder();
@@ -83,6 +95,8 @@ serve(async (req) => {
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const passwordHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
+      console.log("[CREATE-ADMIN] Creating admin account in database...");
+      
       // Create admin account with temporary password
       const { data: newAdmin, error: createError } = await supabase
         .from("admin_accounts")
@@ -98,7 +112,10 @@ serve(async (req) => {
         .select()
         .single();
 
+      console.log("[CREATE-ADMIN] Insert result:", { newAdmin: newAdmin?.id, createError: createError?.message });
+
       if (createError) {
+        console.error("[CREATE-ADMIN] Create error:", createError);
         throw createError;
       }
 
