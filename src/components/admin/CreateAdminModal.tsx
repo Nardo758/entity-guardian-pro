@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, UserPlus, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -44,34 +44,19 @@ export const CreateAdminModal: React.FC<CreateAdminModalProps> = ({
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(['all']);
+  const [selectedPermission, setSelectedPermission] = useState<string>('all');
 
   const resetForm = () => {
     setEmail('');
     setDisplayName('');
     setPassword('');
     setConfirmPassword('');
-    setSelectedPermissions(['all']);
+    setSelectedPermission('all');
   };
 
   const handleClose = () => {
     resetForm();
     onClose();
-  };
-
-  const togglePermission = (permissionId: string) => {
-    if (permissionId === 'all') {
-      setSelectedPermissions(['all']);
-    } else {
-      setSelectedPermissions(prev => {
-        const newPerms = prev.filter(p => p !== 'all');
-        if (newPerms.includes(permissionId)) {
-          return newPerms.filter(p => p !== permissionId);
-        } else {
-          return [...newPerms, permissionId];
-        }
-      });
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +93,7 @@ export const CreateAdminModal: React.FC<CreateAdminModalProps> = ({
           email,
           display_name: displayName,
           password: activeTab === 'create' ? password : undefined,
-          permissions: selectedPermissions,
+          permissions: [selectedPermission],
         },
         headers: {
           Authorization: `Bearer ${sessionToken}`,
@@ -136,21 +121,21 @@ export const CreateAdminModal: React.FC<CreateAdminModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-slate-900 border-slate-800">
+      <DialogContent className="sm:max-w-[500px] bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="text-slate-100">Add New Admin</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogTitle className="text-foreground">Add New Admin</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Create a new administrator account
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'invite' | 'create')}>
-          <TabsList className="grid w-full grid-cols-2 bg-slate-800">
-            <TabsTrigger value="invite" className="data-[state=active]:bg-slate-700">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="invite">
               <Mail className="h-4 w-4 mr-2" />
               Send Invitation
             </TabsTrigger>
-            <TabsTrigger value="create" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="create">
               <UserPlus className="h-4 w-4 mr-2" />
               Create Directly
             </TabsTrigger>
@@ -158,33 +143,31 @@ export const CreateAdminModal: React.FC<CreateAdminModalProps> = ({
 
           <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-200">Email *</Label>
+              <Label htmlFor="email" className="text-foreground">Email *</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
-                className="bg-slate-800 border-slate-700 text-slate-100"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="displayName" className="text-slate-200">Display Name *</Label>
+              <Label htmlFor="displayName" className="text-foreground">Display Name *</Label>
               <Input
                 id="displayName"
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="John Smith"
-                className="bg-slate-800 border-slate-700 text-slate-100"
                 required
               />
             </div>
 
             <TabsContent value="invite" className="mt-0 p-0">
-              <p className="text-sm text-slate-400 bg-slate-800/50 p-3 rounded-lg">
+              <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                 A temporary password will be generated and sent to the user's email. 
                 They will be required to set up MFA on first login.
               </p>
@@ -192,7 +175,7 @@ export const CreateAdminModal: React.FC<CreateAdminModalProps> = ({
 
             <TabsContent value="create" className="mt-0 p-0 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-200">Password *</Label>
+                <Label htmlFor="password" className="text-foreground">Password *</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -200,13 +183,13 @@ export const CreateAdminModal: React.FC<CreateAdminModalProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Minimum 12 characters"
-                    className="bg-slate-800 border-slate-700 text-slate-100 pr-10"
+                    className="pr-10"
                     minLength={12}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -214,57 +197,56 @@ export const CreateAdminModal: React.FC<CreateAdminModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-slate-200">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword" className="text-foreground">Confirm Password *</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm password"
-                  className="bg-slate-800 border-slate-700 text-slate-100"
                 />
               </div>
             </TabsContent>
 
-            <div className="space-y-2">
-              <Label className="text-slate-200">Permissions</Label>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-3">
+              <Label className="text-foreground">Permissions</Label>
+              <RadioGroup 
+                value={selectedPermission} 
+                onValueChange={setSelectedPermission}
+                className="grid grid-cols-2 gap-3"
+              >
                 {PERMISSION_OPTIONS.map((perm) => (
-                  <div
-                    key={perm.id}
-                    className={`flex items-start space-x-2 p-2 rounded-lg border cursor-pointer transition-colors ${
-                      selectedPermissions.includes(perm.id)
-                        ? 'border-amber-500 bg-amber-500/10'
-                        : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-                    }`}
-                    onClick={() => togglePermission(perm.id)}
-                  >
-                    <Checkbox
-                      checked={selectedPermissions.includes(perm.id)}
+                  <div key={perm.id} className="flex items-start space-x-3">
+                    <RadioGroupItem 
+                      value={perm.id} 
+                      id={perm.id}
                       className="mt-0.5"
                     />
-                    <div>
-                      <p className="text-sm font-medium text-slate-200">{perm.label}</p>
-                      <p className="text-xs text-slate-400">{perm.description}</p>
+                    <div className="grid gap-0.5 leading-none">
+                      <Label 
+                        htmlFor={perm.id} 
+                        className="text-sm font-medium text-foreground cursor-pointer"
+                      >
+                        {perm.label}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">{perm.description}</p>
                     </div>
                   </div>
                 ))}
-              </div>
+              </RadioGroup>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                className="border-slate-700 text-slate-300 hover:bg-slate-800"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-amber-600 hover:bg-amber-700"
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {activeTab === 'invite' ? 'Send Invitation' : 'Create Admin'}
