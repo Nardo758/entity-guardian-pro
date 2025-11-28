@@ -36,12 +36,15 @@ import {
   UserX,
   Building2,
   CreditCard,
-  Clock,
+  Shield,
+  UserPlus,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAdminUserManagement, ManagedUser } from '@/hooks/useAdminUserManagement';
 import { UserManagementModal } from '@/components/admin/UserManagementModal';
+import { CreateAdminModal } from '@/components/admin/CreateAdminModal';
+import { useAdminUsers } from '@/hooks/useAdminUsers';
 
 const Users: React.FC = () => {
   const {
@@ -55,8 +58,11 @@ const Users: React.FC = () => {
     isSuspending,
   } = useAdminUserManagement();
 
+  const { adminUsers, isLoading: isLoadingAdmins, refetch: refetchAdmins } = useAdminUsers();
+
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -356,6 +362,69 @@ const Users: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Admin Users Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Shield className="h-5 w-5 text-amber-500" />
+                Admin Users
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                Manage administrator accounts
+              </CardDescription>
+            </div>
+            <Button 
+              onClick={() => setCreateAdminModalOpen(true)}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Admin
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoadingAdmins ? (
+            <Skeleton className="h-32" />
+          ) : adminUsers.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">No admin users found</p>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Admin</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {adminUsers.map((admin) => (
+                    <TableRow key={admin.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{admin.displayName}</p>
+                          <p className="text-xs text-muted-foreground">{admin.user_id}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 capitalize">
+                          {admin.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-success/20 text-success border-success/30">Active</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* User Management Modal */}
       {selectedUserId && (
         <UserManagementModal
@@ -365,6 +434,13 @@ const Users: React.FC = () => {
           onRoleChange={() => refetch()}
         />
       )}
+
+      {/* Create Admin Modal */}
+      <CreateAdminModal
+        isOpen={createAdminModalOpen}
+        onClose={() => setCreateAdminModalOpen(false)}
+        onSuccess={() => refetchAdmins()}
+      />
     </div>
   );
 };
