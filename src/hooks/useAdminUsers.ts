@@ -9,7 +9,7 @@ export interface AdminUser {
 }
 
 export const useAdminUsers = () => {
-  const { data: adminUsers, isLoading, error } = useQuery({
+  const { data: adminUsers, isLoading, error, refetch } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       // Get all users with admin role
@@ -54,5 +54,6 @@ export const useAdminUsers = () => {
     adminUsers: adminUsers || [],
     isLoading,
     error,
+    refetch,
   };
 };
