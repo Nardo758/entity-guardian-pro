@@ -221,6 +221,73 @@ export const useAdminUserManagement = () => {
     },
   });
 
+  const updateSubscriptionMutation = useMutation({
+    mutationFn: async ({ 
+      userId, 
+      updates 
+    }: { 
+      userId: string; 
+      updates: {
+        subscribed?: boolean;
+        subscription_tier?: string;
+        is_trial_active?: boolean;
+        trial_end?: string | null;
+        entities_limit?: number;
+        subscription_status?: string;
+      };
+    }) => {
+      const { error } = await supabase
+        .from('subscribers')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      toast.success('Subscription updated successfully');
+    },
+    onError: (error) => {
+      toast.error(`Failed to update subscription: ${error.message}`);
+    },
+  });
+
+  const grantFreeAccessMutation = useMutation({
+    mutationFn: async ({ 
+      userId, 
+      tier,
+      entitiesLimit 
+    }: { 
+      userId: string; 
+      tier: string;
+      entitiesLimit?: number;
+    }) => {
+      const { error } = await supabase
+        .from('subscribers')
+        .update({
+          subscribed: true,
+          subscription_tier: tier,
+          subscription_status: 'active',
+          is_trial_active: false,
+          entities_limit: entitiesLimit || 999,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      toast.success('Free access granted successfully');
+    },
+    onError: (error) => {
+      toast.error(`Failed to grant free access: ${error.message}`);
+    },
+  });
+
   return {
     users: users || [],
     isLoading,
@@ -231,7 +298,10 @@ export const useAdminUserManagement = () => {
     unsuspendUser: unsuspendUserMutation.mutate,
     assignRole: assignRoleMutation.mutate,
     removeRole: removeRoleMutation.mutate,
+    updateSubscription: updateSubscriptionMutation.mutate,
+    grantFreeAccess: grantFreeAccessMutation.mutate,
     isUpdating: updateUserMutation.isPending,
     isSuspending: suspendUserMutation.isPending,
+    isUpdatingSubscription: updateSubscriptionMutation.isPending,
   };
 };
