@@ -97,14 +97,16 @@ serve(async (req) => {
       if (resendApiKey) {
         const adminPanelUrl = `${req.headers.get("origin")}/admin/login`;
         
-        await fetch("https://api.resend.com/emails", {
+        console.log("[CREATE-ADMIN] Sending invitation email to:", email);
+        
+        const emailResponse = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: "Admin <noreply@yourdomain.com>",
+            from: "Entity Renewal Pro <onboarding@resend.dev>",
             to: [email],
             subject: "You've been invited as an Admin",
             html: `
@@ -118,6 +120,15 @@ serve(async (req) => {
             `,
           }),
         });
+
+        const emailResult = await emailResponse.json();
+        console.log("[CREATE-ADMIN] Email response:", JSON.stringify(emailResult));
+        
+        if (!emailResponse.ok) {
+          console.error("[CREATE-ADMIN] Failed to send email:", emailResult);
+        }
+      } else {
+        console.warn("[CREATE-ADMIN] RESEND_API_KEY not configured, skipping email");
       }
 
       // Log the action
