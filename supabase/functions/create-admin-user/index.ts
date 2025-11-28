@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("[CREATE-ADMIN] Request received:", req.method);
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,7 +22,11 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     const sessionToken = authHeader?.replace("Bearer ", "");
 
+    console.log("[CREATE-ADMIN] Auth header present:", !!authHeader);
+    console.log("[CREATE-ADMIN] Session token present:", !!sessionToken);
+
     if (!sessionToken) {
+      console.log("[CREATE-ADMIN] No session token provided");
       return new Response(
         JSON.stringify({ error: "No session token provided" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -28,12 +34,16 @@ serve(async (req) => {
     }
 
     // Validate admin session
+    console.log("[CREATE-ADMIN] Validating admin session...");
     const { data: sessionData, error: sessionError } = await supabase.rpc(
       "validate_admin_session",
       { p_token: sessionToken }
     );
 
+    console.log("[CREATE-ADMIN] Session validation result:", { sessionData, sessionError });
+
     if (sessionError || !sessionData?.[0]?.is_valid) {
+      console.log("[CREATE-ADMIN] Invalid admin session:", sessionError?.message);
       return new Response(
         JSON.stringify({ error: "Invalid admin session" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
