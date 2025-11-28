@@ -106,7 +106,7 @@ serve(async (req) => {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: "Entity Renewal Pro <onboarding@resend.dev>",
+            from: "Entity Renewal Pro <admin@entityrenewalpro.com>",
             to: [email],
             subject: "You've been invited as an Admin",
             html: `
