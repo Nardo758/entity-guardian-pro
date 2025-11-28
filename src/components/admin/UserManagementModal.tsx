@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Shield, Ban, RefreshCw, AlertTriangle } from 'lucide-react';
+import { User, Shield, Ban, RefreshCw, AlertTriangle, CreditCard, Gift, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { Switch } from '@/components/ui/switch';
 
 interface UserManagementModalProps {
   open: boolean;
@@ -39,6 +40,18 @@ interface UserRole {
   role: string;
 }
 
+interface UserSubscription {
+  id: string;
+  user_id: string;
+  email: string;
+  subscribed: boolean;
+  subscription_tier: string | null;
+  subscription_status: string | null;
+  is_trial_active: boolean;
+  trial_end: string | null;
+  entities_limit: number | null;
+}
+
 export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   open,
   onOpenChange,
@@ -50,6 +63,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
   
   // Form state
@@ -60,6 +74,14 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     company_size: '',
     plan: 'starter',
     user_type: 'owner'
+  });
+  
+  // Subscription form state
+  const [subFormData, setSubFormData] = useState({
+    subscribed: false,
+    subscription_tier: 'starter',
+    is_trial_active: false,
+    entities_limit: 4,
   });
   
   // Role management
@@ -104,6 +126,23 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
       
       if (rolesError) throw rolesError;
       setRoles(rolesData || []);
+
+      // Fetch subscription
+      const { data: subData, error: subError } = await supabase
+        .from('subscribers')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (!subError && subData) {
+        setSubscription(subData);
+        setSubFormData({
+          subscribed: subData.subscribed || false,
+          subscription_tier: subData.subscription_tier || 'starter',
+          is_trial_active: subData.is_trial_active || false,
+          entities_limit: subData.entities_limit || 4,
+        });
+      }
       
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -261,6 +300,62 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     }
   };
 
+  const handleSaveSubscription = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('subscribers')
+        .update({
+          subscribed: subFormData.subscribed,
+          subscription_tier: subFormData.subscription_tier,
+          subscription_status: subFormData.subscribed ? 'active' : 'inactive',
+          is_trial_active: subFormData.is_trial_active,
+          entities_limit: subFormData.entities_limit,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      toast.success('Subscription updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      fetchUserData();
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast.error('Failed to update subscription');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleGrantFreeAccess = async (tier: string) => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('subscribers')
+        .update({
+          subscribed: true,
+          subscription_tier: tier,
+          subscription_status: 'active',
+          is_trial_active: false,
+          entities_limit: tier === 'unlimited' ? 999 : tier === 'pro' ? 25 : 10,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      
+      toast.success(`Free ${tier} access granted successfully`);
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      fetchUserData();
+    } catch (error) {
+      console.error('Error granting free access:', error);
+      toast.error('Failed to grant free access');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const availableRoles = ['admin', 'manager', 'user', 'registered_agent'].filter(
     role => !roles.some(r => r.role === role)
   );
@@ -289,10 +384,11 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="subscription">Subscription</TabsTrigger>
             <TabsTrigger value="roles">Roles</TabsTrigger>
-            <TabsTrigger value="account">Account Status</TabsTrigger>
+            <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4 mt-4">
@@ -384,6 +480,146 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 Save Changes
               </Button>
             </div>
+          </TabsContent>
+
+          <TabsContent value="subscription" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Current Subscription
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Status:</span>
+                    <Badge variant={subscription?.subscribed ? 'default' : 'secondary'}>
+                      {subscription?.subscribed ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Tier:</span>
+                    <Badge variant="outline" className="capitalize">
+                      {subscription?.subscription_tier || 'None'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Trial Active:</span>
+                    <Badge variant={subscription?.is_trial_active ? 'default' : 'secondary'}>
+                      {subscription?.is_trial_active ? 'Yes' : 'No'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Entity Limit:</span>
+                    <span className="font-medium">{subscription?.entities_limit || 4}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/50">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2 text-primary">
+                  <Gift className="h-4 w-4" />
+                  Grant Free Access
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Grant this user free premium access without payment.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGrantFreeAccess('starter')}
+                    disabled={saving}
+                  >
+                    Grant Starter
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGrantFreeAccess('pro')}
+                    disabled={saving}
+                  >
+                    <Crown className="h-4 w-4 mr-1" />
+                    Grant Pro
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleGrantFreeAccess('unlimited')}
+                    disabled={saving}
+                  >
+                    <Crown className="h-4 w-4 mr-1" />
+                    Grant Unlimited
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Manual Override</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="subscribed">Subscribed</Label>
+                    <Switch
+                      id="subscribed"
+                      checked={subFormData.subscribed}
+                      onCheckedChange={(checked) => setSubFormData(prev => ({ ...prev, subscribed: checked }))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="trial_active">Trial Active</Label>
+                    <Switch
+                      id="trial_active"
+                      checked={subFormData.is_trial_active}
+                      onCheckedChange={(checked) => setSubFormData(prev => ({ ...prev, is_trial_active: checked }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="sub_tier">Subscription Tier</Label>
+                    <Select
+                      value={subFormData.subscription_tier}
+                      onValueChange={(value) => setSubFormData(prev => ({ ...prev, subscription_tier: value }))}
+                    >
+                      <SelectTrigger id="sub_tier">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="starter">Starter</SelectItem>
+                        <SelectItem value="pro">Pro</SelectItem>
+                        <SelectItem value="unlimited">Unlimited</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="entities_limit">Entity Limit</Label>
+                    <Input
+                      id="entities_limit"
+                      type="number"
+                      value={subFormData.entities_limit}
+                      onChange={(e) => setSubFormData(prev => ({ ...prev, entities_limit: parseInt(e.target.value) || 4 }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button onClick={handleSaveSubscription} disabled={saving}>
+                    {saving ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
+                    Save Subscription
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="roles" className="space-y-4 mt-4">
