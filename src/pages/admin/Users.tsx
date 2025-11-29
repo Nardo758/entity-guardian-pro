@@ -46,6 +46,7 @@ import { useAdminUserManagement, ManagedUser } from '@/hooks/useAdminUserManagem
 import { UserManagementModal } from '@/components/admin/UserManagementModal';
 import { CreateAdminModal } from '@/components/admin/CreateAdminModal';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { toast } from 'sonner';
 
 const Users: React.FC = () => {
   const {
@@ -400,6 +401,7 @@ const Users: React.FC = () => {
                     <TableHead>Role</TableHead>
                     <TableHead>MFA</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -430,6 +432,41 @@ const Users: React.FC = () => {
                         <Badge className={admin.is_active ? "bg-success/20 text-success border-success/30" : "bg-destructive/20 text-destructive border-destructive/30"}>
                           {admin.is_active ? 'Active' : 'Inactive'}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" disabled={admin.isSiteOwner}>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              toast.info('Edit admin functionality coming soon');
+                            }}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {admin.is_active ? (
+                              <DropdownMenuItem 
+                                onClick={() => toast.info('Deactivate admin functionality coming soon')}
+                                className="text-destructive"
+                              >
+                                <UserX className="h-4 w-4 mr-2" />
+                                Deactivate
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem 
+                                onClick={() => toast.info('Activate admin functionality coming soon')}
+                                className="text-success"
+                              >
+                                <UserCheck className="h-4 w-4 mr-2" />
+                                Activate
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
