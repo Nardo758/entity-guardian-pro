@@ -39,6 +39,7 @@ import {
   Shield,
   UserPlus,
   Crown,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -46,6 +47,7 @@ import { useAdminUserManagement, ManagedUser } from '@/hooks/useAdminUserManagem
 import { UserManagementModal } from '@/components/admin/UserManagementModal';
 import { CreateAdminModal } from '@/components/admin/CreateAdminModal';
 import { EditAdminModal } from '@/components/admin/EditAdminModal';
+import { DeleteAdminDialog } from '@/components/admin/DeleteAdminDialog';
 import { useAdminUsers, AdminUser } from '@/hooks/useAdminUsers';
 import { toast } from 'sonner';
 
@@ -67,6 +69,7 @@ const Users: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [editAdminModalOpen, setEditAdminModalOpen] = useState(false);
+  const [deleteAdminDialogOpen, setDeleteAdminDialogOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -475,6 +478,17 @@ const Users: React.FC = () => {
                                 Activate
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedAdmin(admin);
+                                setDeleteAdminDialogOpen(true);
+                              }}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Admin
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -509,6 +523,17 @@ const Users: React.FC = () => {
         isOpen={editAdminModalOpen}
         onClose={() => {
           setEditAdminModalOpen(false);
+          setSelectedAdmin(null);
+        }}
+        onSuccess={() => refetchAdmins()}
+        admin={selectedAdmin}
+      />
+
+      {/* Delete Admin Dialog */}
+      <DeleteAdminDialog
+        isOpen={deleteAdminDialogOpen}
+        onClose={() => {
+          setDeleteAdminDialogOpen(false);
           setSelectedAdmin(null);
         }}
         onSuccess={() => refetchAdmins()}
