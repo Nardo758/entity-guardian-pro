@@ -44,7 +44,7 @@ serve(async (req) => {
       // Fetch admin accounts from dedicated admin_accounts table
       const { data: adminAccounts, error } = await supabase
         .from("admin_accounts")
-        .select("id, email, display_name, is_active, created_at, permissions, mfa_enabled, last_login_at")
+        .select("id, email, display_name, is_active, created_at, permissions, mfa_enabled, last_login_at, is_site_owner")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

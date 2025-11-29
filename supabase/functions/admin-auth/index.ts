@@ -264,7 +264,8 @@ Deno.serve(async (req) => {
             email: admin.email,
             displayName: admin.display_name,
             permissions: admin.permissions,
-            mfaEnabled: admin.mfa_enabled
+            mfaEnabled: admin.mfa_enabled,
+            isSiteOwner: admin.is_site_owner || false
           },
           expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString() // 4 hours
         }),
@@ -301,6 +302,13 @@ Deno.serve(async (req) => {
         )
       }
 
+      // Get is_site_owner from admin_accounts
+      const { data: adminData } = await supabase
+        .from('admin_accounts')
+        .select('is_site_owner')
+        .eq('id', session.admin_id)
+        .single()
+
       return new Response(
         JSON.stringify({
           valid: true,
@@ -308,7 +316,8 @@ Deno.serve(async (req) => {
             id: session.admin_id,
             email: session.email,
             displayName: session.display_name,
-            permissions: session.permissions
+            permissions: session.permissions,
+            isSiteOwner: adminData?.is_site_owner || false
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

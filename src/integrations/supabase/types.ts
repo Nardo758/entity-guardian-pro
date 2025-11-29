@@ -51,6 +51,7 @@ export type Database = {
           id: string
           ip_whitelist: unknown[] | null
           is_active: boolean | null
+          is_site_owner: boolean | null
           last_login_at: string | null
           last_login_ip: unknown
           locked_until: string | null
@@ -70,6 +71,7 @@ export type Database = {
           id?: string
           ip_whitelist?: unknown[] | null
           is_active?: boolean | null
+          is_site_owner?: boolean | null
           last_login_at?: string | null
           last_login_ip?: unknown
           locked_until?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           id?: string
           ip_whitelist?: unknown[] | null
           is_active?: boolean | null
+          is_site_owner?: boolean | null
           last_login_at?: string | null
           last_login_ip?: unknown
           locked_until?: string | null

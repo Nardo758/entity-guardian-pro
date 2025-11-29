@@ -6,6 +6,7 @@ interface AdminUser {
   displayName: string;
   permissions: string[];
   mfaEnabled?: boolean;
+  isSiteOwner?: boolean;
 }
 
 interface AdminAuthContextType {
