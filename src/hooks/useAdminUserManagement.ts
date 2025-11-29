@@ -28,10 +28,11 @@ export const useAdminUserManagement = () => {
       const sessionToken = sessionStorage.getItem('admin_session_token');
       
       if (!sessionToken) {
-        console.error('No admin session token found');
-        return [];
+        console.error('useAdminUserManagement: No admin session token found');
+        throw new Error('No admin session token');
       }
 
+      console.log('useAdminUserManagement: Fetching users...');
       const { data, error } = await supabase.functions.invoke('admin-get-users', {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
@@ -39,8 +40,10 @@ export const useAdminUserManagement = () => {
         body: { type: 'all_users' },
       });
 
+      console.log('useAdminUserManagement: Response:', { data, error });
+
       if (error) {
-        console.error('Error fetching users:', error);
+        console.error('useAdminUserManagement: Error fetching users:', error);
         throw error;
       }
 
@@ -65,6 +68,9 @@ export const useAdminUserManagement = () => {
 
       return managedUsers;
     },
+    enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('admin_session_token'),
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const updateUserMutation = useMutation({

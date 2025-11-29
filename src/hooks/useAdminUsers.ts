@@ -21,10 +21,11 @@ export const useAdminUsers = () => {
       const sessionToken = sessionStorage.getItem('admin_session_token');
       
       if (!sessionToken) {
-        console.error('No admin session token found');
-        return [];
+        console.error('useAdminUsers: No admin session token found');
+        throw new Error('No admin session token');
       }
 
+      console.log('useAdminUsers: Fetching admin accounts...');
       const { data, error } = await supabase.functions.invoke('admin-get-users', {
         headers: {
           Authorization: `Bearer ${sessionToken}`,
@@ -32,8 +33,10 @@ export const useAdminUsers = () => {
         body: { type: 'admin_accounts' },
       });
 
+      console.log('useAdminUsers: Response:', { data, error });
+
       if (error) {
-        console.error('Error fetching admin accounts:', error);
+        console.error('useAdminUsers: Error fetching admin accounts:', error);
         throw error;
       }
 
@@ -51,6 +54,9 @@ export const useAdminUsers = () => {
       
       return adminAccounts;
     },
+    enabled: typeof window !== 'undefined' && !!sessionStorage.getItem('admin_session_token'),
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   return {

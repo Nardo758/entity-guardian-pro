@@ -16,9 +16,12 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log("admin-get-users: Starting request");
+
     // Validate admin session
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.log("admin-get-users: No authorization header");
       return new Response(
         JSON.stringify({ error: "No authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -26,29 +29,42 @@ serve(async (req) => {
     }
 
     const sessionToken = authHeader.replace("Bearer ", "");
+    console.log("admin-get-users: Validating session token");
+    
     const { data: sessionData, error: sessionError } = await supabase.rpc(
       "validate_admin_session",
       { p_token: sessionToken }
     );
 
+    console.log("admin-get-users: Session validation result:", { sessionData, sessionError });
+
     if (sessionError || !sessionData?.[0]?.is_valid) {
+      console.log("admin-get-users: Invalid session", { sessionError, sessionData });
       return new Response(
         JSON.stringify({ error: "Invalid admin session" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    
+    console.log("admin-get-users: Session valid");
 
     const { type } = await req.json();
+    console.log("admin-get-users: Request type:", type);
 
     if (type === "admin_accounts") {
+      console.log("admin-get-users: Fetching admin accounts");
       // Fetch admin accounts from dedicated admin_accounts table
       const { data: adminAccounts, error } = await supabase
         .from("admin_accounts")
         .select("id, email, display_name, is_active, created_at, permissions, mfa_enabled, last_login_at, is_site_owner")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("admin-get-users: Error fetching admin accounts:", error);
+        throw error;
+      }
 
+      console.log("admin-get-users: Found admin accounts:", adminAccounts?.length);
       return new Response(
         JSON.stringify({ adminAccounts }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -56,27 +72,38 @@ serve(async (req) => {
     }
 
     if (type === "all_users") {
+      console.log("admin-get-users: Fetching all users");
       // Fetch all profiles with their subscription data
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error("admin-get-users: Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
+      console.log("admin-get-users: Found profiles:", profiles?.length);
 
       // Fetch user roles
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role");
 
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error("admin-get-users: Error fetching roles:", rolesError);
+        throw rolesError;
+      }
 
       // Fetch subscribers data
       const { data: subscribers, error: subscribersError } = await supabase
         .from("subscribers")
-        .select("user_id, subscription_tier, subscription_status, subscribed, trial_end, is_trial_active");
+        .select("user_id, email, subscription_tier, subscription_status, subscribed, trial_end, is_trial_active");
 
-      if (subscribersError) throw subscribersError;
+      if (subscribersError) {
+        console.error("admin-get-users: Error fetching subscribers:", subscribersError);
+        throw subscribersError;
+      }
 
       // Create maps for quick lookup
       const rolesMap = new Map<string, string[]>();
@@ -95,6 +122,7 @@ serve(async (req) => {
         subscription: subscribersMap.get(profile.user_id) || null,
       })) || [];
 
+      console.log("admin-get-users: Returning users:", users.length);
       return new Response(
         JSON.stringify({ users }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
