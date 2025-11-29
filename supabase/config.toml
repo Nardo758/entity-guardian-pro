@@ -3,6 +3,9 @@ project_id = "wcuxqopfcgivypbiynjp"
 [functions.create-admin-user]
 verify_jwt = false
 
+[functions.update-admin-user]
+verify_jwt = false
+
 [functions.admin-auth]
 verify_jwt = false
 

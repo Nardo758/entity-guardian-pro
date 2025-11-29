@@ -45,7 +45,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAdminUserManagement, ManagedUser } from '@/hooks/useAdminUserManagement';
 import { UserManagementModal } from '@/components/admin/UserManagementModal';
 import { CreateAdminModal } from '@/components/admin/CreateAdminModal';
-import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { EditAdminModal } from '@/components/admin/EditAdminModal';
+import { useAdminUsers, AdminUser } from '@/hooks/useAdminUsers';
 import { toast } from 'sonner';
 
 const Users: React.FC = () => {
@@ -65,6 +66,8 @@ const Users: React.FC = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
+  const [editAdminModalOpen, setEditAdminModalOpen] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -442,7 +445,8 @@ const Users: React.FC = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => {
-                              toast.info('Edit admin functionality coming soon');
+                              setSelectedAdmin(admin);
+                              setEditAdminModalOpen(true);
                             }}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit Admin
@@ -450,7 +454,10 @@ const Users: React.FC = () => {
                             <DropdownMenuSeparator />
                             {admin.is_active ? (
                               <DropdownMenuItem 
-                                onClick={() => toast.info('Deactivate admin functionality coming soon')}
+                                onClick={() => {
+                                  setSelectedAdmin(admin);
+                                  setEditAdminModalOpen(true);
+                                }}
                                 className="text-destructive"
                               >
                                 <UserX className="h-4 w-4 mr-2" />
@@ -458,7 +465,10 @@ const Users: React.FC = () => {
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem 
-                                onClick={() => toast.info('Activate admin functionality coming soon')}
+                                onClick={() => {
+                                  setSelectedAdmin(admin);
+                                  setEditAdminModalOpen(true);
+                                }}
                                 className="text-success"
                               >
                                 <UserCheck className="h-4 w-4 mr-2" />
@@ -492,6 +502,17 @@ const Users: React.FC = () => {
         isOpen={createAdminModalOpen}
         onClose={() => setCreateAdminModalOpen(false)}
         onSuccess={() => refetchAdmins()}
+      />
+
+      {/* Edit Admin Modal */}
+      <EditAdminModal
+        isOpen={editAdminModalOpen}
+        onClose={() => {
+          setEditAdminModalOpen(false);
+          setSelectedAdmin(null);
+        }}
+        onSuccess={() => refetchAdmins()}
+        admin={selectedAdmin}
       />
     </div>
   );
