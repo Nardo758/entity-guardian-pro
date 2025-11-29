@@ -40,6 +40,7 @@ import {
   UserPlus,
   Crown,
   Trash2,
+  KeyRound,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,6 +49,7 @@ import { UserManagementModal } from '@/components/admin/UserManagementModal';
 import { CreateAdminModal } from '@/components/admin/CreateAdminModal';
 import { EditAdminModal } from '@/components/admin/EditAdminModal';
 import { DeleteAdminDialog } from '@/components/admin/DeleteAdminDialog';
+import { ResetAdminPasswordModal } from '@/components/admin/ResetAdminPasswordModal';
 import { useAdminUsers, AdminUser } from '@/hooks/useAdminUsers';
 import { toast } from 'sonner';
 
@@ -70,6 +72,7 @@ const Users: React.FC = () => {
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [editAdminModalOpen, setEditAdminModalOpen] = useState(false);
   const [deleteAdminDialogOpen, setDeleteAdminDialogOpen] = useState(false);
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -454,6 +457,13 @@ const Users: React.FC = () => {
                               <Edit className="h-4 w-4 mr-2" />
                               Edit Admin
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedAdmin(admin);
+                              setResetPasswordModalOpen(true);
+                            }}>
+                              <KeyRound className="h-4 w-4 mr-2" />
+                              Reset Password
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {admin.is_active ? (
                               <DropdownMenuItem 
@@ -534,6 +544,17 @@ const Users: React.FC = () => {
         isOpen={deleteAdminDialogOpen}
         onClose={() => {
           setDeleteAdminDialogOpen(false);
+          setSelectedAdmin(null);
+        }}
+        onSuccess={() => refetchAdmins()}
+        admin={selectedAdmin}
+      />
+
+      {/* Reset Password Modal */}
+      <ResetAdminPasswordModal
+        isOpen={resetPasswordModalOpen}
+        onClose={() => {
+          setResetPasswordModalOpen(false);
           setSelectedAdmin(null);
         }}
         onSuccess={() => refetchAdmins()}

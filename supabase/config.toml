@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.delete-admin-user]
 verify_jwt = false
 
+[functions.reset-admin-password]
+verify_jwt = false
+
 [functions.admin-auth]
 verify_jwt = false
 
