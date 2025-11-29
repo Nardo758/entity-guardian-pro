@@ -3,50 +3,51 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface AdminUser {
   id: string;
-  user_id: string;
+  email: string;
   displayName: string;
-  role: string;
+  is_active: boolean;
+  created_at: string;
+  mfa_enabled: boolean;
+  last_login_at: string | null;
+  permissions: string[];
 }
 
 export const useAdminUsers = () => {
   const { data: adminUsers, isLoading, error, refetch } = useQuery({
-    queryKey: ['admin-users'],
+    queryKey: ['admin-accounts'],
     queryFn: async () => {
-      // Get all users with admin role
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('id, user_id, role')
-        .eq('role', 'admin');
-
-      if (rolesError) throw rolesError;
-
-      if (!roles || roles.length === 0) return [];
-
-      // Get profile details for admin users
-      const adminUserIds = roles.map(r => r.user_id);
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, first_name, last_name, company')
-        .in('user_id', adminUserIds);
-
-      if (profilesError) throw profilesError;
-
-      const profileMap = new Map((profiles || []).map(p => [p.user_id, p]));
+      // Get admin session token from sessionStorage
+      const sessionToken = sessionStorage.getItem('admin_session_token');
       
-      const adminUsers: AdminUser[] = roles.map((role) => {
-        const profile = profileMap.get(role.user_id);
-        const displayName = profile 
-          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.company || 'Unknown'
-          : 'Unknown';
-        return {
-          id: role.id,
-          user_id: role.user_id,
-          displayName,
-          role: 'admin',
-        };
+      if (!sessionToken) {
+        console.error('No admin session token found');
+        return [];
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-get-users', {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+        body: { type: 'admin_accounts' },
       });
+
+      if (error) {
+        console.error('Error fetching admin accounts:', error);
+        throw error;
+      }
+
+      const adminAccounts: AdminUser[] = (data.adminAccounts || []).map((admin: any) => ({
+        id: admin.id,
+        email: admin.email,
+        displayName: admin.display_name,
+        is_active: admin.is_active,
+        created_at: admin.created_at,
+        mfa_enabled: admin.mfa_enabled,
+        last_login_at: admin.last_login_at,
+        permissions: admin.permissions || [],
+      }));
       
-      return adminUsers;
+      return adminAccounts;
     },
   });
 

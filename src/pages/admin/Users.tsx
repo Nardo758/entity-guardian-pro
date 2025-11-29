@@ -395,7 +395,8 @@ const Users: React.FC = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Admin</TableHead>
-                    <TableHead>Role</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>MFA</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -405,16 +406,20 @@ const Users: React.FC = () => {
                       <TableCell>
                         <div>
                           <p className="font-medium">{admin.displayName}</p>
-                          <p className="text-xs text-muted-foreground">{admin.user_id}</p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 capitalize">
-                          {admin.role}
+                        <p className="text-sm text-muted-foreground">{admin.email}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={admin.mfa_enabled ? "bg-success/20 text-success border-success/30" : "bg-amber-500/20 text-amber-500 border-amber-500/30"}>
+                          {admin.mfa_enabled ? 'Enabled' : 'Disabled'}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className="bg-success/20 text-success border-success/30">Active</Badge>
+                        <Badge className={admin.is_active ? "bg-success/20 text-success border-success/30" : "bg-destructive/20 text-destructive border-destructive/30"}>
+                          {admin.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
