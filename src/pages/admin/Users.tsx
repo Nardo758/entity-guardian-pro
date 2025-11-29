@@ -38,6 +38,7 @@ import {
   CreditCard,
   Shield,
   UserPlus,
+  Crown,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -396,6 +397,7 @@ const Users: React.FC = () => {
                   <TableRow>
                     <TableHead>Admin</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>MFA</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
@@ -404,12 +406,20 @@ const Users: React.FC = () => {
                   {adminUsers.map((admin) => (
                     <TableRow key={admin.id}>
                       <TableCell>
-                        <div>
+                        <div className="flex items-center gap-2">
                           <p className="font-medium">{admin.displayName}</p>
+                          {admin.isSiteOwner && (
+                            <Crown className="h-4 w-4 text-amber-500" />
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <p className="text-sm text-muted-foreground">{admin.email}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={admin.isSiteOwner ? "bg-amber-500/20 text-amber-600 border-amber-500/30" : "bg-primary/20 text-primary border-primary/30"}>
+                          {admin.isSiteOwner ? 'Site Owner' : 'Administrator'}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={admin.mfa_enabled ? "bg-success/20 text-success border-success/30" : "bg-amber-500/20 text-amber-500 border-amber-500/30"}>

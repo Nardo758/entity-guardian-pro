@@ -2,16 +2,24 @@ import React from 'react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Settings as SettingsIcon, User, Shield, Clock } from 'lucide-react';
+import { Settings as SettingsIcon, User, Shield, Clock, Crown } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const { admin } = useAdminAuth();
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage your admin account settings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+          <p className="text-muted-foreground">Manage your admin account settings</p>
+        </div>
+        {admin?.isSiteOwner && (
+          <Badge className="bg-amber-500/20 text-amber-600 border-amber-500/30 flex items-center gap-1.5 px-3 py-1.5">
+            <Crown className="h-4 w-4" />
+            Site Owner
+          </Badge>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -38,7 +46,7 @@ const Settings: React.FC = () => {
               <span className="text-muted-foreground">Admin ID</span>
               <span className="text-muted-foreground font-mono text-sm">{admin?.id?.slice(0, 8)}...</span>
             </div>
-            <div className="flex items-center justify-between py-2">
+            <div className="flex items-center justify-between py-2 border-b">
               <span className="text-muted-foreground">Permissions</span>
               <div className="flex gap-2">
                 {admin?.permissions?.map((perm) => (
@@ -47,6 +55,12 @@ const Settings: React.FC = () => {
                   </Badge>
                 ))}
               </div>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-muted-foreground">Site Owner Status</span>
+              <Badge className={admin?.isSiteOwner ? 'bg-amber-500/20 text-amber-600' : 'bg-muted text-muted-foreground'}>
+                {admin?.isSiteOwner ? 'Site Owner' : 'Administrator'}
+              </Badge>
             </div>
           </CardContent>
         </Card>

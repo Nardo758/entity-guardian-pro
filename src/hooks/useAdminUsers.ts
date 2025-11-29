@@ -10,6 +10,7 @@ export interface AdminUser {
   mfa_enabled: boolean;
   last_login_at: string | null;
   permissions: string[];
+  isSiteOwner: boolean;
 }
 
 export const useAdminUsers = () => {
@@ -45,6 +46,7 @@ export const useAdminUsers = () => {
         mfa_enabled: admin.mfa_enabled,
         last_login_at: admin.last_login_at,
         permissions: admin.permissions || [],
+        isSiteOwner: admin.is_site_owner || false,
       }));
       
       return adminAccounts;
