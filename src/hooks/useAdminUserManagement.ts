@@ -24,47 +24,32 @@ export const useAdminUserManagement = () => {
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['admin-managed-users'],
     queryFn: async () => {
-      // Get all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Get admin session token from sessionStorage
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      
+      if (!sessionToken) {
+        console.error('No admin session token found');
+        return [];
+      }
 
-      if (profilesError) throw profilesError;
-
-      // Get all user roles
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      if (rolesError) throw rolesError;
-
-      // Get subscriber info
-      const { data: subscribers, error: subscribersError } = await supabase
-        .from('subscribers')
-        .select('user_id, subscription_tier, subscribed, email');
-
-      if (subscribersError) throw subscribersError;
-
-      // Map roles by user_id
-      const roleMap = new Map<string, string[]>();
-      (roles || []).forEach(r => {
-        const existing = roleMap.get(r.user_id) || [];
-        existing.push(r.role);
-        roleMap.set(r.user_id, existing);
+      const { data, error } = await supabase.functions.invoke('admin-get-users', {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+        body: { type: 'all_users' },
       });
 
-      // Map subscribers by user_id
-      const subscriberMap = new Map(
-        (subscribers || []).map(s => [s.user_id, s])
-      );
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
 
-      const managedUsers: ManagedUser[] = (profiles || []).map(profile => {
-        const subscriber = subscriberMap.get(profile.user_id);
+      const managedUsers: ManagedUser[] = (data.users || []).map((profile: any) => {
+        const subscriber = profile.subscription;
         return {
           id: profile.id,
           user_id: profile.user_id,
-          email: subscriber?.email || 'N/A',
+          email: subscriber?.email || profile.email || 'N/A',
           first_name: profile.first_name,
           last_name: profile.last_name,
           company: profile.company,
@@ -72,7 +57,7 @@ export const useAdminUserManagement = () => {
           plan: profile.plan,
           account_status: profile.account_status,
           created_at: profile.created_at,
-          roles: roleMap.get(profile.user_id) || [],
+          roles: profile.roles || [],
           subscription_tier: subscriber?.subscription_tier || null,
           subscribed: subscriber?.subscribed || false,
         };
