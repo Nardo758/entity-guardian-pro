@@ -747,25 +747,32 @@ const Analytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 {churnRiskData.length > 0 ? (
-                  <div className="h-64">
+                  <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={churnRiskData}
                           cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
+                          cy="45%"
+                          innerRadius={50}
+                          outerRadius={70}
                           paddingAngle={5}
                           dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}`}
                         >
                           {churnRiskData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                          formatter={(value, entry: any) => (
+                            <span className="text-sm text-foreground">
+                              {value}: {entry.payload.value}
+                            </span>
+                          )}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
