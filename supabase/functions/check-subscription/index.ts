@@ -123,20 +123,30 @@ serve(async (req) => {
     const trialStart = existingSubscriber?.trial_start || new Date().toISOString();
     const isTrialActive = existingSubscriber?.is_trial_active ?? true;
     
-    await supabaseClient.from("subscribers").upsert({
+    const subscriptionId = hasActiveSub ? subscriptions.data[0].id : null;
+    
+    const { error: upsertError } = await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionId,
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
       subscription_status: subscriptionStatus,
+      current_period_start: hasActiveSub ? new Date(subscriptions.data[0].current_period_start * 1000).toISOString() : null,
+      current_period_end: hasActiveSub ? new Date(subscriptions.data[0].current_period_end * 1000).toISOString() : null,
       trial_start: trialStart,
-      is_trial_active: hasActiveSub ? false : isTrialActive, // Disable trial if they have active subscription
+      is_trial_active: hasActiveSub ? false : isTrialActive,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 
-    logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier, subscriptionStatus });
+    if (upsertError) {
+      logStep("Database upsert FAILED", { error: upsertError.message, code: upsertError.code });
+      throw new Error(`Database update failed: ${upsertError.message}`);
+    }
+
+    logStep("Database updated successfully", { subscribed: hasActiveSub, subscriptionTier, subscriptionStatus, subscriptionId });
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
