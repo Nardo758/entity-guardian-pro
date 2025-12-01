@@ -82,12 +82,13 @@ serve(async (req) => {
       );
     }
 
-    // Hash the new password
+    // Hash the new password (must match admin-auth format: salt:hash)
     const encoder = new TextEncoder();
-    const data = encoder.encode(new_password);
+    const salt = crypto.randomUUID();
+    const data = encoder.encode(new_password + salt);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const passwordHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    const passwordHash = `${salt}:${hashArray.map(b => b.toString(16).padStart(2, "0")).join("")}`;
 
     // Update admin password
     const { error: updateError } = await supabase
