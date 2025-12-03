@@ -145,25 +145,26 @@ export const useAdminUserManagement = () => {
 
   const unsuspendUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          account_status: 'active',
-          suspended_at: null,
-          suspended_by: null,
-          suspension_reason: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) throw new Error('No admin session token');
+
+      const { data, error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'unsuspend_user',
+          userId 
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
-      toast.success('User unsuspended successfully');
+      toast.success('User reactivated successfully');
     },
     onError: (error) => {
-      toast.error(`Failed to unsuspend user: ${error.message}`);
+      toast.error(`Failed to reactivate user: ${error.message}`);
     },
   });
 
