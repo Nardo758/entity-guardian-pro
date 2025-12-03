@@ -253,7 +253,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
         return;
       }
 
-      const { error } = await supabase.functions.invoke('admin-get-users', {
+      const { data, error } = await supabase.functions.invoke('admin-get-users', {
         headers: { Authorization: `Bearer ${sessionToken}` },
         body: { 
           action: 'unsuspend_user',
@@ -262,10 +262,12 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       
       toast.success('Account reactivated successfully');
       queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
       onRefetch?.();
+      onOpenChange(false); // Close modal so fresh data is shown on re-open
     } catch (error) {
       console.error('Error reactivating account:', error);
       toast.error('Failed to reactivate account');
