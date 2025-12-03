@@ -45,6 +45,7 @@ const Users: React.FC = () => {
 
   const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState<'profile' | 'subscription' | 'roles' | 'account'>('profile');
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [editAdminModalOpen, setEditAdminModalOpen] = useState(false);
   const [deleteAdminDialogOpen, setDeleteAdminDialogOpen] = useState(false);
@@ -80,8 +81,9 @@ const Users: React.FC = () => {
     }, {} as Record<string, number>),
   }), [users]);
 
-  const handleOpenModal = (user: ManagedUser) => {
+  const handleOpenModal = (user: ManagedUser, tab: 'profile' | 'subscription' | 'roles' | 'account' = 'profile') => {
     setSelectedUser(user);
+    setModalInitialTab(tab);
     setModalOpen(true);
   };
 
@@ -325,7 +327,7 @@ const Users: React.FC = () => {
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem
-                                onClick={() => handleOpenModal(user)}
+                                onClick={() => handleOpenModal(user, 'account')}
                                 className="text-destructive"
                               >
                                 <UserX className="h-4 w-4 mr-2" />
@@ -493,6 +495,7 @@ const Users: React.FC = () => {
           open={modalOpen}
           onOpenChange={setModalOpen}
           userId={selectedUser.user_id}
+          initialTab={modalInitialTab}
           userData={{
             email: selectedUser.email,
             first_name: selectedUser.first_name,
