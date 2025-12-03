@@ -9,6 +9,7 @@ export interface ManagedUser {
   first_name: string | null;
   last_name: string | null;
   company: string | null;
+  company_size: string | null;
   user_type: string | null;
   plan: string | null;
   account_status: string | null;
@@ -16,6 +17,8 @@ export interface ManagedUser {
   roles: string[];
   subscription_tier: string | null;
   subscribed: boolean;
+  is_trial_active: boolean;
+  entities_limit: number | null;
 }
 
 export const useAdminUserManagement = () => {
@@ -56,6 +59,7 @@ export const useAdminUserManagement = () => {
           first_name: profile.first_name,
           last_name: profile.last_name,
           company: profile.company,
+          company_size: profile.company_size || null,
           user_type: profile.user_type,
           plan: profile.plan,
           account_status: profile.account_status,
@@ -63,6 +67,8 @@ export const useAdminUserManagement = () => {
           roles: profile.roles || [],
           subscription_tier: subscriber?.subscription_tier || null,
           subscribed: subscriber?.subscribed || false,
+          is_trial_active: subscriber?.is_trial_active || false,
+          entities_limit: subscriber?.entities_limit || null,
         };
       });
 

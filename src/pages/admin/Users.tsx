@@ -43,7 +43,7 @@ const Users: React.FC = () => {
 
   const { adminUsers, isLoading: isLoadingAdmins, refetch: refetchAdmins } = useAdminUsers();
 
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<ManagedUser | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [createAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [editAdminModalOpen, setEditAdminModalOpen] = useState(false);
@@ -81,7 +81,7 @@ const Users: React.FC = () => {
   }), [users]);
 
   const handleOpenModal = (user: ManagedUser) => {
-    setSelectedUserId(user.user_id);
+    setSelectedUser(user);
     setModalOpen(true);
   };
 
@@ -488,12 +488,29 @@ const Users: React.FC = () => {
       </Card>
 
       {/* User Management Modal */}
-      {selectedUserId && (
+      {selectedUser && (
         <UserManagementModal
           open={modalOpen}
           onOpenChange={setModalOpen}
-          userId={selectedUserId}
+          userId={selectedUser.user_id}
+          userData={{
+            email: selectedUser.email,
+            first_name: selectedUser.first_name,
+            last_name: selectedUser.last_name,
+            company: selectedUser.company,
+            company_size: selectedUser.company_size,
+            plan: selectedUser.plan,
+            user_type: selectedUser.user_type,
+            account_status: selectedUser.account_status,
+            roles: selectedUser.roles,
+            subscribed: selectedUser.subscribed,
+            subscription_tier: selectedUser.subscription_tier,
+            is_trial_active: selectedUser.is_trial_active,
+            entities_limit: selectedUser.entities_limit,
+            created_at: selectedUser.created_at,
+          }}
           onRoleChange={() => refetch()}
+          onRefetch={() => refetch()}
         />
       )}
 

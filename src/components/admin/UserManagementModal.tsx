@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,56 +17,39 @@ interface UserManagementModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
+  userData?: {
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    company: string | null;
+    company_size: string | null;
+    plan: string | null;
+    user_type: string | null;
+    account_status: string | null;
+    roles: string[];
+    subscribed: boolean;
+    subscription_tier: string | null;
+    is_trial_active: boolean;
+    entities_limit: number | null;
+    created_at: string;
+  };
   onRoleChange?: () => void;
-}
-
-interface UserProfile {
-  id: string;
-  user_id: string;
-  first_name: string | null;
-  last_name: string | null;
-  company: string | null;
-  company_size: string | null;
-  plan: string | null;
-  user_type: string | null;
-  account_status: string | null;
-  suspension_reason: string | null;
-  suspended_at: string | null;
-  created_at: string;
-}
-
-interface UserRole {
-  id: string;
-  role: string;
-}
-
-interface UserSubscription {
-  id: string;
-  user_id: string;
-  email: string;
-  subscribed: boolean;
-  subscription_tier: string | null;
-  subscription_status: string | null;
-  is_trial_active: boolean;
-  trial_end: string | null;
-  entities_limit: number | null;
+  onRefetch?: () => void;
 }
 
 export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   open,
   onOpenChange,
   userId,
-  onRoleChange
+  userData,
+  onRoleChange,
+  onRefetch
 }) => {
   const queryClient = useQueryClient();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
   
-  // Form state
+  // Form state - initialized from userData
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -90,89 +73,56 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   // Suspension management
   const [suspensionReason, setSuspensionReason] = useState('');
 
+  // Initialize form data when userData changes
   useEffect(() => {
-    if (open && userId) {
-      fetchUserData();
-    }
-  }, [open, userId]);
-
-  const fetchUserData = async () => {
-    setLoading(true);
-    try {
-      // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      
-      if (profileError) throw profileError;
-      
-      setProfile(profileData);
+    if (open && userData) {
       setFormData({
-        first_name: profileData.first_name || '',
-        last_name: profileData.last_name || '',
-        company: profileData.company || '',
-        company_size: profileData.company_size || '',
-        plan: profileData.plan || 'starter',
-        user_type: profileData.user_type || 'owner'
+        first_name: userData.first_name || '',
+        last_name: userData.last_name || '',
+        company: userData.company || '',
+        company_size: userData.company_size || '',
+        plan: userData.plan || 'starter',
+        user_type: userData.user_type || 'owner'
       });
-
-      // Fetch roles
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('id, role')
-        .eq('user_id', userId);
-      
-      if (rolesError) throw rolesError;
-      setRoles(rolesData || []);
-
-      // Fetch subscription
-      const { data: subData, error: subError } = await supabase
-        .from('subscribers')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      
-      if (!subError && subData) {
-        setSubscription(subData);
-        setSubFormData({
-          subscribed: subData.subscribed || false,
-          subscription_tier: subData.subscription_tier || 'starter',
-          is_trial_active: subData.is_trial_active || false,
-          entities_limit: subData.entities_limit || 4,
-        });
-      }
-      
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-      toast.error('Failed to load user data');
-    } finally {
-      setLoading(false);
+      setSubFormData({
+        subscribed: userData.subscribed || false,
+        subscription_tier: userData.subscription_tier || 'starter',
+        is_trial_active: userData.is_trial_active || false,
+        entities_limit: userData.entities_limit || 4,
+      });
     }
-  };
+  }, [open, userData]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          company: formData.company,
-          company_size: formData.company_size,
-          plan: formData.plan,
-          user_type: formData.user_type,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) {
+        toast.error('Admin session expired');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'update_profile',
+          userId,
+          profileData: {
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            company: formData.company,
+            company_size: formData.company_size,
+            plan: formData.plan,
+            user_type: formData.user_type,
+          }
+        }
+      });
 
       if (error) throw error;
       
       toast.success('Profile updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['secure-profiles'] });
-      fetchUserData();
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      onRefetch?.();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -186,28 +136,27 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     
     setSaving(true);
     try {
-      const { data: currentUser } = await supabase.auth.getUser();
-      
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: selectedRole,
-          created_by: currentUser.user?.id
-        });
-
-      if (error) {
-        if (error.code === '23505') {
-          toast.error('User already has this role');
-        } else {
-          throw error;
-        }
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) {
+        toast.error('Admin session expired');
         return;
       }
+
+      const { error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'add_role',
+          userId,
+          role: selectedRole
+        }
+      });
+
+      if (error) throw error;
       
       toast.success(`Role "${selectedRole}" added successfully`);
       setSelectedRole('');
-      fetchUserData();
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      onRefetch?.();
       onRoleChange?.();
     } catch (error) {
       console.error('Error adding role:', error);
@@ -217,18 +166,29 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     }
   };
 
-  const handleRemoveRole = async (roleId: string, roleName: string) => {
+  const handleRemoveRole = async (roleName: string) => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('id', roleId);
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) {
+        toast.error('Admin session expired');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'remove_role',
+          userId,
+          role: roleName
+        }
+      });
 
       if (error) throw error;
       
       toast.success(`Role "${roleName}" removed`);
-      fetchUserData();
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      onRefetch?.();
       onRoleChange?.();
     } catch (error) {
       console.error('Error removing role:', error);
@@ -246,25 +206,27 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     
     setSaving(true);
     try {
-      const { data: currentUser } = await supabase.auth.getUser();
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          account_status: 'suspended',
-          suspension_reason: suspensionReason,
-          suspended_at: new Date().toISOString(),
-          suspended_by: currentUser.user?.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) {
+        toast.error('Admin session expired');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'suspend_user',
+          userId,
+          reason: suspensionReason
+        }
+      });
 
       if (error) throw error;
       
       toast.success('Account suspended successfully');
       setSuspensionReason('');
-      queryClient.invalidateQueries({ queryKey: ['secure-profiles'] });
-      fetchUserData();
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      onRefetch?.();
     } catch (error) {
       console.error('Error suspending account:', error);
       toast.error('Failed to suspend account');
@@ -276,22 +238,25 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   const handleReactivateAccount = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          account_status: 'active',
-          suspension_reason: null,
-          suspended_at: null,
-          suspended_by: null,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) {
+        toast.error('Admin session expired');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'unsuspend_user',
+          userId
+        }
+      });
 
       if (error) throw error;
       
       toast.success('Account reactivated successfully');
-      queryClient.invalidateQueries({ queryKey: ['secure-profiles'] });
-      fetchUserData();
+      queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
+      onRefetch?.();
     } catch (error) {
       console.error('Error reactivating account:', error);
       toast.error('Failed to reactivate account');
@@ -303,23 +268,31 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   const handleSaveSubscription = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('subscribers')
-        .update({
-          subscribed: subFormData.subscribed,
-          subscription_tier: subFormData.subscription_tier,
-          subscription_status: subFormData.subscribed ? 'active' : 'inactive',
-          is_trial_active: subFormData.is_trial_active,
-          entities_limit: subFormData.entities_limit,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) {
+        toast.error('Admin session expired');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'update_subscription',
+          userId,
+          subscriptionData: {
+            subscribed: subFormData.subscribed,
+            subscription_tier: subFormData.subscription_tier,
+            is_trial_active: subFormData.is_trial_active,
+            entities_limit: subFormData.entities_limit,
+          }
+        }
+      });
 
       if (error) throw error;
       
       toast.success('Subscription updated successfully');
       queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
-      fetchUserData();
+      onRefetch?.();
     } catch (error) {
       console.error('Error updating subscription:', error);
       toast.error('Failed to update subscription');
@@ -331,23 +304,26 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   const handleGrantFreeAccess = async (tier: string) => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('subscribers')
-        .update({
-          subscribed: true,
-          subscription_tier: tier,
-          subscription_status: 'active',
-          is_trial_active: false,
-          entities_limit: tier === 'unlimited' ? 999 : tier === 'pro' ? 25 : 10,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId);
+      const sessionToken = sessionStorage.getItem('admin_session_token');
+      if (!sessionToken) {
+        toast.error('Admin session expired');
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke('admin-get-users', {
+        headers: { Authorization: `Bearer ${sessionToken}` },
+        body: { 
+          action: 'grant_free_access',
+          userId,
+          tier
+        }
+      });
 
       if (error) throw error;
       
       toast.success(`Free ${tier} access granted successfully`);
       queryClient.invalidateQueries({ queryKey: ['admin-managed-users'] });
-      fetchUserData();
+      onRefetch?.();
     } catch (error) {
       console.error('Error granting free access:', error);
       toast.error('Failed to grant free access');
@@ -356,11 +332,13 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
     }
   };
 
+  const userRoles = userData?.roles || [];
   const availableRoles = ['admin', 'manager', 'user', 'registered_agent'].filter(
-    role => !roles.some(r => r.role === role)
+    role => !userRoles.includes(role)
   );
 
-  if (loading) {
+  // Show loading state if no userData
+  if (!userData) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl">
@@ -379,7 +357,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            User Management
+            User Management - {userData.email}
           </DialogTitle>
         </DialogHeader>
 
@@ -494,25 +472,25 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Status:</span>
-                    <Badge variant={subscription?.subscribed ? 'default' : 'secondary'}>
-                      {subscription?.subscribed ? 'Active' : 'Inactive'}
+                    <Badge variant={userData.subscribed ? 'default' : 'secondary'}>
+                      {userData.subscribed ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Tier:</span>
                     <Badge variant="outline" className="capitalize">
-                      {subscription?.subscription_tier || 'None'}
+                      {userData.subscription_tier || 'None'}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Trial Active:</span>
-                    <Badge variant={subscription?.is_trial_active ? 'default' : 'secondary'}>
-                      {subscription?.is_trial_active ? 'Yes' : 'No'}
+                    <Badge variant={userData.is_trial_active ? 'default' : 'secondary'}>
+                      {userData.is_trial_active ? 'Yes' : 'No'}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Entity Limit:</span>
-                    <span className="font-medium">{subscription?.entities_limit || 4}</span>
+                    <span className="font-medium">{userData.entities_limit || 4}</span>
                   </div>
                 </div>
               </CardContent>
@@ -631,19 +609,19 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {roles.length === 0 ? (
+                {userRoles.length === 0 ? (
                   <p className="text-muted-foreground text-sm">No roles assigned</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {roles.map((role) => (
+                    {userRoles.map((role) => (
                       <Badge 
-                        key={role.id} 
-                        variant={role.role === 'admin' ? 'destructive' : 'secondary'}
+                        key={role} 
+                        variant={role === 'admin' ? 'destructive' : 'secondary'}
                         className="flex items-center gap-1"
                       >
-                        {role.role}
+                        {role}
                         <button
-                          onClick={() => handleRemoveRole(role.id, role.role)}
+                          onClick={() => handleRemoveRole(role)}
                           className="ml-1 hover:text-destructive-foreground"
                           disabled={saving}
                         >
@@ -695,33 +673,27 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">Status:</span>
-                    <Badge variant={profile?.account_status === 'suspended' ? 'destructive' : 'default'}>
-                      {profile?.account_status || 'active'}
+                    <Badge variant={userData.account_status === 'suspended' ? 'destructive' : 'default'}>
+                      {userData.account_status || 'active'}
                     </Badge>
                   </div>
                   
-                  {profile?.account_status === 'suspended' && (
+                  {userData.account_status === 'suspended' && (
                     <div className="bg-destructive/10 p-4 rounded-lg space-y-2">
                       <p className="text-sm font-medium text-destructive">
                         Account Suspended
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Reason: {profile.suspension_reason || 'No reason provided'}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Suspended: {profile.suspended_at ? new Date(profile.suspended_at).toLocaleString() : 'N/A'}
                       </p>
                     </div>
                   )}
                   
                   <div className="text-xs text-muted-foreground">
-                    Account created: {profile?.created_at ? new Date(profile.created_at).toLocaleString() : 'N/A'}
+                    Account created: {userData.created_at ? new Date(userData.created_at).toLocaleString() : 'N/A'}
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {profile?.account_status === 'suspended' ? (
+            {userData.account_status === 'suspended' ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm text-green-600">Reactivate Account</CardTitle>
