@@ -48,12 +48,180 @@ serve(async (req) => {
     
     console.log("admin-get-users: Session valid");
 
-    const { type } = await req.json();
-    console.log("admin-get-users: Request type:", type);
+    const body = await req.json();
+    const { type, action, userId, profileData, role, reason, subscriptionData, tier } = body;
+    console.log("admin-get-users: Request type:", type, "action:", action);
 
+    // Handle action-based requests
+    if (action) {
+      switch (action) {
+        case 'update_profile': {
+          console.log("admin-get-users: Updating profile for user:", userId);
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              ...profileData,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (error) {
+            console.error("admin-get-users: Error updating profile:", error);
+            throw error;
+          }
+
+          return new Response(
+            JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        case 'add_role': {
+          console.log("admin-get-users: Adding role for user:", userId, "role:", role);
+          const { error } = await supabase
+            .from("user_roles")
+            .insert({ user_id: userId, role });
+
+          if (error) {
+            console.error("admin-get-users: Error adding role:", error);
+            throw error;
+          }
+
+          return new Response(
+            JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        case 'remove_role': {
+          console.log("admin-get-users: Removing role for user:", userId, "role:", role);
+          const { error } = await supabase
+            .from("user_roles")
+            .delete()
+            .eq("user_id", userId)
+            .eq("role", role);
+
+          if (error) {
+            console.error("admin-get-users: Error removing role:", error);
+            throw error;
+          }
+
+          return new Response(
+            JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        case 'suspend_user': {
+          console.log("admin-get-users: Suspending user:", userId);
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              account_status: "suspended",
+              suspended_at: new Date().toISOString(),
+              suspension_reason: reason,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (error) {
+            console.error("admin-get-users: Error suspending user:", error);
+            throw error;
+          }
+
+          return new Response(
+            JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        case 'unsuspend_user': {
+          console.log("admin-get-users: Unsuspending user:", userId);
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              account_status: "active",
+              suspended_at: null,
+              suspended_by: null,
+              suspension_reason: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (error) {
+            console.error("admin-get-users: Error unsuspending user:", error);
+            throw error;
+          }
+
+          return new Response(
+            JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        case 'update_subscription': {
+          console.log("admin-get-users: Updating subscription for user:", userId, subscriptionData);
+          const { error } = await supabase
+            .from("subscribers")
+            .update({
+              ...subscriptionData,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (error) {
+            console.error("admin-get-users: Error updating subscription:", error);
+            throw error;
+          }
+
+          return new Response(
+            JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        case 'grant_free_access': {
+          console.log("admin-get-users: Granting free access for user:", userId, "tier:", tier);
+          
+          // Determine entities limit based on tier
+          let entitiesLimit = 4;
+          if (tier === 'pro') entitiesLimit = 15;
+          if (tier === 'unlimited') entitiesLimit = 999;
+
+          const { error } = await supabase
+            .from("subscribers")
+            .update({
+              subscribed: true,
+              subscription_tier: tier,
+              subscription_status: "active",
+              is_trial_active: false,
+              entities_limit: entitiesLimit,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", userId);
+
+          if (error) {
+            console.error("admin-get-users: Error granting free access:", error);
+            throw error;
+          }
+
+          return new Response(
+            JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        default:
+          return new Response(
+            JSON.stringify({ error: "Invalid action type" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+      }
+    }
+
+    // Handle type-based requests (for fetching data)
     if (type === "admin_accounts") {
       console.log("admin-get-users: Fetching admin accounts");
-      // Fetch admin accounts from dedicated admin_accounts table
       const { data: adminAccounts, error } = await supabase
         .from("admin_accounts")
         .select("id, email, display_name, is_active, created_at, permissions, mfa_enabled, last_login_at, is_site_owner")
@@ -73,7 +241,6 @@ serve(async (req) => {
 
     if (type === "all_users") {
       console.log("admin-get-users: Fetching all users");
-      // Fetch all profiles with their subscription data
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("*")
@@ -85,7 +252,6 @@ serve(async (req) => {
       }
       console.log("admin-get-users: Found profiles:", profiles?.length);
 
-      // Fetch user roles
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
         .select("user_id, role");
@@ -95,17 +261,15 @@ serve(async (req) => {
         throw rolesError;
       }
 
-      // Fetch subscribers data
       const { data: subscribers, error: subscribersError } = await supabase
         .from("subscribers")
-        .select("user_id, email, subscription_tier, subscription_status, subscribed, trial_end, is_trial_active");
+        .select("user_id, email, subscription_tier, subscription_status, subscribed, trial_end, is_trial_active, entities_limit");
 
       if (subscribersError) {
         console.error("admin-get-users: Error fetching subscribers:", subscribersError);
         throw subscribersError;
       }
 
-      // Create maps for quick lookup
       const rolesMap = new Map<string, string[]>();
       roles?.forEach((r) => {
         const existing = rolesMap.get(r.user_id) || [];
@@ -115,7 +279,6 @@ serve(async (req) => {
 
       const subscribersMap = new Map(subscribers?.map((s) => [s.user_id, s]) || []);
 
-      // Combine data
       const users = profiles?.map((profile) => ({
         ...profile,
         roles: rolesMap.get(profile.user_id) || [],
