@@ -2,25 +2,22 @@ import React from 'react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdminAnalytics } from '@/hooks/useAdminAnalytics';
-import { 
-  Users, 
-  Building2, 
-  DollarSign, 
-  TrendingUp,
-  Activity,
-  Shield,
-  Clock
+import { useAdminUserManagement } from '@/hooks/useAdminUserManagement';
+import {
+  Users, Building2, DollarSign, TrendingUp,
+  Activity, Shield, Clock
 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const Dashboard: React.FC = () => {
   const { admin } = useAdminAuth();
   const { metrics, loading: isLoading } = useAdminAnalytics();
+  const { users, isLoading: isUsersLoading } = useAdminUserManagement();
 
   const stats = [
     {
       title: 'Total Users',
-      value: metrics?.userAnalytics?.total_users || 0,
+      value: isUsersLoading ? '...' : users.length,
       change: `+${metrics?.userAnalytics?.user_growth_30d || 0} this month`,
       icon: Users,
       color: 'text-blue-500',

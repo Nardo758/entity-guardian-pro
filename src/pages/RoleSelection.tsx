@@ -22,7 +22,6 @@ const RoleSelection = () => {
       });
       return;
     }
-
     setLoading(userType);
     
     try {

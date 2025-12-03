@@ -4,43 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Users as UsersIcon,
-  Search,
-  MoreHorizontal,
-  Eye,
-  Edit,
-  RefreshCw,
-  UserCheck,
-  UserX,
-  Building2,
-  CreditCard,
-  Shield,
-  UserPlus,
-  Crown,
-  Trash2,
-  KeyRound,
+  Users as UsersIcon, Search, MoreHorizontal, Eye, Edit,
+  RefreshCw, UserCheck, UserX, Building2, CreditCard,
+  Shield, UserPlus, Crown, Trash2, KeyRound,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -386,7 +362,7 @@ const Users: React.FC = () => {
                 Manage administrator accounts
               </CardDescription>
             </div>
-            <Button 
+            <Button
               onClick={() => setCreateAdminModalOpen(true)}
               className="bg-amber-600 hover:bg-amber-700"
             >
@@ -466,7 +442,7 @@ const Users: React.FC = () => {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {admin.is_active ? (
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedAdmin(admin);
                                   setEditAdminModalOpen(true);
@@ -477,7 +453,7 @@ const Users: React.FC = () => {
                                 Deactivate
                               </DropdownMenuItem>
                             ) : (
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => {
                                   setSelectedAdmin(admin);
                                   setEditAdminModalOpen(true);
@@ -489,7 +465,7 @@ const Users: React.FC = () => {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => {
                                 setSelectedAdmin(admin);
                                 setDeleteAdminDialogOpen(true);
