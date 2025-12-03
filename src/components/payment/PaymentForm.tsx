@@ -161,7 +161,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({
                   Processing Payment...
                 </div>
               ) : (
-                'Complete Payment'
+                'Complete Payment'  
               )}
             </Button>
 
