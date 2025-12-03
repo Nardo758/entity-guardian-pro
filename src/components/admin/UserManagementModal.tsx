@@ -35,6 +35,7 @@ interface UserManagementModalProps {
   };
   onRoleChange?: () => void;
   onRefetch?: () => void;
+  initialTab?: 'profile' | 'subscription' | 'roles' | 'account';
 }
 
 export const UserManagementModal: React.FC<UserManagementModalProps> = ({
@@ -43,11 +44,19 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   userId,
   userData,
   onRoleChange,
-  onRefetch
+  onRefetch,
+  initialTab = 'profile'
 }) => {
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Reset to initialTab when modal opens
+  useEffect(() => {
+    if (open) {
+      setActiveTab(initialTab);
+    }
+  }, [open, initialTab]);
   
   // Form state - initialized from userData
   const [formData, setFormData] = useState({
@@ -361,7 +370,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'profile' | 'subscription' | 'roles' | 'account')}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="subscription">Subscription</TabsTrigger>
