@@ -476,6 +476,7 @@ export type Database = {
           registered_agent_phone: string | null
           state: string
           status: string | null
+          team_id: string | null
           type: string
           updated_at: string
           user_id: string
@@ -497,6 +498,7 @@ export type Database = {
           registered_agent_phone?: string | null
           state: string
           status?: string | null
+          team_id?: string | null
           type: string
           updated_at?: string
           user_id: string
@@ -518,6 +520,7 @@ export type Database = {
           registered_agent_phone?: string | null
           state?: string
           status?: string | null
+          team_id?: string | null
           type?: string
           updated_at?: string
           user_id?: string
