@@ -463,9 +463,17 @@ export type Database = {
           created_at: string
           formation_date: string | null
           id: string
+          independent_director_email: string | null
           independent_director_fee: number | null
+          independent_director_fee_due_date: string | null
+          independent_director_name: string | null
+          independent_director_phone: string | null
           name: string
+          registered_agent_email: string | null
           registered_agent_fee: number | null
+          registered_agent_fee_due_date: string | null
+          registered_agent_name: string | null
+          registered_agent_phone: string | null
           state: string
           status: string | null
           type: string
@@ -476,9 +484,17 @@ export type Database = {
           created_at?: string
           formation_date?: string | null
           id?: string
+          independent_director_email?: string | null
           independent_director_fee?: number | null
+          independent_director_fee_due_date?: string | null
+          independent_director_name?: string | null
+          independent_director_phone?: string | null
           name: string
+          registered_agent_email?: string | null
           registered_agent_fee?: number | null
+          registered_agent_fee_due_date?: string | null
+          registered_agent_name?: string | null
+          registered_agent_phone?: string | null
           state: string
           status?: string | null
           type: string
@@ -489,9 +505,17 @@ export type Database = {
           created_at?: string
           formation_date?: string | null
           id?: string
+          independent_director_email?: string | null
           independent_director_fee?: number | null
+          independent_director_fee_due_date?: string | null
+          independent_director_name?: string | null
+          independent_director_phone?: string | null
           name?: string
+          registered_agent_email?: string | null
           registered_agent_fee?: number | null
+          registered_agent_fee_due_date?: string | null
+          registered_agent_name?: string | null
+          registered_agent_phone?: string | null
           state?: string
           status?: string | null
           type?: string
