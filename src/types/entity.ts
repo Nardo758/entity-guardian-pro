@@ -1,21 +1,22 @@
 export interface Entity {
   id: string;
   user_id: string;
-  team_id?: string;
+  team_id?: string | null;
   name: string;
-  type: 'sole_proprietorship' | 'partnership' | 'llc' | 'c_corp' | 's_corp';
+  type: string;
   state: string;
-  formation_date: string;
-  registered_agent_name: string;
-  registered_agent_email: string;
-  registered_agent_phone: string;
-  registered_agent_fee: number;
-  registered_agent_fee_due_date?: string;
-  independent_director_name?: string;
-  independent_director_email?: string;
-  independent_director_phone?: string;
-  independent_director_fee?: number;
-  independent_director_fee_due_date?: string;
+  status?: string | null;
+  formation_date?: string | null;
+  registered_agent_name?: string | null;
+  registered_agent_email?: string | null;
+  registered_agent_phone?: string | null;
+  registered_agent_fee?: number | null;
+  registered_agent_fee_due_date?: string | null;
+  independent_director_name?: string | null;
+  independent_director_email?: string | null;
+  independent_director_phone?: string | null;
+  independent_director_fee?: number | null;
+  independent_director_fee_due_date?: string | null;
   created_at: string;
   updated_at: string;
 }
