@@ -274,10 +274,12 @@ const Entities: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Formation Date:</span>
-                      <span>{new Date(entity.formation_date).toLocaleDateString()}</span>
-                    </div>
+                    {entity.formation_date && (
+                      <div className="flex justify-between text-sm">
+                        <span>Formation Date:</span>
+                        <span>{new Date(entity.formation_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
                     {entity.registered_agent_name && (
                       <div className="flex justify-between text-sm">
                         <span>Agent:</span>
