@@ -22,7 +22,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 const Entities: React.FC = () => {
   const navigate = useNavigate();
   const permissions = useTierPermissions();
-  const { entities, loading, error, deleteEntity, refetch } = useEntities();
+  const { entities, loading, error, addEntity, deleteEntity, refetch } = useEntities();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddAgentModal, setShowAddAgentModal] = useState(false);
@@ -345,7 +345,7 @@ const Entities: React.FC = () => {
           <EntityForm
             onClose={() => setShowAddForm(false)}
             onSubmit={async (entityData) => {
-              // This will be handled by the EntityForm's internal logic
+              await addEntity(entityData);
               setShowAddForm(false);
             }}
           />
