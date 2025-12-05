@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useEntityLimits } from '@/hooks/useEntityLimits';
 import { EntityLimitWarning } from '@/components/EntityLimitWarning';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,11 +112,11 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
   const isDirectorRequired = isDelawareEntity && (formData.type === 'c_corp' || formData.type === 's_corp');
 
   return (
-    <Card className="mb-8 border shadow-sm">
-      <CardHeader>
-        <CardTitle>Add New Entity</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Entity</DialogTitle>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -343,7 +343,7 @@ export const EntityForm: React.FC<EntityFormProps> = ({ onSubmit, onClose }) => 
             </Button>
           </div>
         </form>
-        </CardContent>
-      </Card>
-    );
-  };
+      </DialogContent>
+    </Dialog>
+  );
+};
