@@ -96,51 +96,15 @@ const Entities: React.FC = () => {
           subtitle="Manage your business entities and agent assignments"
           onAddEntity={() => setShowAddForm(true)} />
 
-
-
-        {/* Modals */}
-        {showAddForm && (
-          <EntityForm
-            onClose={() => setShowAddForm(false)}
-            onSubmit={async (entityData) => {
-              await addEntity(entityData);
-              setShowAddForm(false);
-            }}
-          />
-        )}
-
-        {showInviteModal && selectedEntity && (
-          <EntityInviteAgentModal
-            entity={selectedEntity}
-            isOpen={showInviteModal}
-            onClose={() => {
-              setShowInviteModal(false);
-              setSelectedEntity(null);
-            }}
-          />
-        )}
-
-        {showAddAgentModal && selectedEntity && (
-          <AddAgentModal
-            entity={selectedEntity}
-            isOpen={showAddAgentModal}
-            onClose={() => {
-              setShowAddAgentModal(false);
-              setSelectedEntity(null);
-            }}
-          />
-        )}
-      </div>
-
-      <DataFetchWrapper
-        loading={loading}
-        error={error}
-        data={entities}
-        onRetry={refetch}
-        loadingMessage="Loading your entities..."
-        errorTitle="Failed to load entities"
-      >
-        <div className="container-full p-5 space-y-6">
+        <DataFetchWrapper
+          loading={loading}
+          error={error}
+          data={entities}
+          onRetry={refetch}
+          loadingMessage="Loading your entities..."
+          errorTitle="Failed to load entities"
+        >
+          <div className="container-full p-5 space-y-6">
           {/* Header */}
           {/* <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -376,7 +340,41 @@ const Entities: React.FC = () => {
             </Card>
           )}
         </div>
-      </DataFetchWrapper>
+        </DataFetchWrapper>
+
+        {/* Modals */}
+        {showAddForm && (
+          <EntityForm
+            onClose={() => setShowAddForm(false)}
+            onSubmit={async (entityData) => {
+              await addEntity(entityData);
+              setShowAddForm(false);
+            }}
+          />
+        )}
+
+        {showInviteModal && selectedEntity && (
+          <EntityInviteAgentModal
+            entity={selectedEntity}
+            isOpen={showInviteModal}
+            onClose={() => {
+              setShowInviteModal(false);
+              setSelectedEntity(null);
+            }}
+          />
+        )}
+
+        {showAddAgentModal && selectedEntity && (
+          <AddAgentModal
+            entity={selectedEntity}
+            isOpen={showAddAgentModal}
+            onClose={() => {
+              setShowAddAgentModal(false);
+              setSelectedEntity(null);
+            }}
+          />
+        )}
+      </div>
     </DashboardLayout>
   );
 };
