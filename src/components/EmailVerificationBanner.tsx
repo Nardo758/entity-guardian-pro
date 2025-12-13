@@ -70,15 +70,17 @@ export const EmailVerificationBanner: React.FC = () => {
   };
 
   return (
-    <div className="w-full border-b border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900/50">
-      <div className="container mx-auto px-4 py-3">
+    <div className="w-full border-b-2 border-orange-300 bg-orange-100 dark:bg-orange-950/40 dark:border-orange-800">
+      <div className="w-full max-w-4xl mx-auto px-4 py-4">
         <Alert className="border-0 bg-transparent p-0">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 space-y-2">
-              <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col items-center text-center gap-4 sm:flex-row sm:items-start sm:text-left">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-200 dark:bg-orange-900/50 flex-shrink-0">
+              <AlertCircle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div className="flex-1 space-y-3">
+              <div className="flex flex-col items-center sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
+                  <p className="text-base font-semibold text-orange-900 dark:text-orange-100">
                     Email verification required
                   </p>
                   <AlertDescription className="text-sm text-orange-800 dark:text-orange-200">
@@ -90,35 +92,35 @@ export const EmailVerificationBanner: React.FC = () => {
                   variant="ghost"
                   size="sm"
                   onClick={handleDismiss}
-                  className="h-6 w-6 p-0 text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-100 flex-shrink-0"
+                  className="h-8 w-8 p-0 text-orange-600 hover:text-orange-900 hover:bg-orange-200 dark:text-orange-400 dark:hover:text-orange-100 dark:hover:bg-orange-900/50 flex-shrink-0 rounded-full"
                   aria-label="Dismiss"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
                 <Button
                   onClick={handleResendEmail}
                   disabled={isResending}
-                  size="sm"
+                  size="default"
                   variant="outline"
-                  className="bg-white dark:bg-gray-900 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950"
+                  className="bg-white dark:bg-gray-900 border-orange-400 dark:border-orange-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950 font-medium"
                 >
                   {isResending ? (
                     <>
-                      <div className="w-3 h-3 border-2 border-orange-600/30 border-t-orange-600 rounded-full animate-spin mr-2" />
+                      <div className="w-4 h-4 border-2 border-orange-600/30 border-t-orange-600 rounded-full animate-spin mr-2" />
                       Sending...
                     </>
                   ) : (
                     <>
-                      <Mail className="h-3 w-3 mr-2" />
+                      <Mail className="h-4 w-4 mr-2" />
                       Resend verification email
                     </>
                   )}
                 </Button>
                 {lastSentTime && (
-                  <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                    <CheckCircle className="h-3 w-3" />
+                  <div className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400 font-medium">
+                    <CheckCircle className="h-4 w-4" />
                     <span>Email sent! Check your inbox</span>
                   </div>
                 )}
