@@ -14,7 +14,14 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { useAgents } from '@/hooks/useAgents';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Building, MapPin, FileText, Eye, EyeOff } from 'lucide-react';
 import PasswordStrengthIndicator from '@/components/ui/PasswordStrengthIndicator';
 
@@ -49,6 +56,11 @@ const AgentSignup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackVariant, setFeedbackVariant] = useState<'success' | 'error' | 'info'>('info');
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackDescription, setFeedbackDescription] = useState<React.ReactNode>(null);
+  const [feedbackNavigateTo, setFeedbackNavigateTo] = useState<string | null>(null);
   
   const form = useForm<AgentFormData>({
     resolver: zodResolver(agentSchema),
@@ -72,6 +84,28 @@ const AgentSignup = () => {
     form.setValue('states', newStates);
   };
 
+  const showFeedback = (params: {
+    variant: 'success' | 'error' | 'info';
+    title: string;
+    description: React.ReactNode;
+    navigateTo?: string;
+  }) => {
+    setFeedbackVariant(params.variant);
+    setFeedbackTitle(params.title);
+    setFeedbackDescription(params.description);
+    setFeedbackNavigateTo(params.navigateTo ?? null);
+    setFeedbackOpen(true);
+  };
+
+  const handleFeedbackOpenChange = (open: boolean) => {
+    setFeedbackOpen(open);
+    if (!open && feedbackNavigateTo) {
+      const to = feedbackNavigateTo;
+      setFeedbackNavigateTo(null);
+      navigate(to);
+    }
+  };
+
   const onSubmit = async (data: AgentFormData) => {
     setIsSubmitting(true);
     try {
@@ -88,13 +122,25 @@ const AgentSignup = () => {
 
       if (signUpError) {
         if (signUpError.message?.includes('already registered')) {
-          toast.error('An account with this email already exists. Please use a different email or sign in instead.');
+          showFeedback({
+            variant: 'error',
+            title: 'Account already exists',
+            description: 'An account with this email already exists. Please use a different email or sign in instead.',
+          });
         } else if (signUpError.message?.includes('confirmation email') || signUpError.message?.includes('email')) {
           // Handle email sending issues gracefully
-          toast.error('Account created but email confirmation failed. You can still proceed to sign in.');
+          showFeedback({
+            variant: 'info',
+            title: 'Account created (email issue)',
+            description: 'Account created but email confirmation failed. You can still proceed to sign in.',
+          });
           // Continue with the flow anyway
         } else {
-          toast.error(`Account creation failed: ${signUpError.message}`);
+          showFeedback({
+            variant: 'error',
+            title: 'Account creation failed',
+            description: signUpError.message ? `Account creation failed: ${signUpError.message}` : 'Account creation failed.',
+          });
         }
         
         // Only return early if it's not an email-related error
@@ -112,22 +158,39 @@ const AgentSignup = () => {
 
       if (signInError) {
         if (signInError.message?.includes('Email not confirmed')) {
-          toast.success(`Account created successfully! 
-          
-EMAIL CONFIRMATION REQUIRED: Please check your email and click the confirmation link. 
-If you don't receive an email, please contact support.
-
-Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to email service configuration.`);
+          showFeedback({
+            variant: 'success',
+            title: 'Account created successfully',
+            description: (
+              <div className="space-y-3">
+                <div className="font-medium">Email confirmation required</div>
+                <div className="text-sm text-muted-foreground">
+                  Please check your email and click the confirmation link. If you don't receive an email, please contact support.
+                </div>
+                <div className="text-sm">
+                  <span className="font-medium">Note:</span> Currently only emails to <span className="font-medium">m.dixon5030@gmail.com</span> will be delivered due to email service configuration.
+                </div>
+              </div>
+            ),
+          });
           return;
         } else {
           console.error('Sign in error:', signInError);
-          toast.error(`Authentication failed: ${signInError.message}`);
+          showFeedback({
+            variant: 'error',
+            title: 'Authentication failed',
+            description: signInError.message ? `Authentication failed: ${signInError.message}` : 'Authentication failed.',
+          });
           return;
         }
       }
 
       if (!authData.user) {
-        toast.error('Failed to authenticate after account creation');
+        showFeedback({
+          variant: 'error',
+          title: 'Authentication failed',
+          description: 'Failed to authenticate after account creation.',
+        });
         return;
       }
 
@@ -143,11 +206,19 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
         is_available: true,
       });
       
-      toast.success('Agent profile created successfully! Welcome to the platform.');
-      navigate('/agent-dashboard');
+      showFeedback({
+        variant: 'success',
+        title: 'Profile created',
+        description: 'Agent profile created successfully! Welcome to the platform.',
+        navigateTo: '/agent-dashboard',
+      });
     } catch (error: any) {
       console.error('Agent signup error:', error);
-      toast.error(error.message || 'Failed to create agent profile. Please try again.');
+      showFeedback({
+        variant: 'error',
+        title: 'Signup failed',
+        description: error?.message || 'Failed to create agent profile. Please try again.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -155,6 +226,32 @@ Note: Currently only emails to m.dixon5030@gmail.com will be delivered due to em
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-4xl">
+      <Dialog open={feedbackOpen} onOpenChange={handleFeedbackOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle
+              className={
+                feedbackVariant === 'error'
+                  ? 'text-destructive'
+                  : feedbackVariant === 'success'
+                    ? 'text-primary'
+                    : undefined
+              }
+            >
+              {feedbackTitle}
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="text-sm text-muted-foreground">{feedbackDescription}</div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" onClick={() => handleFeedbackOpenChange(false)}>
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold mb-2">Become a Registered Agent</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
