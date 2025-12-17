@@ -13,76 +13,76 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
-  const Landing = () => {
-    const navigate = useNavigate();
-    const { installApp, isInstallable, isInstalled, isSupported, canInstall, getBrowserInstructions } = usePWA();
-    const { toast } = useToast();
-    const { user, profile, loading, signOut } = useAuth();
-    const [authTimeout, setAuthTimeout] = React.useState(false);
+const Landing = () => {
+  const navigate = useNavigate();
+  const { installApp, isInstallable, isInstalled, isSupported, canInstall, getBrowserInstructions } = usePWA();
+  const { toast } = useToast();
+  const { user, profile, loading, signOut } = useAuth();
+  const [authTimeout, setAuthTimeout] = React.useState(false);
 
-    // Fallback timeout to show auth buttons if loading takes too long
-    React.useEffect(() => {
-      const timer = setTimeout(() => {
-        if (loading) {
-          setAuthTimeout(true);
-        }
-      }, 3000);
-      return () => clearTimeout(timer);
-    }, [loading]);
-
-    // Note: We intentionally don't auto-redirect authenticated users from the landing page
-    // This allows users to view the landing page even when logged in (e.g., to see pricing)
-    // They can navigate to their dashboard using the user menu or nav links
-
-    const handleDesktopDownload = async () => {
-      if (isInstalled) {
-        toast({
-          title: "App Already Installed ✅",
-          description: "Entity Renewal Pro is already installed on your device. Look for it in your apps or desktop.",
-          variant: "default"
-        });
-        return;
+  // Fallback timeout to show auth buttons if loading takes too long
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        setAuthTimeout(true);
       }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
-      if (!isSupported) {
-        const { browser, instruction } = getBrowserInstructions();
+  // Note: We intentionally don't auto-redirect authenticated users from the landing page
+  // This allows users to view the landing page even when logged in (e.g., to see pricing)
+  // They can navigate to their dashboard using the user menu or nav links
+
+  const handleDesktopDownload = async () => {
+    if (isInstalled) {
+      toast({
+        title: "App Already Installed ✅",
+        description: "Entity Renewal Pro is already installed on your device. Look for it in your apps or desktop.",
+        variant: "default"
+      });
+      return;
+    }
+
+    if (!isSupported) {
+      const { browser, instruction } = getBrowserInstructions();
+      toast({
+        title: `Install on ${browser}`,
+        description: instruction,
+        duration: 6000
+      });
+      return;
+    }
+
+    if (canInstall) {
+      toast({
+        title: "Installing App...",
+        description: "Please wait while we install Entity Renewal Pro to your device.",
+      });
+
+      const success = await installApp();
+      if (success) {
         toast({
-          title: `Install on ${browser}`,
-          description: instruction,
+          title: "App Installed Successfully! 🎉",
+          description: "Entity Renewal Pro has been added to your desktop. You can now access it directly from your device.",
           duration: 6000
         });
-        return;
-      }       
-
-      if (canInstall) {
-        toast({
-          title: "Installing App...",
-          description: "Please wait while we install Entity Renewal Pro to your device.",
-        });
-
-        const success = await installApp();
-        if (success) {
-          toast({
-            title: "App Installed Successfully! 🎉",
-            description: "Entity Renewal Pro has been added to your desktop. You can now access it directly from your device.",
-            duration: 6000
-          });
-        } else {
-          toast({
-            title: "Installation Cancelled",
-            description: "No worries! You can install the app anytime using your browser's menu options.",
-            variant: "destructive"
-          });
-        }
       } else {
-        const { browser, instruction } = getBrowserInstructions();
         toast({
-          title: `Manual Installation - ${browser}`,
-          description: instruction,
-          duration: 8000
+          title: "Installation Cancelled",
+          description: "No worries! You can install the app anytime using your browser's menu options.",
+          variant: "destructive"
         });
       }
-    };
+    } else {
+      const { browser, instruction } = getBrowserInstructions();
+      toast({
+        title: `Manual Installation - ${browser}`,
+        description: instruction,
+        duration: 8000
+      });
+    }
+  };
 
   // User Menu Component
   const UserMenu = () => {
@@ -121,10 +121,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
     };
 
     const getDisplayName = () => {
-      return user?.user_metadata?.full_name || 
-             user?.user_metadata?.name || 
-             user?.email?.split('@')[0] || 
-             'User';
+      return user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email?.split('@')[0] ||
+        'User';
     };
 
     const getInitials = () => {
@@ -147,8 +147,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
           onClick={() => setIsOpen(!isOpen)}
         >
           <Avatar className="w-8 h-8">
-            <AvatarImage 
-              src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture} 
+            <AvatarImage
+              src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
               alt={getDisplayName()}
             />
             <AvatarFallback className="bg-gradient-to-br from-primary to-primary-dark text-primary-foreground">
@@ -172,8 +172,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
               <div className="px-4 py-3 border-b border-border">
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-10 h-10">
-                    <AvatarImage 
-                      src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture} 
+                    <AvatarImage
+                      src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
                       alt={getDisplayName()}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-primary-dark text-primary-foreground">
@@ -191,7 +191,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                   </div>
                 </div>
               </div>
-              
+
               <Link
                 to="/dashboard"
                 className="flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
@@ -200,16 +200,16 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 <Shield className="mr-3 h-4 w-4" />
                 Dashboard
               </Link>
-              
-              <Link
+
+              {/* <Link
                 to="/profile"
                 className="flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 <User className="mr-3 h-4 w-4" />
                 Profile
-              </Link>
-              
+              </Link> */}
+
               <Link
                 to="/settings"
                 className="flex items-center px-4 py-2 text-sm hover:bg-muted/50 transition-colors"
@@ -218,9 +218,9 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 <Settings className="mr-3 h-4 w-4" />
                 Settings
               </Link>
-              
+
               <div className="border-t border-border my-1" />
-              
+
               <button
                 onClick={handleSignOut}
                 className="flex items-center w-full px-4 py-2 text-sm hover:bg-muted/50 transition-colors text-destructive"
@@ -235,7 +235,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
     );
   };
 
-  
+
 
   // Features data
   const features = [
@@ -401,8 +401,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
                 size="lg"
                 variant="secondary"
                 className={`text-lg px-8 bg-card/80 hover:bg-card border border-border/50 backdrop-blur-sm shadow-lg transition-all duration-200 ${isInstalled ? 'bg-success/10 border-success/20 text-success-foreground' :
-                    canInstall ? 'bg-primary/10 border-primary/20 hover:bg-primary/20' :
-                      'bg-muted/50'
+                  canInstall ? 'bg-primary/10 border-primary/20 hover:bg-primary/20' :
+                    'bg-muted/50'
                   }`}
                 onClick={handleDesktopDownload}
               >
