@@ -150,7 +150,11 @@ const Settings = () => {
                 <div className="text-center space-y-1">
                   <p className="font-semibold">{`${settingsProfile.first_name} ${settingsProfile.last_name}`.trim()}</p>
                   <p className="text-sm text-muted-foreground">{settingsProfile.email}</p>
-                  <Badge variant="secondary" className="mt-2 capitalize">{currentTier}</Badge>
+                  <Badge variant="secondary" className="mt-2 capitalize">
+                    {subscription.subscribed && subscription.subscription_tier 
+                      ? subscription.subscription_tier 
+                      : "No plan selected"}
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
