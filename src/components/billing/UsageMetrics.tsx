@@ -108,7 +108,7 @@ export const UsageMetrics = () => {
         entitiesLimit: subscription?.entities_limit || tierLimits.entities,
         storageUsed: (documentsCount || 0) * 0.5, // Estimate 0.5GB per document
         storageLimit: tierLimits.storage,
-        apiCalls: Math.floor(Math.random() * 500), // Mock data - would come from analytics
+        apiCalls: 0, // Default to 0 - would come from analytics in production
         apiLimit: tierLimits.api,
       };
 
