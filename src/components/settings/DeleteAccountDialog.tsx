@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AlertTriangle, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DeleteAccountDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ interface DeleteAccountDialogProps {
 
 export const DeleteAccountDialog = ({ open, onOpenChange, userEmail }: DeleteAccountDialogProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [confirmEmail, setConfirmEmail] = useState("");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,12 +73,18 @@ export const DeleteAccountDialog = ({ open, onOpenChange, userEmail }: DeleteAcc
       return;
     }
 
+    if (!user?.id) {
+      toast.error("User not authenticated. Please log in again.");
+      return;
+    }
+
     setLoading(true);
     try {
       // Create deletion request
       const { error: requestError } = await supabase
         .from('account_deletion_requests')
         .insert({
+          user_id: user.id,
           reason: reason || null,
           status: 'pending'
         });
