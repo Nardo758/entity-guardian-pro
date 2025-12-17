@@ -296,18 +296,23 @@ const Settings = () => {
                         </Button>
                       </div>
                     </div>
-                    <Separator />
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Password</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Keep your password strong and unique
-                        </p>
-                      </div>
-                      <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
-                        Change Password
-                      </Button>
-                    </div>
+                    {/* Only show password change for non-OAuth users */}
+                    {user?.app_metadata?.provider === 'email' && (
+                      <>
+                        <Separator />
+                        <div className="space-y-4">
+                          <div>
+                            <Label>Password</Label>
+                            <p className="text-sm text-muted-foreground">
+                              Keep your password strong and unique
+                            </p>
+                          </div>
+                          <Button variant="outline" onClick={() => setShowPasswordDialog(true)}>
+                            Change Password
+                          </Button>
+                        </div>
+                      </>
+                    )}
 
                     {isAdmin && isMFAEnabled && (
                       <>
